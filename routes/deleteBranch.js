@@ -3,15 +3,16 @@
  */
 
 // Misc:
-import addToIPFS from '../utilities/addToIPFS';
-import getFromIPFS from '../utilities/getFromIPFS';
+const addToIPFS = require('../utilities/addToIPFS');
+const getFromIPFS = require('../utilities/getFromIPFS');
+const removeFromIPFS = require('../utilities/removeFromIPFS');
 
 // isomorphic-git related imports and setup
+const fs = require('fs');
 const git = require('isomorphic-git');
 git.plugins.set('fs',fs); // Bring your own file system 
 
 const path = require('path');
-const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 
@@ -31,7 +32,11 @@ router.post('/deleteBranch', async (req,res) => {
                         dir:  path.join(__dirname, projLeader, projName),
                         ref: branchName
                     })
-                    addToIPFS(projLeader,projName);
+                    // Unpin old majorHash to prevent clutter:
+                    removeFromIPFS(projLeader,projName);
+                    // Store new state of repository:
+                    majorHash = addToIPFS(projLeader,projName);
+                    console.log("Updated majorHash (deleted branch): ", majorHash);
                     res.status(200).send({message: "Delete Branch successful"});
                 }catch(e){
                     console.log("deleteBranch git ERR: ",e);

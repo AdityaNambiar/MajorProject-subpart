@@ -3,17 +3,17 @@
 */
 
 // Misc:
-import addToIPFS from '../utilities/addToIPFS';
-import getFromIPFS from '../utilities/getFromIPFS';
-import removeFromIPFS from '../utilities/removeFromIPFS';
+const addToIPFS = require('../utilities/addToIPFS');
+const getFromIPFS = require('../utilities/getFromIPFS');
+const removeFromIPFS = require('../utilities/removeFromIPFS');
 
 
 // isomorphic-git related imports and setup
+const fs = require('fs');
 const git = require('isomorphic-git');
 git.plugins.set('fs',fs); // Bring your own file system 
 
 const path = require('path');
-const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 
@@ -26,7 +26,7 @@ router.post('/addFile', async (req,res) => {
     try{
         fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
         { 
-            if (!exists) getFromIPFS(majorHash); 
+            if (!exists) getFromIPFS(majorHash, projLeader); 
             else {
                 // Git work:
                 let buffer = req.body.filebuff;
@@ -39,7 +39,9 @@ router.post('/addFile', async (req,res) => {
                         filepath: filename
                     })
                     console.log(`File added is -> ${filename}`);
+                    // Prevent cluttering IPFS repo by unpinning old states of repo:
                     removeFromIPFS(projLeader, projName);
+                    // Store new state of git repo:
                     majorHash = addToIPFS(projLeader,projName);
                     console.log("Updated MajorHash (git add): ",majorHash);
                     res.status(200).send({message: "Add / Commit successful", data: files});

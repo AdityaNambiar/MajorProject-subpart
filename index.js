@@ -6,26 +6,21 @@ const fs = require('fs');
 // Terminal execution import
 const { exec, spawn, spawnSync, execSync } = require('child_process');
 
-// isomorphic-git related imports and setup
-const git = require('isomorphic-git');
-git.plugins.set('fs',fs); // Bring your own file system 
-
-// ipfs related import and setup
-const ipfsClient = require('ipfs-http-client');
-const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'});
-
 const cors = require('cors');
 const port = process.env.PORT || 5000;
 
 // route imports:
 const initProj = require('./routes/initProj');
 const gitGraph = require('./routes/gitGraph');
+
+const addFile = require('./routes/addFile');
+const getFiles = require('./routes/getFiles');
+const commitFile = require('./routes/commitFile');
+
 const addBranch = require('./routes/addBranch');
 const getBranches = require('./routes/getBranches');
-const addFile = require('./routes/addFile');
 const deleteBranch = require('./routes/deleteBranch');
 const checkoutBranch = require('./routes/checkoutBranch');
-const getFiles = require('./routes/getFiles');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -34,30 +29,12 @@ app.get('/',() => {
     console.log("Home");
 })
 
-/**
- * What to do for IPFS? :
- * Just create a code-base structure as follows:
- * -- Do a IPFS.get() to download the project from IPFS repo.
- * -- Perform actions written within routes below
- * -- Do a IPFS.add() and IPFS.pin() to upload / store the project back on IPFS repo.
- */
-
-/**
- * IPFS action for initialization:
- * 1. Create project directory by Leader's name
- * 2. Initialize a git repository within this directory.
- * 3. Perform IPFS.add() and IPFS.pin().
- */
-var majorHash = '';
-const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-var projName = "";
-
-
 app.post('/initProj', initProj);
 app.post('/gitGraph', gitGraph); 
 
 app.post('/addFile', addFile);
 app.post('/getFiles',getFiles);
+app.post('/commitFile',commitFile);
 
 app.post('/addBranch', addBranch);
 app.post('/getBranches', getBranches);
@@ -70,18 +47,31 @@ app.post('/mergeBranches', async (req,res) => {
     var projName = req.body.projName;
     var branchName = req.body.name;
     var majorHash = '';
-    try{ 
-        let source_branch = branchName;
-        await git.merge({
-            fs,
-            dir:  path.join(__dirname, projLeader, projName),
-            ours: 'master',
-            theirs: source_branch,
+    // IPFS work:
+    try{
+        fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
+        { 
+            if (!exists) getFromIPFS(majorHash); 
+            else {
+                // Git work:
+                try{ 
+                    let source_branch = branchName;
+                    await git.merge({
+                        fs,
+                        dir:  path.join(__dirname, projLeader, projName),
+                        ours: 'master',
+                        theirs: source_branch,
+                    })
+                    console.log(`Merged branch ${source_branch} with master.`)
+                    res.status(200).send({message: "Merge Branches successful"});
+                }catch(e){
+                    console.log("mergeBranch git err: ", e);
+                    res.status(400).send(e);
+                }
+            }
         })
-        console.log(`Merged branch ${source_branch} with master.`)
-        res.status(200).send({message: "Merge Branches successful"});
-    }catch(e){
-        console.log("mergeBranch ERR: ", e);
+    } catch(e) {
+        console.log("mergeBranches main err: ", e);
     }
 })
 /**
@@ -96,20 +86,32 @@ app.post('/mergeBranches', async (req,res) => {
  */
 app.post('/mergeFiles', (req,res) => {
     const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = "";
+    var projName = "app" || req.body.projName;
+    var branchName = 'feature' || req.body.name; // Hard coded - has to fetch as: req.body.branchName
     var majorHash = '';
-    try {
-        var branchName = 'feature'; // Hard coded - has to fetch as: req.body.branchName
-        var execout = execSync('git merge '+branchName , {
-            cwd: path.join(__dirname, projLeader, req.body.projName),
-            shell: true,
-        });
-        //console.log(execout);
-        res.status(200).send(execout);
-    }catch(e){
-        console.log("gitgraph err: ",e);
-        res.status(200).send(e);
-    }
+    // IPFS work:
+    try{
+        fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
+        { 
+            if (!exists) getFromIPFS(majorHash); 
+            else {
+                // Git work:
+                try {
+                    var execout = execSync('git merge '+branchName , {
+                        cwd: path.join(__dirname, projLeader, projName),
+                        shell: true,
+                    });
+                    console.log(execout);
+                    res.status(200).send(execout);
+                }catch(e){
+                    console.log("mergeBranch git err: ",e);
+                    res.status(200).send(e);
+                }
+            }
+        })
+    } catch(e) {
+        console.log("mergeBranch main err: ", err);
+    } 
 }) 
 
 app.listen(port,()=>{

@@ -7,7 +7,7 @@
 const ipfsClient = require('ipfs-http-client');
 const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'});
 
-export default async function getFromIPFS(majorHash, projLeader){
+module.exports.getFromIPFS = async function getFromIPFS(majorHash, projLeader){
     await ipfs.get(majorHash, async (err, results) => {
         if (err) throw new Error("ipfs.get err: \n", err);
         var leader_dirpathhash = results[0].path

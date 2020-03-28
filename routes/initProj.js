@@ -4,14 +4,14 @@
  */
 
 // Misc:
-import addToIPFS from '../utilities/addToIPFS';
+const addToIPFS = require('../utilities/addToIPFS');
 
 // isomorphic-git related imports and setup
+const fs = require('fs');
 const git = require('isomorphic-git');
 git.plugins.set('fs',fs); // Bring your own file system 
 
 const path = require('path');
-const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 

@@ -8,7 +8,7 @@ const ipfsClient = require('ipfs-http-client');
 const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'});
 var majorHash = '';
 
-export default async function removeFromIPFS(projLeader, projName){
+module.exports.removeFromIPFS = async function removeFromIPFS(projLeader, projName){
     try{
         // IPFS.pin.rm() projectLeader's folder:
         await ipfs.pin.rm(majorHash, (err,res) => {

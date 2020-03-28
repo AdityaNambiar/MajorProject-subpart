@@ -3,14 +3,14 @@
  */
 
 // Misc:
-import getFromIPFS from '../utilities/getFromIPFS';
+const getFromIPFS = require('../utilities/getFromIPFS');
 
 // isomorphic-git related imports and setup
+const fs = require('fs');
 const git = require('isomorphic-git');
 git.plugins.set('fs',fs); // Bring your own file system 
 
 const path = require('path');
-const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 
@@ -22,7 +22,7 @@ router.post('/gitGraph', (req,res) => {
     try{
         fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
         { 
-            if (!exists) getFromIPFS(majorHash); 
+            if (!exists) getFromIPFS(majorHash, projLeader); 
             else {
                 try {
                     var execout = execSync('git log --all --graph --decorate --oneline', {
@@ -32,7 +32,7 @@ router.post('/gitGraph', (req,res) => {
                     console.log(execout);
                     res.status(200).send(execout);
                 }catch(e){
-                    console.log("gitgraph err: ",e);
+                    console.log("gitgraph (git log) err: ",e);
                     res.status(400).send(e);
                 }
             }

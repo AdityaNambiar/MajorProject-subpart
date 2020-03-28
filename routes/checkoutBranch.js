@@ -3,15 +3,16 @@
  */
 
 // Misc:
-import addToIPFS from '../utilities/addToIPFS';
-import getFromIPFS from '../utilities/getFromIPFS';
+const addToIPFS = require('../utilities/addToIPFS');
+const getFromIPFS = require('../utilities/getFromIPFS');
+const removeFromIPFS = require('../utilities/removeFromIPFS');
 
 // isomorphic-git related imports and setup
+const fs = require('fs');
 const git = require('isomorphic-git');
 git.plugins.set('fs',fs); // Bring your own file system 
 
 const path = require('path');
-const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 
@@ -31,8 +32,11 @@ router.post('/checkoutBranch', async (req,res) => {
                         dir:  path.join(__dirname, projLeader, projName),
                         ref: branchName,
                     });
-                    // Store .git's state back to .git state of the project folder stored on IPFS.
-                    majorHash = addToIPFS(projLeader,projName); // Store the latest (updated) project hash into majorHash.
+                    // Prevent cluttering IPFS repo by unpinning old states of repo:
+                    removeFromIPFS(projLeader, projName);
+                    // Store new state of git repo:
+                    majorHash = addToIPFS(projLeader,projName);
+                    console.log("Updated MajorHash (git checkout branch): ",majorHash);
                     console.log("Checked out to: ", branchName);
                     res.status(200).send({message: "Branch checkout successful"});
                 }catch(e){

@@ -3,39 +3,39 @@
 */
 
 // Misc:
-import addToIPFS from '../utilities/addToIPFS';
-import getFromIPFS from '../utilities/getFromIPFS';
-import removeFromIPFS from '../utilities/removeFromIPFS';
+const addToIPFS = require('../utilities/addToIPFS');
+const getFromIPFS = require('../utilities/getFromIPFS');
+const removeFromIPFS = require('../utilities/removeFromIPFS');
 
 // isomorphic-git related imports and setup
+const fs = require('fs');
 const git = require('isomorphic-git');
 git.plugins.set('fs',fs); // Bring your own file system 
 
 const path = require('path');
-const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 
 router.post('/commitFile', async (req,res) => {
     const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = "";
+    var projName = req.body.projName;
     var majorHash = '';
     var authorname = 'Aditya';
     var authoremail = 'adi@g.c';
+    var usermsg = req.body.comm_msg;
     majorHash = '';
     // IPFS work:
     try{
-        fs.exists(path.join(__dirname, projLeader, req.body.projName), async (exists) => 
+        fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
         { 
             if (!exists) getFromIPFS(majorHash); 
             else {
                 // Git work:
-                let usermsg = req.body.comm_msg;
 
                 try {
                     let sha = await git.commit({
                         fs,
-                        dir:  path.join(__dirname, projLeader, req.body.projName),
+                        dir:  path.join(__dirname, projLeader, projName),
                         message: usermsg,
                         author: {
                             name: authorname,
@@ -43,7 +43,9 @@ router.post('/commitFile', async (req,res) => {
                         }
                     })
                     console.log("commit hash: \n",sha);
+                    // Remove clutter in IPFS by unpinning old git repo state:
                     removeFromIPFS(projLeader,projName);
+                    // Store new state of git repo:
                     majorHash = addToIPFS(projLeader,projName);
                     console.log("Updated MajorHash (git commit): ",majorHash);
                     res.status(200).send({message: "Add / Commit successful", data: files});

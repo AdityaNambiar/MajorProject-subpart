@@ -13,7 +13,7 @@ git.plugins.set('fs',fs); // Bring your own file system
 
 // ipfs related import and setup
 const ipfsClient = require('ipfs-http-client');
-const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'});
+const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'};
 
 const cors = require('cors');
 const port = process.env.PORT || 5000;
@@ -43,7 +43,6 @@ app.get('/',() => {
 var majorHash = '';
 const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
 var projName = "";
-
 
 
 app.post('/initProj', 

@@ -1,5 +1,5 @@
 import getFromIPFS from './misc/getFromIPFS';
-
+const globSource = require('ipfs').globSource;
 export default async function addToIPFS(projLeader, projName){
     try{
         // IPFS.add() projectLeader's folder:
@@ -8,7 +8,10 @@ export default async function addToIPFS(projLeader, projName){
             path: `${projLeader}/${projName}`,
         }
         files.push(fileobj);
-        await ipfs.add(Array.from(files), async (err, results)=>{
+        await ipfs.add(globSource(Array.from(files),{ 
+            recursive: true,
+            hidden: true
+        }),async (err, results)=>{
             if (err) console.log("IPFS ADD Err: ",err);
             console.log("IPFS ADD results: ",results);
 

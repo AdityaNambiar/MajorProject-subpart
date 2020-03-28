@@ -10,7 +10,7 @@ const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 
-router.post('/', async(req,res) => {
+router.post('/initProj', async(req,res) => {
     const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
     var projName = "";
     var majorHash = '';

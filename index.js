@@ -43,38 +43,9 @@ app.get('/',() => {
 var majorHash = '';
 const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
 var projName = "";
-async function addToIPFS(projLeader, projName){
-    // IPFS.add() projectLeader's folder:
-    let files = [];
-    let fileobj = {
-        path: `${projLeader}/${projName}`,
-    }
-    files.push(fileobj);
-    await ipfs.add(Array.from(files), async (err, results)=>{
-        if (err) console.log("IPFS ADD Err: ",err);
-        console.log("IPFS ADD results: ",results);
 
-        hash = results[results.length - 1].hash; // Access hash of only the Leader's directory (which is the last element of results)
-        majorHash = hash;
-        await ipfs.pin.add(hash, (err, res) => { 
-            if(err) console.log("IPFS PIN Err: ", err);
-            console.log("IPFS PIN res: ", res[0].hash); // Hash after pinning the Leader's directory.
-        });
-        
-        console.log("Save this majorHash: ",majorHash);  
-    })
-}
 
-async function getFromIPFS(majorHash){
-    await ipfs.get(majorHash, async (err, results) => {
-        if (err) throw new Error("ipfs.get err: \n", err);
-        var leader_dirpathhash = results[0].path
-        execSync(`ipfs get ${leader_dirpathhash} -o ${projLeader}`, {
-            cwd: __dirname,
-            shell: true,
-        });
-    });
-}
+
 app.post('/initProj', 
     async(req,res) => {
         try {
@@ -255,7 +226,7 @@ app.post('/mergeBranches', async (req,res) => {
         console.log(`Merged branch ${source_branch} with master.`)
         res.status(200).send({message: "Merge Branches successful"});
     }catch(e){
-        console.log("ERR mergeBranch: ", e);
+        console.log("mergeBranch ERR: ", e);
     }
 })
 /**

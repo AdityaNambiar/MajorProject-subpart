@@ -99,10 +99,10 @@ app.post('/mergeFiles', (req,res) => {
                 // Git work:
                 try {
                     var execout = execSync('git merge '+branchName , {
-                        cwd: path.join(__dirname, projLeader, projName),
+                        cwd: path.join(__dirname),
                         shell: true,
                     });
-                    console.log(execout);
+                    console.log(execout.stdout);
                     res.status(200).send(execout);
                 }catch(e){
                     console.log("mergeBranch git err: ",e);

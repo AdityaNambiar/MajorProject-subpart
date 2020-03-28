@@ -5,6 +5,9 @@
 // Misc:
 const getFromIPFS = require('../utilities/getFromIPFS');
 
+// Terminal execution import
+const { exec, spawn, spawnSync, execSync } = require('child_process');
+
 // isomorphic-git related imports and setup
 const fs = require('fs');
 const git = require('isomorphic-git');

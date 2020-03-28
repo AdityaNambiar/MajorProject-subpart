@@ -98,11 +98,14 @@ app.post('/mergeFiles', (req,res) => {
             else {
                 // Git work:
                 try {
-                    var execout = execSync('git merge '+branchName , {
+                    var execout = exec('git merge '+branchName , {
                         cwd: path.join(__dirname),
                         shell: true,
+                    }, (err, stdout, stderr) => {
+                        if (err) console.log("mergeFiles err: \n", err);
+                        if (stderr) console.log("mergeFiles stderr: \n", err);
+                        console.log("RESULTS: \n",stdout);
                     });
-                    console.log(execout.stdout);
                     res.status(200).send(execout);
                 }catch(e){
                     console.log("mergeBranch git err: ",e);

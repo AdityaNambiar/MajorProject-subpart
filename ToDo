@@ -1,0 +1,9 @@
+1. Commit route
+    - Seperate it from the addFile route
+2. Add route for removeProj
+    - Unpin and run node's exec() on the git repo to remove it from local node. 
+  (Also need to keep this as a seperate utility - a remove / delete Proj route request will make call to this IPFS utility)
+
+Reminder: projLeader, projName (and additional other necessary items that come from req.body), majorHash are required by IPFS and git APIs.
+
+3. (Inform Gopi) authorname = participantCard's Identifier (i.e. get name) and authoremail => Both should be kept in world state.

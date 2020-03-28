@@ -1,9 +1,9 @@
+
 /**
- * Return a list of branches from the current working git repo
- */
+ * Get (Read) list of files in current branch of git repository.
+*/
 
 // Misc:
-import addToIPFS from '../utilities/addToIPFS';
 import getFromIPFS from '../utilities/getFromIPFS';
 
 // isomorphic-git related imports and setup
@@ -15,33 +15,34 @@ const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 
-router.post('/getBranches', async (req,res) => {
+router.post('/getFiles', async (req,res) => {
     const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
     var projName = req.body.projName;
     var majorHash = '';
-    majorHash = ""; // Fill in majorHash
-    try {
+    // IPFS work:
+    try{
         fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
         { 
-            if (!exists) getFromIPFS(majorHash, projLeader); 
+            if (!exists) getFromIPFS(majorHash); 
             else {
-                try{
-                    // Git work:
-                    let branches = await git.listBranches({
-                        dir:  path.join(__dirname, projLeader, projName)
+                try {
+                    let files = await git.listFiles({
+                        dir:  path.join(__dirname, projLeader, projName),
+                        ref: 'HEAD'
                     })
-                    majorHash = addToIPFS(projLeader,projName);
-                    res.status(200).send(branches);
+                    console.log("Files on selected branch: ",files);
+
+                    res.status(200).send({message: "Fetch files on current branch (where HEAD ptr is at) successful", data: files});
                 }catch(e){
-                    console.log("getBranch git err",e);
+                    console.log("getFiles git ERR: ",e);
                     res.status(400).send(e);
                 }
             }
         })
-    }catch(e){
-        console.log("getbranch outer ERR: ",e);
+    }catch(e) {
+        console.log("getFiles main Err: ", e);
         res.status(400).send(e);
-    };
-});
+    }
+})
 
 module.exports = router;

@@ -1,5 +1,6 @@
 // Misc:
-import addToIPFS from '../misc/addToIPFS';
+import addToIPFS from '../utilities/addToIPFS';
+import getFromIPFS from '../utilities/getFromIPFS';
 
 // isomorphic-git related imports and setup
 const git = require('isomorphic-git');
@@ -12,32 +13,41 @@ const router = express.Router();
 
 router.post('/initProj', async(req,res) => {
     const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = "";
+    var projName = req.body.projName;
     var majorHash = '';
     try {
-        
-        // Create project folder with provided leader's name
-        fs.mkdir(path.join(__dirname, projLeader), (err)=>{
-            if (err) console.log("mkdir (leader's folder) err: ",err);
-            // Create actual project folder with leader's 
-            fs.mkdir(path.join(__dirname, projLeader, req.body.projName), async (err) => {
-                if (err) console.log("mkdir (proj folder) err: ", err);
-                // Initialize this folder as git repo 
-                try{
-                    await git.init({
-                        fs,
-                        dir: path.join(__dirname, projLeader, req.body.projName)
-                    });
-                    res.status(200).send({message:"git init done"});
-                }catch(e){
-                    console.log("git init err: ",e);
-                    res.status(400).send(e)
-                }
-            })
-            addToIPFS(projLeader,req.body.projName);
+        fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
+        { 
+            if (!exists){ 
+                // Create project folder with provided leader's name
+                fs.mkdir(path.join(__dirname, projLeader), (err)=>{
+                    if (err) console.log("mkdir (leader's folder) err: ",err);
+
+                    // Create actual project folder with leader's 
+                    fs.mkdir(path.join(__dirname, projLeader, projName), async (err) => {
+                        if (err) console.log("mkdir (proj folder) err: ", err);
+
+                        // Initialize this folder as git repo 
+                        try{
+                            await git.init({
+                                fs,
+                                dir: path.join(__dirname, projLeader, projName)
+                            });
+                            res.status(200).send({message:"git init done"});
+                        }catch(e){
+                            console.log("git init err: ",e);
+                            res.status(400).send(e)
+                        }
+                    })
+                    majorHash = addToIPFS(projLeader,projName);
+                    console.log("MajorHash (git init): ", majorHash);
+                })
+            } else {
+                console.log("Intialized attempted with same project name / leader ");
+            }
         })
     } catch (err) {
-        console.log("git init outer catch err: ", err)
+        console.log("git init main err: ", err)
     }
 })
 

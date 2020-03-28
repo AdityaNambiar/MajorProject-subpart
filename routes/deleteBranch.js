@@ -1,5 +1,5 @@
 /**
- * Return a list of branches from the current working git repo
+ * Remove a branch from the current working git repo
  */
 
 // Misc:
@@ -15,33 +15,34 @@ const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 
-router.post('/getBranches', async (req,res) => {
+router.post('/deleteBranch', async (req,res) => {
     const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
     var projName = req.body.projName;
-    var majorHash = '';
-    majorHash = ""; // Fill in majorHash
+    var branchName = req.body.name;
+    var majorHash = "";
+    majorHash = "";
     try {
         fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
         { 
-            if (!exists) getFromIPFS(majorHash, projLeader); 
+            if (!exists) getFromIPFS(majorHash); 
             else {
-                try{
-                    // Git work:
-                    let branches = await git.listBranches({
-                        dir:  path.join(__dirname, projLeader, projName)
+                try {
+                    await git.deleteBranch({
+                        dir:  path.join(__dirname, projLeader, projName),
+                        ref: branchName
                     })
-                    majorHash = addToIPFS(projLeader,projName);
-                    res.status(200).send(branches);
+                    addToIPFS(projLeader,projName);
+                    res.status(200).send({message: "Delete Branch successful"});
                 }catch(e){
-                    console.log("getBranch git err",e);
+                    console.log("deleteBranch git ERR: ",e);
                     res.status(400).send(e);
                 }
             }
         })
     }catch(e){
-        console.log("getbranch outer ERR: ",e);
+        console.log("deleteBranch outer ERR: ",e);
         res.status(400).send(e);
-    };
-});
+    }
+})
 
 module.exports = router;

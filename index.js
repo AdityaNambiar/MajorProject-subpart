@@ -3,7 +3,6 @@ const app = express();
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
-import addToIPFS from './misc/addToIPFS';
 // Terminal execution import
 const { exec, spawn, spawnSync, execSync } = require('child_process');
 
@@ -18,7 +17,14 @@ const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'});
 const cors = require('cors');
 const port = process.env.PORT || 5000;
 
+// route imports:
 const initProj = require('./routes/initProj');
+const addBranch = require('./routes/addBranch');
+const getBranches = require('./routes/getBranches');
+const addFile = require('./routes/addFile');
+const deleteBranch = require('./routes/deleteBranch');
+const checkoutBranch = require('./routes/checkoutBranch');
+const getFiles = require('./routes/getFiles');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -47,173 +53,27 @@ var projName = "";
 
 
 app.post('/initProj', initProj);
-app.post('/addBranch', async (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = "";
-    var majorHash = '';
-    try {
-        await git.branch({
-            dir:  path.join(__dirname, projLeader, req.body.projName),
-            ref: req.body.name
-        })
-        res.status(200).send({message: "Add Branch successful"});
-    }catch(e){
-        console.log("ERR: ",e);
-        res.status(400).send(e);
-    }
-});
-app.post('/addFile', async (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = "";
-    var majorHash = '';
-    majorHash = 'QmPkJRJzcvXApgMoJBsWx2Vi4HdPUxmtpkoBNPc5SPVQoQ';
-    // IPFS work:
-    try{
-        fs.exists(path.join(__dirname, projLeader, req.body.projName), async (exists) => 
-        { 
-            if (!exists) getFromIPFS(majorHash); 
-            else {
-                // Git work:
-                let buffer = req.body.filebuff;
-                let filename = req.body.filename;
-                let ac_status = req.body.autocomm_status;
-                let usermsg = req.body.comm_msg;
 
-                fs.writeFileSync(path.join(__dirname, projLeader, req.body.projName,filename),Buffer.from(buffer));
-                try {
-                    let files = await git.add({
-                        dir:  path.join(__dirname, projLeader, req.body.projName),
-                        filepath: filename
-                    })
-                    console.log(`File added is -> ${filename}`);
+app.post('/addFile', addFile);
 
-                    if (ac_status) { // if auto-commit is true i.e. user wants to commit when they add this file...
-                        let sha = await git.commit({
-                            fs,
-                            dir:  path.join(__dirname, projLeader, req.body.projName),
-                            message: usermsg,
-                            author: {
-                                name: "Aditya",
-                                email: "adi@g.c"
-                            }
-                        })
-                        console.log("commit hash: \n",sha);
-                    }
-                    addToIPFS(projLeader,projName);
-                    res.status(200).send({message: "Add / Commit successful", data: files});
-                }catch(e){
-                    console.log("addFile git ERR: ",e);
-                    res.status(400).send(e);
-                }
-            }   
-        })
-    }catch(err){
-        console.log("addFile outer ERR \n",err);
-        res.status(400).send(e);
-    }
-});
-app.post('/getBranches', async (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = "";
-    var majorHash = '';
-    majorHash = ""; // Fill in majorHash
-    try {
-        fs.exists(path.join(__dirname, projLeader, req.body.projName), async (exists) => 
-        { 
-            if (!exists) getFromIPFS(majorHash); 
-            else {
-                try{
-                    // Git work:
-                    let branches = await git.listBranches({
-                        dir:  path.join(__dirname, projLeader, req.body.projName)
-                    })
+app.post('/addBranch', addBranch);
+app.post('/getBranches', getBranches);
+app.post('/deleteBranch', deleteBranch);
+app.post('/checkoutBranch', checkoutBranch);
+app.post('/getFiles',getFiles);
 
-                    res.status(200).send(branches);
-                }catch(e){
-                    console.log("getBranch git err",e);
-                    res.status(400).send(e);
-                }
-            }
-        })
-    }catch(e){
-        console.log("getbranch outer ERR: ",e);
-        res.status(400).send(e);
-    };
-});
-
-app.post('/deleteBranch', async (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = "";
-    var majorHash = '';
-    majorHash = "";
-    try {
-        fs.exists(path.join(__dirname, projLeader, req.body.projName), async (exists) => 
-        { 
-            if (!exists) getFromIPFS(majorHash); 
-            else {
-                try {
-                    await git.deleteBranch({
-                        dir:  path.join(__dirname, projLeader, req.body.projName),
-                        ref: req.body.name
-                    })
-                    addToIPFS(projLeader,projName);
-                    res.status(200).send({message: "Delete Branch successful"});
-                }catch(e){
-                    console.log("deleteBranch git ERR: ",e);
-                    res.status(400).send(e);
-                }
-            }
-        })
-    }catch(e){
-        console.log("deleteBranch outer ERR: ",e);
-        res.status(400).send(e);
-    }
-});
-
-app.post('/checkoutBranch', async (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = "";
-    var majorHash = '';
-    majorHash = ""
-    try {
-        await git.checkout({
-            dir:  path.join(__dirname, projLeader, req.body.projName),
-            ref: req.body.name,
-        });
-        console.log("Checked out to: ", req.body.name);
-        res.status(200).send({message: "Branch checkout successful"});
-    }catch(e){
-        console.log("checkoutBranch ERR: ",e);
-        res.status(400).send(e);
-    }
-});
-
-app.post('/getFiles', async (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = "";
-    var majorHash = '';
-    try {
-        let files = await git.listFiles({
-            dir:  path.join(__dirname, projLeader, req.body.projName),
-            ref: 'HEAD'
-        })
-        console.log("Files on selected branch: ",files);
-        res.status(200).send({message: "Fetch files on current branch (where HEAD ptr is at) successful", data: files});
-    }catch(e){
-        console.log("getFiles ERR: ",e);
-        res.status(400).send(e);
-    }
-});
+app.post('/getFiles', );
 // The below route is the one with isomorphic-git's method:
 app.post('/mergeBranches', async (req,res) => {
     const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = "";
+    var projName = req.body.projName;
+    var branchName = req.body.name;
     var majorHash = '';
     try{ 
-        let source_branch = req.body.name;
+        let source_branch = branchName;
         await git.merge({
             fs,
-            dir:  path.join(__dirname, projLeader, req.body.projName),
+            dir:  path.join(__dirname, projLeader, projName),
             ours: 'master',
             theirs: source_branch,
         })

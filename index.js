@@ -3,7 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
-
+import addToIPFS from './misc/addToIPFS';
 // Terminal execution import
 const { exec, spawn, spawnSync, execSync } = require('child_process');
 
@@ -13,15 +13,16 @@ git.plugins.set('fs',fs); // Bring your own file system
 
 // ipfs related import and setup
 const ipfsClient = require('ipfs-http-client');
-const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'};
+const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'});
 
 const cors = require('cors');
 const port = process.env.PORT || 5000;
 
+const initProj = require('./routes/initProj');
+
 app.use(cors());
 app.use(bodyParser.json());
 
-// routes:
 app.get('/',() => {
     console.log("Home");
 })
@@ -45,35 +46,11 @@ const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
 var projName = "";
 
 
-app.post('/initProj', 
-    async(req,res) => {
-        try {
-            // Create project folder with provided leader's name
-            fs.mkdir(path.join(__dirname, projLeader), (err)=>{
-                if (err) console.log("mkdir (leader's folder) err: ",err);
-                // Create actual project folder with leader's 
-                fs.mkdir(path.join(__dirname, projLeader, req.body.projName), async (err) => {
-                    if (err) console.log("mkdir (proj folder) err: ", err);
-                    // Initialize this folder as git repo 
-                    try{
-                        await git.init({
-                            fs,
-                            dir: path.join(__dirname, projLeader, req.body.projName)
-                        });
-                        res.status(200).send({message:"git init done"});
-                    }catch(e){
-                        console.log("git init err: ",e);
-                        res.status(400).send(e)
-                    }
-                })
-                addToIPFS(projLeader,req.body.projName);
-            })
-        } catch (err) {
-            console.log("git init outer catch err: ", err)
-        }
-    }
-)
+app.post('/initProj', initProj);
 app.post('/addBranch', async (req,res) => {
+    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
+    var projName = "";
+    var majorHash = '';
     try {
         await git.branch({
             dir:  path.join(__dirname, projLeader, req.body.projName),
@@ -86,6 +63,9 @@ app.post('/addBranch', async (req,res) => {
     }
 });
 app.post('/addFile', async (req,res) => {
+    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
+    var projName = "";
+    var majorHash = '';
     majorHash = 'QmPkJRJzcvXApgMoJBsWx2Vi4HdPUxmtpkoBNPc5SPVQoQ';
     // IPFS work:
     try{
@@ -133,6 +113,9 @@ app.post('/addFile', async (req,res) => {
     }
 });
 app.post('/getBranches', async (req,res) => {
+    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
+    var projName = "";
+    var majorHash = '';
     majorHash = ""; // Fill in majorHash
     try {
         fs.exists(path.join(__dirname, projLeader, req.body.projName), async (exists) => 
@@ -159,6 +142,9 @@ app.post('/getBranches', async (req,res) => {
 });
 
 app.post('/deleteBranch', async (req,res) => {
+    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
+    var projName = "";
+    var majorHash = '';
     majorHash = "";
     try {
         fs.exists(path.join(__dirname, projLeader, req.body.projName), async (exists) => 
@@ -185,6 +171,9 @@ app.post('/deleteBranch', async (req,res) => {
 });
 
 app.post('/checkoutBranch', async (req,res) => {
+    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
+    var projName = "";
+    var majorHash = '';
     majorHash = ""
     try {
         await git.checkout({
@@ -200,6 +189,9 @@ app.post('/checkoutBranch', async (req,res) => {
 });
 
 app.post('/getFiles', async (req,res) => {
+    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
+    var projName = "";
+    var majorHash = '';
     try {
         let files = await git.listFiles({
             dir:  path.join(__dirname, projLeader, req.body.projName),
@@ -214,6 +206,9 @@ app.post('/getFiles', async (req,res) => {
 });
 // The below route is the one with isomorphic-git's method:
 app.post('/mergeBranches', async (req,res) => {
+    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
+    var projName = "";
+    var majorHash = '';
     try{ 
         let source_branch = req.body.name;
         await git.merge({
@@ -239,6 +234,9 @@ app.post('/mergeBranches', async (req,res) => {
  * 4. Now the user has to be told to resolve the conflicts and Click on 'Save' and 'Apply' to 'git add file' and 'git commit file' respectively. (direct the routes of these buttons to the git API of addFile, without check and with check for commit) 
  */
 app.post('/mergeFiles', (req,res) => {
+    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
+    var projName = "";
+    var majorHash = '';
     try {
         var branchName = 'feature'; // Hard coded - has to fetch as: req.body.branchName
         var execout = execSync('git merge '+branchName , {
@@ -253,6 +251,9 @@ app.post('/mergeFiles', (req,res) => {
     }
 }) 
 app.post('/gitGraph', (req,res) => {
+    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
+    var projName = "";
+    var majorHash = '';
     try {
         let output = '';
         var execout = execSync('git log --all --graph --decorate --oneline', {

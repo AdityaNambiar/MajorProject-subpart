@@ -1,6 +1,10 @@
+/**
+ * Make project manager / leader's directory with their project name.
+ * Initialize a git repository 
+ */
+
 // Misc:
 import addToIPFS from '../utilities/addToIPFS';
-import getFromIPFS from '../utilities/getFromIPFS';
 
 // isomorphic-git related imports and setup
 const git = require('isomorphic-git');

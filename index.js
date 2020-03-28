@@ -19,6 +19,7 @@ const port = process.env.PORT || 5000;
 
 // route imports:
 const initProj = require('./routes/initProj');
+const gitGraph = require('./routes/gitGraph');
 const addBranch = require('./routes/addBranch');
 const getBranches = require('./routes/getBranches');
 const addFile = require('./routes/addFile');
@@ -53,16 +54,16 @@ var projName = "";
 
 
 app.post('/initProj', initProj);
+app.post('/gitGraph', gitGraph); 
 
 app.post('/addFile', addFile);
+app.post('/getFiles',getFiles);
 
 app.post('/addBranch', addBranch);
 app.post('/getBranches', getBranches);
 app.post('/deleteBranch', deleteBranch);
 app.post('/checkoutBranch', checkoutBranch);
-app.post('/getFiles',getFiles);
 
-app.post('/getFiles', );
 // The below route is the one with isomorphic-git's method:
 app.post('/mergeBranches', async (req,res) => {
     const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
@@ -100,23 +101,6 @@ app.post('/mergeFiles', (req,res) => {
     try {
         var branchName = 'feature'; // Hard coded - has to fetch as: req.body.branchName
         var execout = execSync('git merge '+branchName , {
-            cwd: path.join(__dirname, projLeader, req.body.projName),
-            shell: true,
-        });
-        //console.log(execout);
-        res.status(200).send(execout);
-    }catch(e){
-        console.log("gitgraph err: ",e);
-        res.status(200).send(e);
-    }
-}) 
-app.post('/gitGraph', (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = "";
-    var majorHash = '';
-    try {
-        let output = '';
-        var execout = execSync('git log --all --graph --decorate --oneline', {
             cwd: path.join(__dirname, projLeader, req.body.projName),
             shell: true,
         });

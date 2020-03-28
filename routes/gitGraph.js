@@ -28,12 +28,15 @@ router.post('/gitGraph', (req,res) => {
             if (!exists) getFromIPFS(majorHash, projLeader); 
             else {
                 try {
-                    var execout = execSync('git log --all --graph --decorate --oneline', {
+                    exec('git log --all --graph --decorate --oneline', {
                         cwd: path.join(__dirname, projLeader,projName),
                         shell: true,
+                    }, (err, stdout, stderr) => {
+                        if (err) console.log("gitgraph err: \n", err);
+                        if (stderr) console.log("gitgraph stderr: \n", err);
+                        console.log(stdout);
+                        res.status(200).send(stdout);
                     });
-                    console.log(execout);
-                    res.status(200).send(execout);
                 }catch(e){
                     console.log("gitgraph (git log) err: ",e);
                     res.status(400).send(e);

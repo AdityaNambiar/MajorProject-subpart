@@ -98,7 +98,7 @@ app.post('/mergeFiles', (req,res) => {
             else {
                 // Git work:
                 try {
-                    var execout = exec('git merge '+branchName , {
+                    exec('git merge '+branchName , {
                         cwd: path.join(__dirname),
                         shell: true,
                     }, (err, stdout, stderr) => {

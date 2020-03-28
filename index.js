@@ -42,7 +42,7 @@ app.get('/',() => {
  */
 var majorHash = '';
 const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-
+var projName = "";
 async function addToIPFS(projLeader, projName){
     // IPFS.add() projectLeader's folder:
     let files = [];
@@ -67,7 +67,7 @@ async function addToIPFS(projLeader, projName){
 
 async function getFromIPFS(majorHash){
     await ipfs.get(majorHash, async (err, results) => {
-        if (err) throw new Error("addFile - ipfs.get:\n", err);
+        if (err) throw new Error("ipfs.get err: \n", err);
         var leader_dirpathhash = results[0].path
         execSync(`ipfs get ${leader_dirpathhash} -o ${projLeader}`, {
             cwd: __dirname,
@@ -149,44 +149,73 @@ app.post('/addFile', async (req,res) => {
                         })
                         console.log("commit hash: \n",sha);
                     }
+                    addToIPFS(projLeader,projName);
                     res.status(200).send({message: "Add / Commit successful", data: files});
                 }catch(e){
-                    console.log("addFile ERR: ",e);
+                    console.log("addFile git ERR: ",e);
                     res.status(400).send(e);
                 }
             }   
         })
     }catch(err){
-        console.log("addFile - ipfs.get:\n",err);
+        console.log("addFile outer ERR \n",err);
         res.status(400).send(e);
     }
 });
 app.post('/getBranches', async (req,res) => {
+    majorHash = ""; // Fill in majorHash
     try {
-        let branches = await git.listBranches({
-            dir:  path.join(__dirname, projLeader, req.body.projName)
+        fs.exists(path.join(__dirname, projLeader, req.body.projName), async (exists) => 
+        { 
+            if (!exists) getFromIPFS(majorHash); 
+            else {
+                try{
+                    // Git work:
+                    let branches = await git.listBranches({
+                        dir:  path.join(__dirname, projLeader, req.body.projName)
+                    })
+
+                    res.status(200).send(branches);
+                }catch(e){
+                    console.log("getBranch git err",e);
+                    res.status(400).send(e);
+                }
+            }
         })
-        res.status(200).send(branches);
     }catch(e){
-        console.log("getbranch ERR: ",e);
+        console.log("getbranch outer ERR: ",e);
         res.status(400).send(e);
     };
 });
 
 app.post('/deleteBranch', async (req,res) => {
+    majorHash = "";
     try {
-        await git.deleteBranch({
-            dir:  path.join(__dirname, projLeader, req.body.projName),
-            ref: req.body.name
+        fs.exists(path.join(__dirname, projLeader, req.body.projName), async (exists) => 
+        { 
+            if (!exists) getFromIPFS(majorHash); 
+            else {
+                try {
+                    await git.deleteBranch({
+                        dir:  path.join(__dirname, projLeader, req.body.projName),
+                        ref: req.body.name
+                    })
+                    addToIPFS(projLeader,projName);
+                    res.status(200).send({message: "Delete Branch successful"});
+                }catch(e){
+                    console.log("deleteBranch git ERR: ",e);
+                    res.status(400).send(e);
+                }
+            }
         })
-        res.status(200).send({message: "Delete Branch successful"});
     }catch(e){
-        console.log("ERR: ",e);
+        console.log("deleteBranch outer ERR: ",e);
         res.status(400).send(e);
     }
 });
 
 app.post('/checkoutBranch', async (req,res) => {
+    majorHash = ""
     try {
         await git.checkout({
             dir:  path.join(__dirname, projLeader, req.body.projName),

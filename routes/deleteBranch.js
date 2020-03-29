@@ -23,13 +23,13 @@ router.post('/deleteBranch', async (req,res) => {
     var majorHash = "";
     majorHash = "";
     try {
-        fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
+        fs.exists(path.resolve(__dirname,'..',projLeader,projName), async (exists) => 
         { 
             if (!exists) getFromIPFS(majorHash); 
             else {
                 try {
                     await git.deleteBranch({
-                        dir:  path.join(__dirname, projLeader, projName),
+                        dir:  path.resolve(__dirname,'..',projLeader,projName),
                         ref: branchName
                     })
                     // Unpin old majorHash to prevent clutter:

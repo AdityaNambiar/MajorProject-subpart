@@ -21,14 +21,14 @@ router.post('/getBranches', async (req,res) => {
     var majorHash = '';
     majorHash = ""; // Fill in majorHash
     try {
-        fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
+        fs.exists(path.resolve(__dirname,'..',projLeader,projName), async (exists) => 
         { 
             if (!exists) getFromIPFS(majorHash, projLeader); 
             else {
                 try{
                     // Git work:
                     let branches = await git.listBranches({
-                        dir:  path.join(__dirname, projLeader, projName)
+                        dir:  path.resolve(__dirname,'..',projLeader,projName)
                     })
                     majorHash = addToIPFS(projLeader,projName);
                     res.status(200).send(branches);

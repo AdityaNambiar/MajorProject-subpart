@@ -23,13 +23,13 @@ router.post('/checkoutBranch', async (req,res) => {
     var branchName = req.body.name;
     majorHash = ""
     try {
-        fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
+        fs.exists(path.resolve(__dirname,'..',projLeader,projName), async (exists) => 
         { 
             if (!exists) getFromIPFS(majorHash, projLeader); 
             else {
                 try {
                     await git.checkout({
-                        dir:  path.join(__dirname, projLeader, projName),
+                        dir:  path.resolve(__dirname,'..',projLeader,projName),
                         ref: branchName,
                     });
                     // Prevent cluttering IPFS repo by unpinning old states of repo:

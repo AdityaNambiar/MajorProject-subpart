@@ -21,13 +21,13 @@ router.post('/getFiles', async (req,res) => {
     var majorHash = '';
     // IPFS work:
     try{
-        fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
+        fs.exists(path.resolve(__dirname,'..',projLeader,projName), async (exists) => 
         { 
             if (!exists) getFromIPFS(majorHash, projLeader); 
             else {
                 try {
                     let files = await git.listFiles({
-                        dir:  path.join(__dirname, projLeader, projName),
+                        dir:  path.resolve(__dirname,'..',projLeader,projName),
                         ref: 'HEAD'
                     })
                     console.log("Files on selected branch: ",files);

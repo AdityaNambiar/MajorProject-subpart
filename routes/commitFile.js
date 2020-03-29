@@ -26,7 +26,7 @@ router.post('/commitFile', async (req,res) => {
     majorHash = '';
     // IPFS work:
     try{
-        fs.exists(path.join(__dirname, projLeader, projName), async (exists) => 
+        fs.exists(path.resolve(__dirname,'..',projLeader,projName), async (exists) => 
         { 
             if (!exists) getFromIPFS(majorHash); 
             else {
@@ -35,7 +35,7 @@ router.post('/commitFile', async (req,res) => {
                 try {
                     let sha = await git.commit({
                         fs,
-                        dir:  path.join(__dirname, projLeader, projName),
+                        dir:  path.resolve(__dirname,'..',projLeader,projName),
                         message: usermsg,
                         author: {
                             name: authorname,

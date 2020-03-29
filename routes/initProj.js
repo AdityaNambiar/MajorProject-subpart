@@ -76,8 +76,9 @@ async function main(projLeader, projName, majorHash, res, buffer, filename, ac_s
                 console.log("git init err: ",e);
                 res.status(400).send(e)
             }
-        majorHash = await addToIPFS(projLeader,projName);
-        console.log("MajorHash (git init): ", majorHash);
+            majorHash = await addToIPFS(projLeader,projName);
+            console.log("MajorHash (git init): ", majorHash);
+        })
     })
 }
 module.exports = router;

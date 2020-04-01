@@ -1,5 +1,5 @@
 /**
- * Make project manager / leader's directory with their project name.
+ * Make project with their project name.
  * Initialize a git repository 
  */
 
@@ -96,7 +96,7 @@ async function clone(projName) {
     return new Promise( async (resolve, reject) => {
         try {
             await exec(`git clone --bare ${projName} ${projName+'.git'}`,{
-                cwd: '.',
+                cwd: path.resolve('projects'),
                 shell: true
             }, (err, stdout, stderr) => {
                 if (err) console.log('init clone cli err: ',err);

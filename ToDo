@@ -12,12 +12,20 @@ projLeader/projName directory structure REPLACED with projName/ only.
 5. git init - direct bare. 
     add file:
         1. IPFS fetch bare repo -> git clone first (to get local repo on server)
-        2. Perform action (addFile ka route logic)
+        ( What to check for when modifying initial checks incase of an operation like addFile?:
+            1. Check whether the bare repo exists or not.
+                - if not, fetch it from IPFS. 
+                - then clone the repo (can also overwrite.. its ok)
+            2. check if normal repo exists or not.
+                - if not, clone from the bare repo (write this clone seperate as a utility function - for reusability)
+        )
+        2. Perform action (addFile route logic)
         3. (auto) Commit changes to local server repo
-        4. Push to bare repo on server
-        5. Add to IPFS the bare repo  
+        4. Push to bare repo on server  (Can make this a utility function as well - for reusability)
+        5. Add the bare repo to IPFS.
 
 
 6. diff between two commit hashes (previous to the current hash and current hash) route
+    - new route (diffFiles.js) 
 
 7. read file and send buffer (seperate route)

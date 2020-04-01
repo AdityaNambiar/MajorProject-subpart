@@ -25,7 +25,7 @@ let README = `PROJECT NAME: ${projName} \n PROJECT DESCRIPTION: ${projDesc} \n`
 
 router.post('/initProj', async (req,res) => {
     var projName = req.body.projName;  
-    var majorHash = '';
+    var majorHash = 'QmX4nZGMdwhDCz4NvLrcaVUWJAFL4YzoRS98unY9xx8cLs'; // MOST RECENT IPFS HASH - DO NOT REMOVE
     // Git work:
     let authoremail = 'adi@g.c';
     let authorname = 'Aditya';

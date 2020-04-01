@@ -62,7 +62,6 @@ async function main(projName, majorHash, res, buffer, filename, usermsg, authorn
             .then( async () => {
                 try{
                     await clone(projName)
-                    console.log("clone done.");
                 } catch(e) {
                     res.status(400).send({msg: "clone err: "+e})
                 }

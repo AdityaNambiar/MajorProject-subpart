@@ -24,7 +24,7 @@ let README = `PROJECT NAME: ${projName} \n PROJECT DESCRIPTION: ${projDesc} \n`
 
 
 router.post('/initProj', async (req,res) => {
-    var projName = req.body.projName; // 
+    var projName = req.body.projName;  
     var majorHash = '';
     // Git work:
     let authoremail = 'adi@g.c';
@@ -33,14 +33,13 @@ router.post('/initProj', async (req,res) => {
     let filename = req.body.filename || "README";
     let usermsg = "Initial Commit";
     try {
-        if (!fs.existsSync(path.resolve(__dirname,'..','projects',projName)))
-            main(projName, majorHash, res, buffer, filename, usermsg)
+        main(projName, majorHash, res, buffer, filename, usermsg, authorname, authoremail)
     } catch (err) {
         console.log("git init main err: ", err)
     }
 })
 
-async function main(projName, majorHash, res, buffer, filename, usermsg) {
+async function main(projName, majorHash, res, buffer, filename, usermsg, authorname, authoremail) {
     fs.mkdir(path.resolve(__dirname,'..','projects',projName), async (err) => {
             if (err) console.log("mkdir (proj folder) err: ", err);
 
@@ -84,7 +83,7 @@ async function gitInit(projName) {
         try {
             await git.init({
                 fs,
-                dir: path.resolve(__dirname,'..',projName)
+                dir: path.resolve(__dirname,'..','projects', projName)
             });
             resolve(true)
         } catch(e) {

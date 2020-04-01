@@ -18,60 +18,41 @@ const express = require('express');
 const router = express.Router();
 
 router.post('/addFile', async (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = req.body.projName;
+    const projLeader = "Aditya" // hard coded - has to card name or from blockchain?
+    var projName = req.body.projName || "app";
     var majorHash = '';
-    let buffer = req.body.filebuff;
-    let filename = req.body.filename;
-    majorHash = 'QmPkJRJzcvXApgMoJBsWx2Vi4HdPUxmtpkoBNPc5SPVQoQ';
+    let buffer = req.body.filebuff || "NEW STRING";
+    let filename = req.body.filename || "NEW_FILE"; 
+    majorHash = 'QmNkhbVEpLa8iLk8M8rzdiorXAR7jpNaRthjoLnFoNneiz'; // hard coded
     // IPFS work:
     try{
-        fs.exists(path.resolve(__dirname,'..',projLeader,projName), async (exists) => 
-        { 
-            if (!exists) getFromIPFS(majorHash, projLeader); 
-            else {
-                // Git work:
-
-                fs.writeFileSync(path.join(__dirname, projLeader, projName,filename),Buffer.from(buffer));
-                try {
-                    let files = await git.add({
-                        dir:  path.join(__dirname, projLeader, req.body.projName),
-                        filepath: filename
-                    })
-                    console.log(`File added is -> ${filename}`);
-                    // Prevent cluttering IPFS repo by unpinning old states of repo:
-                    await removeFromIPFS(projLeader, projName);
-                    // Store new state of git repo:
-                    majorHash = addToIPFS(projLeader,projName);
-                    console.log("Updated MajorHash (git add): ",majorHash);
-                    res.status(200).send({message: "Add / Commit successful", data: files});
-                }catch(e){
-                    console.log("addFile git ERR: ",e);
-                    res.status(400).send(e);
-                }
-            }   
-        })
+        if (!fs.existsSync(path.resolve(__dirname,'..',projName))) {
+            await getFromIPFS(majorHash, projLeader) // This should run first and then the below code 
+            main(projLeader,projName, majorHash, res, buffer, filename)
+        } else {
+            main(projLeader,projName, majorHash, res, buffer, filename)
+        }
     }catch(err){
         console.log("addFile outer ERR \n",err);
         res.status(400).send(e);
     }
 })
 
-async function main() {
+async function main(projLeader, projName, majorHash, res, buffer, filename) {
     // Git work:
-    fs.writeFileSync(path.join(__dirname, projLeader, projName,filename),Buffer.from(buffer));
+    fs.writeFileSync(path.resolve(__dirname,'..',projName,filename),Buffer.from(buffer));
     try {
-        let files = await git.add({
-            dir:  path.join(__dirname, projLeader, req.body.projName),
+        await git.add({
+            dir:  path.resolve(__dirname,'..',projName),
             filepath: filename
         })
-        console.log(`File added is -> ${filename}`);
-        // Prevent cluttering IPFS repo by unpinning old states of repo:
-        await removeFromIPFS(projLeader, projName);
+        var oldmajorHash = majorHash;
         // Store new state of git repo:
-        majorHash = addToIPFS(projLeader,projName);
+        majorHash = await addToIPFS(projLeader,projName);
+        // Prevent cluttering IPFS repo by unpinning (and garbage-collect) old states of repo:
+        await removeFromIPFS(oldmajorHash, projLeader, projName);
         console.log("Updated MajorHash (git add): ",majorHash);
-        res.status(200).send({message: "Add / Commit successful", data: files});
+        res.status(200).send({projName: projName, majorHash: majorHash});
     }catch(e){
         console.log("addFile git ERR: ",e);
         res.status(400).send(e);

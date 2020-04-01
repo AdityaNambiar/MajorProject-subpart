@@ -10,21 +10,17 @@ const ipfsClient = require('ipfs-http-client');
 const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'});
 var majorHash = '';
 
-module.exports = async function addToIPFS(projLeader, projName){
+module.exports = async function addToIPFS(projName){
     return new Promise( async (resolve, reject) => {
         try{
             // IPFS.add() projectLeader's folder:
-            let files = [];
-            let fileobj = {
-                path: `${projLeader}/${projName}`,
-            }
-            files.push(fileobj);
-            await ipfs.add(globSource(`${projLeader}`,{  // To allow hidden files - use globSource
+
+            await ipfs.add(globSource(`projects/${projName}`,{  // To allow hidden files - use globSource
                 recursive: true,
                 hidden: true
             }),async (err, results)=>{
                 if (err) console.log("IPFS ADD Err: ",err);
-                console.log("IPFS ADD results: ",results);
+                
                 hash = results[results.length - 1].hash; // Access hash of only the Leader's directory (which is the last element of results)
                 majorHash = hash;
                 await ipfs.pin.add(hash, (err, res) => { 

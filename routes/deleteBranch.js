@@ -21,33 +21,36 @@ router.post('/deleteBranch', async (req,res) => {
     var projName = req.body.projName;
     var branchName = req.body.name;
     var majorHash = "";
-    majorHash = "";
+    majorHash = "QmX32zevGSsZSSGEGRLNCpkg1TvYiw2rz9jMLqn4VCik7n";
     try {
-        fs.exists(path.resolve(__dirname,'..',projLeader,projName), async (exists) => 
-        { 
-            if (!exists) getFromIPFS(majorHash); 
-            else {
-                try {
-                    await git.deleteBranch({
-                        dir:  path.resolve(__dirname,'..',projLeader,projName),
-                        ref: branchName
-                    })
-                    // Unpin old majorHash to prevent clutter:
-                    removeFromIPFS(projLeader,projName);
-                    // Store new state of repository:
-                    majorHash = addToIPFS(projLeader,projName);
-                    console.log("Updated majorHash (deleted branch): ", majorHash);
-                    res.status(200).send({message: "Delete Branch successful"});
-                }catch(e){
-                    console.log("deleteBranch git ERR: ",e);
-                    res.status(400).send(e);
-                }
-            }
-        })
+        if (!fs.existsSync(path.resolve(__dirname,'..',projName))) {
+            await getFromIPFS(majorHash, projLeader) // This should run first and then the below code 
+            main(projLeader, projName, res, branchName, majorHash)
+        } else {
+            main(projLeader, projName, res, branchName, majorHash)
+        }
     }catch(e){
-        console.log("deleteBranch outer ERR: ",e);
+        console.log("deleteBranch main ERR: ",e);
         res.status(400).send(e);
     }
 })
+async function main(projLeader, projName, res, branchName, majorHash) {
+    try {
+        await git.deleteBranch({
+            dir:  path.resolve(__dirname,'..',projName),
+            ref: branchName
+        })
 
+        var oldmajorHash = majorHash;
+        // Store new state of git repo:
+        majorHash = await addToIPFS(projLeader,projName);
+        // Prevent cluttering IPFS repo by unpinning (and garbage-collect) old states of repo:
+        await removeFromIPFS(oldmajorHash, projLeader, projName);
+        console.log("Updated MajorHash (git branch -d): ",majorHash);
+        res.status(200).send({projName: projName, majorHash: majorHash});
+    }catch(e){
+        console.log("deleteBranch git ERR: ",e);
+        res.status(400).send(e);
+    }
+}
 module.exports = router;

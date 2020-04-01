@@ -1,6 +1,23 @@
+1. projName and majorHash in an object to be returned back to blockchain.
+Reminder: projLeader, projName, branchName, majorHash are required by IPFS and git APIs.
 
-  (Also need to keep this as a seperate utility - a remove / delete Proj route request will make call to this IPFS utility)
+2. (Inform Gopi) authorname = participantCard's Identifier (i.e. get name) and authoremail => Both should be kept in world state.
 
-Reminder: projLeader, projName (and additional other necessary items that come from req.body), majorHash are required by IPFS and git APIs.
+3. Add a addRemote, deleteRemote, listRemotes API
 
-3. (Inform Gopi) authorname = participantCard's Identifier (i.e. get name) and authoremail => Both should be kept in world state.
+projLeader/projName directory structure REPLACED with projName/ only.
+
+4. Try JSON.stringify for a string which has a code snippet.
+
+5. git init - direct bare. 
+    add file:
+        1. IPFS fetch bare repo -> git clone first (to get local repo on server)
+        2. Perform action (addFile ka route logic)
+        3. (auto) Commit changes to local server repo
+        4. Push to bare repo on server
+        5. Add to IPFS the bare repo  
+
+
+6. diff between two commit hashes (previous to the current hash and current hash) route
+
+7. read file and send buffer (seperate route)

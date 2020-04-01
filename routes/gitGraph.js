@@ -21,10 +21,10 @@ const router = express.Router();
 router.post('/gitGraph', async (req,res) => {
     const projLeader = "Aditya"; // Hard coded - has to card name or from blockchain?
     var projName = req.body.projName;
-    var majorHash = "QmRDV5kodBAQ4aZeM8JRyCgmAJwYGoXFAyLTRK4YvcrDpY"; // Hard coded.
+    var majorHash = "QmWkL3LV3JHJVv4g83TQzeGKpP35cstD241VccNvqn6vA7"; // Hard coded.
     // IPFS work:
     try{
-        if (!fs.existsSync(path.resolve(__dirname,'..',projLeader))) {
+        if (!fs.existsSync(path.resolve(__dirname,'..',projName))) {
             await getFromIPFS(majorHash, projLeader) // This should run first and then the below code 
             main(projLeader,projName,res)
         } else {
@@ -39,7 +39,7 @@ router.post('/gitGraph', async (req,res) => {
 async function main(projLeader, projName, res){
     try {
         await exec('git log --all --graph --decorate --oneline', {
-            cwd: path.resolve(__dirname,'..',projLeader,projName),
+            cwd: path.resolve(__dirname,'..',projName),
             shell: true,
         }, (err, stdout, stderr) => {
             if (err) console.log("gitgraph err: \n", err);

@@ -20,10 +20,10 @@ router.post('/addBranch', async (req,res) => {
     const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
     var projName = req.body.projName;
     var branchName = req.body.name;
-    var majorHash = 'QmXnn5NSDDLNvNWVcfPc692hRmWgHpJgF1XDtgext6R6D1'; // hard coded
+    var majorHash = 'QmWkL3LV3JHJVv4g83TQzeGKpP35cstD241VccNvqn6vA7'; // hard coded
     // IPFS work:
     try{
-        if (!fs.existsSync(path.resolve(__dirname,'..',projLeader))) {
+        if (!fs.existsSync(path.resolve(__dirname,'..',projName))) {
             await getFromIPFS(majorHash, projLeader) // This should run first and then the below code 
             main(projLeader,projName,branchName,majorHash,res)
         } else {
@@ -39,15 +39,16 @@ async function main(projLeader, projName, branchName, majorHash, res){
     try {
     // Git work:
     await git.branch({
-        dir:  path.resolve(__dirname,'..',projLeader,projName),
+        dir:  path.resolve(__dirname,'..',projName),
         ref: branchName
     })
-    // Prevent cluttering IPFS repo by unpinning old states of repo:
-    await removeFromIPFS(majorHash, projLeader, projName);
+    var oldmajorHash = majorHash;
     // Store new state of git repo:
     majorHash = await addToIPFS(projLeader,projName);
+    // Prevent cluttering IPFS repo by unpinning old states of repo:
+    await removeFromIPFS(oldmajorHash, projLeader, projName);
     console.log("Updated MajorHash (git branch newbranch): ",majorHash);
-    res.status(200).send({message: "Add Branch successful"});
+    res.status(200).send({projName: projName, majorHash: majorHash});
     } catch(e) {
         console.log("(git branch newbranch) err: ",e);
         res.status(400).send(e);

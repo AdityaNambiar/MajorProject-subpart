@@ -21,7 +21,7 @@ module.exports = async function removeFromIPFS(majorHash, projName){
                 if (err) console.log("IPFS PIN RM Err: ", err);
                 console.log("majorHash removed: ",res);
                 execSync('ipfs repo gc', {
-                    cwd: path.resolve(__dirname,'..',projName),
+                    cwd: path.resolve(__dirname,'..','projects',projName),
                     shell: true,
                 });
                 resolve(true);

@@ -1,11 +1,12 @@
+
+** Top priority **
+projLeader/projName directory structure for all routes has to be REPLACED with projName/ only.
+
 1. projName and majorHash in an object to be returned back to blockchain.
-Reminder: projLeader, projName, branchName, majorHash are required by IPFS and git APIs.
 
 2. (Inform Gopi) authorname = participantCard's Identifier (i.e. get name) and authoremail => Both should be kept in world state.
 
-3. Add a addRemote, deleteRemote, listRemotes API
-
-projLeader/projName directory structure REPLACED with projName/ only.
+3. (Need to confirm) Add a addRemote, deleteRemote, listRemotes API
 
 4. Try JSON.stringify for a string which has a code snippet.
 

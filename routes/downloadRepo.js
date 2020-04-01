@@ -1,5 +1,6 @@
 /**
- * Add a new branch in git repo:
+ * Download the repository (the one with working directory - the normal one) as a .ZIP 
+ * (Because on GitHub - they give a URL. Talk with Raj about this 'zip' idea for downloading repo)
  */
 // Misc:
 const addToIPFS = require('../utilities/addToIPFS');
@@ -17,12 +18,11 @@ const router = express.Router();
 
 
 router.post('/downloadRepo', async (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
     var projName = req.body.projName;
-    var majorHash = 'QmWkL3LV3JHJVv4g83TQzeGKpP35cstD241VccNvqn6vA7'; // hard coded
+    var majorHash = 'QmWkL3LV3JHJVv4g83TQzeGKpP35cstD241VccNvqn6vA7'; // bare repo hash here
     // IPFS work:
     try{
-        await getFromIPFS(majorHash, projLeader)
+        await getFromIPFS(majorHash, projName)
         res.status(200).send({msg: "Downloaded requested project"}) 
     }catch(e){
         console.log("addBranch outer Err: ",e);

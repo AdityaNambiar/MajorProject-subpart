@@ -29,8 +29,8 @@ router.post('/initProj', async (req,res) => {
     // Git work:
     let authoremail = 'adi@g.c';
     let authorname = 'Aditya';
-    let buffer = req.body.filebuff || README;
-    let filename = req.body.filename || "README";
+    let buffer = req.body.filebuff || README.md;
+    let filename = req.body.filename || "README.md";
     let usermsg = "Initial Commit";
     try {
         main(projName, majorHash, res, buffer, filename, usermsg, authorname, authoremail)
@@ -98,8 +98,8 @@ async function clone(projName) {
                 cwd: path.resolve('projects'),
                 shell: true
             }, (err, stdout, stderr) => {
-                if (err) console.log('init clone cli err: ',err);
-                if (stderr) console.log('init clone cli stderr: ',stderr);
+                if (err) { console.log('init clone cli err: ',err); reject(err); }
+                if (stderr) { console.log('init clone cli stderr: ',stderr); reject(stderr); }
                 resolve(true)
             })
         } catch(e) {

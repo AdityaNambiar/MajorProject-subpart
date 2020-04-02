@@ -4,6 +4,7 @@
 // Misc:
 const addToIPFS = require('../utilities/addToIPFS');
 const getFromIPFS = require('../utilities/getFromIPFS');
+const cloneBare = require('../utilities/cloneBare');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
 
 // isomorphic-git related imports and setup
@@ -23,8 +24,9 @@ router.post('/addBranch', async (req,res) => {
     var majorHash = 'QmWkL3LV3JHJVv4g83TQzeGKpP35cstD241VccNvqn6vA7'; // hard coded
     // IPFS work:
     try{
-        if (!fs.existsSync(path.resolve(__dirname,'..',projName))) {
-            await getFromIPFS(majorHash, projLeader) // This should run first and then the below code 
+        if (!fs.existsSync(path.resolve(__dirname,'..','projects',projName+'.git'))) {
+            await getFromIPFS(majorHash, projLeader) // Fetch bare repo
+            await cloneBare(projName); // Clone the bare repo
             main(projLeader,projName,branchName,majorHash,res)
         } else {
             main(projLeader,projName,branchName,majorHash,res)
@@ -35,7 +37,7 @@ router.post('/addBranch', async (req,res) => {
     }
 })
 
-async function main(projLeader, projName, branchName, majorHash, res){
+async function main(projName, branchName, majorHash, res){
     try {
     // Git work:
     await git.branch({
@@ -44,7 +46,7 @@ async function main(projLeader, projName, branchName, majorHash, res){
     })
     var oldmajorHash = majorHash;
     // Store new state of git repo:
-    majorHash = await addToIPFS(projLeader,projName);
+    majorHash = await addToIPFS(projName+'.git');
     // Prevent cluttering IPFS repo by unpinning old states of repo:
     await removeFromIPFS(oldmajorHash, projLeader, projName);
     console.log("Updated MajorHash (git branch newbranch): ",majorHash);

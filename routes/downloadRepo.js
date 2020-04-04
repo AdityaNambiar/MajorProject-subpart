@@ -1,6 +1,7 @@
 /**
- * Download the repository (the one with working directory - the normal one) as a .ZIP 
- * (Because on GitHub - they give a URL. Talk with Raj about this 'zip' idea for downloading repo)
+ * Download the repository (the one with working directory - the normal one)
+ * https://localhost:5000/projName.git <- URL. 
+ * res.status(200).send(url).
  */
 // Misc:
 const addToIPFS = require('../utilities/addToIPFS');

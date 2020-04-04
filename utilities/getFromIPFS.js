@@ -19,12 +19,12 @@ module.exports = function getFromIPFS(majorHash, projName){
                 if (err) throw new Error("ipfs.get err: \n", err);
                 var leader_dirpathhash = results[0].path
                 await exec(`ipfs get ${leader_dirpathhash} -o ${projName+'.git'}`, {
-                    cwd: path.resolve(__dirname,'..'),
+                    cwd: path.resolve(__dirname,'..','projects'),
                     shell: true,
                 }, (err,stderr, stdout) => {
-                    if (err) console.log(err);
-                    if (stderr) console.log(stderr);
-                    console.log(stdout);
+                    if (err) console.log('ipfs get cli err: ',err);
+                    if (stderr) console.log('ipfs get cli stderr: ',stderr);
+                    console.log('IPFS get: ', stdout);
                 });
                 resolve(true);
             });

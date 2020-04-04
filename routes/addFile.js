@@ -1,8 +1,9 @@
 /**
  * Add files to git repository.
+ * combine with commitFile (Direct commit) 
 */
 
-// Misc:
+// Misc:    
 const addToIPFS = require('../utilities/addToIPFS');
 const getFromIPFS = require('../utilities/getFromIPFS');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
@@ -42,7 +43,7 @@ router.post('/addFile', async (req,res) => {
 async function main(projName, majorHash, res, buffer, filename) {
     // Git work:
     await writeFile(projName,filename,buffer) // create and update the changes on the file.
-    .then(()=>{
+    .then( async ()=>{
         try {
             await git.add({
                 dir:  path.join(__dirname, '..', 'projects', projName),
@@ -53,7 +54,7 @@ async function main(projName, majorHash, res, buffer, filename) {
             res.status(400).send(e);
         }
     })
-    .then(()=>{
+    .then( async ()=>{
         var oldmajorHash = majorHash;
         // Store new state of git repo:
         majorHash = await addToIPFS(projName+'.git');

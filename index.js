@@ -14,6 +14,7 @@ const addFile = require('./routes/addFile');
 const getFiles = require('./routes/getFiles');
 const commitFile = require('./routes/commitFile');
 const diffFiles = require('./routes/diffFiles');
+const readForBuffer = require('./routes/readForBuffer');
 
 const addBranch = require('./routes/addBranch');
 const getBranches = require('./routes/getBranches');
@@ -37,6 +38,7 @@ app.post('/addFile', addFile);
 app.post('/getFiles',getFiles);
 app.post('/commitFile',commitFile);
 app.post('/diffFiles', diffFiles);
+app.post('/readForBuffer',readForBuffer);
 
 app.post('/addBranch', addBranch);
 app.post('/getBranches', getBranches);

@@ -8,8 +8,9 @@ projLeader/projName directory structure for all routes has to be REPLACED with p
 
 3. (Need to confirm) Add a addRemote, deleteRemote, listRemotes API 
 
-4. For getFiles, you'll get a branchName. So you need to first checkout to that branch and then do getFiles.
-    -- i.e. add checkoutBranch logic to getFiles.
+4. For getFiles, you'll get a branchName. So you need to first perform `git branch --set-upstream-to=master`
+                                                     second, checkout to that branch 
+                                                     third, do getFiles.
 
 6. diff between two commit hashes (previous to the current hash and current hash) route
     - new route (diffFiles.js) 

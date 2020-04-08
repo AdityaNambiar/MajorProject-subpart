@@ -20,6 +20,8 @@
     "hypernal": "^0.3.0",
     "ipfs": "^0.41.2",
     "ipfs-http-client": "^38.0.0",
-    "isomorphic-git": "^0.78.5"
+    "isomorphic-git": "^0.78.5",
+    "node-git-server": "^0.6.1",
+    "simple-get": "^3.1.0"
   }
 }

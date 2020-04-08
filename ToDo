@@ -8,41 +8,84 @@ projLeader/projName directory structure for all routes has to be REPLACED with p
 
 3. (Need to confirm) Add a addRemote, deleteRemote, listRemotes API 
 
-4. Try JSON.stringify for a string which has a code snippet. 
-
-5. git init - direct bare. 
-    add file:
-        1. IPFS fetch bare repo -> git clone first (to get local repo on server)
-        ( What to check for when modifying initial checks incase of an operation like addFile?:
-            1. Check whether the bare repo exists or not.
-                - if not, fetch it from IPFS. 
-                - then clone the repo (can also overwrite.. its ok)
-            2. check if normal repo exists or not.
-                - if not, clone from the bare repo (write this clone seperate as a utility function - for reusability)
-        )
-        2. Perform action (addFile route logic)
-        3. (auto) Commit changes to local server repo
-        4. Use cloneBare to overwrite bare repo on server 
-        5. Add the bare repo to IPFS.
-
+4. For getFiles, you'll get a branchName. So you need to first checkout to that branch and then do getFiles.
+    -- i.e. add checkoutBranch logic to getFiles.
 
 6. diff between two commit hashes (previous to the current hash and current hash) route
     - new route (diffFiles.js) 
 
-7. read file and send buffer (seperate route) (done)
-
 8. Features remaining:
-    - Branch Commit history (git log) (use isomorphic's git.log) (save or pass the parent commit hash of current hash)
+    - (85% done)Branch Commit history (git log) (use isomorphic's git.log) (save or pass the parent commit hash of current hash)
     - File Commit history (git log --oneline -p file_name) (use exec) (https://stackoverflow.com/questions/1786027/how-to-view-file-history-in-git)
     - diffFiles (Relevant ToDo - 6) (https://stackoverflow.com/questions/424071/how-to-list-all-the-files-in-a-commit - for showing the list of files in a commit) 
-    - readForBuffer (Just a single fs.readFile) *COMPLETE THIS FIRST AND BE DONE WITH THIS*
+    - (DONE): readForBuffer (Just a single fs.readFile) 
     - downloadRepo (check the comment written in route) **LOW PRIORITY**
     - pushToBare (a route that auth layer can call for enabling push to the bare repo)
-    
-    
-    
-    
-    
-    
-    (SCRAP):
-    - issues (Relevant ToDo - 4, issues-datastructure.json)
+    - (SCRAPPED): issues (Relevant ToDo - 4, issues-datastructure.json)
+
+
+
+After devOnCLI pushed changes and devOnRemote is working on the repository,
+    [System checks] If pushed change is not conflicting,
+        git commit to create a new commit.
+    [System checks] If pushed change is a conflicting one (i.e. the latest (pushed) commit has updated the same file which was being edited remotely),
+        [ System allows user to look at the diff patch of what changed ] [ System is currently in merge state - after pulling ]
+        If user is okay with proceeding with commit, 
+            System allows user to proceed with completing this merge by: `git checkout --ours .` && git commit -m "commit msg"
+                    { Remember this will not erase 'theirs' changes because unka change already committed hai }
+                    { Thus a new merge commit - but with user provided commit msg is created }
+
+
+- Final pointers:
+ - System will allow creation of projects by anyone. 
+ - Folder structure will made as:
+    projects/
+        projectName1.git (if it not exists, bring from IPFS)
+        projectName1/ (if it not exists, clone it out from bare)
+            username1/  (created for each route - because it is removed for each route) ( this contains the work dir )
+            username2/ 
+        projectName2/
+            username1/
+ - (Utility - cleanUp(username)) Delete username folder under projectName folder whenever user's actions are completed (when route is about to end)
+ - Operations:
+        a. setup the directory structure.
+        b. perform git operations.
+        c. after commit, run Checker.
+            if (Checker does not show conflicts):
+                push changes to project's bare folder. (pass the filename_arr as well - here it will be empty)
+            if (Checker throws err):
+                take the filename_arr and buffer of those files and pass it.
+        d. Remove username folder (utility as mentioned above) 
+ - When user wants to merge, 
+    a. execute mergeFiles route. 
+        -- if conflicts arise (filename_arr is not empty). { run Checker }
+            Do not delete this user's folder.
+            Pass the filename_arr and all the buffers of the respective files.
+            if user wants to perform other operations (means while he is in merge state): (add a check at each route to know whether same user ka folder exists or not)
+                if it exists, throw err: "<git ka error>"
+        -- if no conflicts exist,
+                directly push to bare.
+ - pushChecker:
+    - Check between bare repo status and username work dir status
+    - Utility.
+        - `git pull barerepo master`
+        - if conflicts arise, { do the same that you did for mergeFiles route when conflicts arise }.
+        - if conflicts dont arise, pull will be successful.
+
+ - statusChecker:
+    - `git fetch`
+    - `git status`
+        - Extract the line the "This branch is ahead / behind n commits ...."
+
+ - (Merge Conflict page):
+    if user wants to work on CLI (Show URL / Download Repo),
+        downloadRepo route:
+            zip the work dir of user.
+            send the zip.
+            Remove user's work dir.
+
+
+
+
+
+This branch is ahead / front - check how to do this programmatically. (how to check difference b/w bare & work dir)

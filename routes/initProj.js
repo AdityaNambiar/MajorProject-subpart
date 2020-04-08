@@ -1,6 +1,8 @@
 /**
  * Make project with their project name.
- * Initialize a git repository 
+ * Initialize a git repository with master
+ * 
+ * 
  */
 
 // Misc:
@@ -73,6 +75,7 @@ async function main(projName, majorHash, res, buffer, filename, usermsg, authorn
             })
             .catch((e) => {
                 console.log('main catch err: ',e);
+
             })
         })
 }
@@ -98,8 +101,8 @@ async function clone(projName) {
                 cwd: path.resolve('projects'),
                 shell: true
             }, (err, stdout, stderr) => {
-                if (err) { console.log('init clone cli err: ',err); reject(err); }
-                if (stderr) { console.log('init clone cli stderr: ',stderr); reject(stderr); }
+                if (err) { console.log('init clone cli err: ',err); }
+                if (stderr) { console.log('init clone cli stderr: ',stderr);}
                 resolve(true)
             })
         } catch(e) {

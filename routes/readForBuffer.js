@@ -20,30 +20,26 @@ router.post('/readForBuffer', async (req, res) => {
     const projName = 'app' || req.body.projName;
     let buffer;
     const majorHash = "QmX4nZGMdwhDCz4NvLrcaVUWJAFL4YzoRS98unY9xx8cLs"; // hard-coded
-    try {
-        if (!fs.existsSync(__dirname,'..','projects',projName+'.git')){
+        if (!fs.existsSync(path.resolve(__dirname,'..','projects',projName+'.git'))){
+            console.log("does not exist");
             await getFromIPFS(majorHash, projName)
             .then( async () => {
-                await cloneBare(projName);
-            })
-            .then( async () => {
+                console.log("going for main action ...");
                 buffer = await main(projName, filename);
             })
-            .catch( (e) => {
-                console.log('err while fetching / cloning repo: ', e);
+            .then( () => {
+                console.log('buffer: ', String(buffer));
+                res.status(200).send({projName: projName, buffer: buffer, filename: filename});
+            })
+            .catch( (e) => {    
                 res.status(400).send(e);
             })
         }
-        console.log('buffer: ', String(buffer));
-        res.status(200).send({projName: projName, buffer: buffer, filename: filename});
-    } catch(e){
-        console.log('readFile main err: ', e);
-        res.status(400).send(e);
-    }
 })
 
 async function main(projName, filename) {
     return new Promise( async (resolve, reject) =>{
+            console.log(path.resolve('projects',projName, filename));
             fs.readFile(path.resolve('projects',projName, filename),(err, data) => {
                 if (err) {
                     console.log('fs readfile err: ', err);

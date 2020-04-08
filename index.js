@@ -5,23 +5,34 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const port = process.env.PORT || 5000;
 
+const path = require('path');
+const Server = require('node-git-server');
+
+// utility import:
+const pushToRepo = require('./utilities/pushToRepo');
+
+
 // route imports:
 const initProj = require('./routes/initProj');
 const gitGraph = require('./routes/gitGraph');
 const downloadRepo = require('./routes/downloadRepo');
 
-const addFile = require('./routes/addFile');
 const getFiles = require('./routes/getFiles');
 const commitFile = require('./routes/commitFile');
 const diffFiles = require('./routes/diffFiles');
+const mergeFiles = require('./routes/mergeFiles');
+const fileCommitHistory = require('./routes/fileCommitHistory');
 const readForBuffer = require('./routes/readForBuffer');
 
 const addBranch = require('./routes/addBranch');
 const getBranches = require('./routes/getBranches');
 const deleteBranch = require('./routes/deleteBranch');
-const checkoutBranch = require('./routes/checkoutBranch');
+const branchCommitHistory = require('./routes/branchCommitHistory');
 
-const mergeFiles = require('./routes/mergeFiles');
+const pushChecker = require('./routes/pushChecker');
+const statusChecker = require('./routes/statusChecker');
+
+
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -34,18 +45,25 @@ app.post('/initProj', initProj);
 app.post('/gitGraph', gitGraph); 
 app.post('/downloadRepo', downloadRepo);
 
-app.post('/addFile', addFile);
 app.post('/getFiles',getFiles);
 app.post('/commitFile',commitFile);
 app.post('/diffFiles', diffFiles);
+app.post('/mergeFiles', mergeFiles); 
+app.post('/fileCommitHistory', fileCommitHistory);
 app.post('/readForBuffer',readForBuffer);
 
 app.post('/addBranch', addBranch);
 app.post('/getBranches', getBranches);
 app.post('/deleteBranch', deleteBranch);
-app.post('/checkoutBranch', checkoutBranch);
+app.post('/branchCommitHistory', branchCommitHistory);
 
-app.post('/mergeFiles', mergeFiles); 
+app.post('/pushChecker', pushChecker);
+app.post('/statusChecker', statusChecker);
+
+const repos = new Server(path.resolve(__dirname), {
+    autoCreate: true
+});
+const port2 = process.env.PORT || 7005;
 /**
  * Git merge procedure:
  * 1. Get the leader's folder (just to get the git repo inside it) from IPFS
@@ -57,9 +75,26 @@ app.post('/mergeFiles', mergeFiles);
  * 4. Now the user has to be told to resolve the conflicts and Click on 'Save' and 'Apply' to 'git add file' and 'git commit file' respectively. (direct the routes of these buttons to the git API of addFile, without check and with check for commit) 
  */
 
+repos.on('push', (push) => {
+    console.log('push object: ',push)
+    console.log(`push ${push.repo}/${push.commit} (${push.branch})`);
+    push.accept();
+});
+
+repos.on('fetch', (fetch) => {
+    console.log('fetch object: ', fetch);
+    fetch.accept();
+})
+
+repos.listen(port2, () => {
+    console.log(`node-git-server running at http://localhost:${port2}`)
+});
+
 app.listen(port,()=>{
     console.log("Started NodeJS server on "+port);
 })
+
+
 
 
 

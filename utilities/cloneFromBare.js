@@ -1,6 +1,6 @@
 /**
  * UTILITY
- * For cloning the bare git repo after fetching from IPFS.
+ * For cloning the working dir repo after fetching bare from IPFS.
  */
 
 // Terminal execution import
@@ -8,11 +8,11 @@ const { exec } = require('child_process');
 
 const path = require('path');
 
-module.exports = async function clone(projName) {
+module.exports = async function clone(projName, username) {
     return new Promise( async (resolve, reject) => {
         try {
-            await exec(`git clone --bare ${projName} ${projName+'.git'}`,{
-                cwd: path.resolve('projects'),
+            await exec(`git clone ${projName+'.git'} ${username}`,{
+                cwd: path.resolve('projects',''),
                 shell: true
             }, (err, stdout, stderr) => {
                 if (err) { console.log('clone cli err: ',err); reject(err) }

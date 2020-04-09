@@ -8,7 +8,6 @@
 const addToIPFS = require('../utilities/addToIPFS');
 const getFromIPFS = require('../utilities/getFromIPFS');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
-const cloneBare = require('../utilities/cloneBare');
 
 
 // isomorphic-git related imports and setup

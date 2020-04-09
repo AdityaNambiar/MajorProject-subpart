@@ -20,7 +20,8 @@ let projectspath, workdirpath, barerepopath, projNamepath;
 module.exports = async function preRouteChecks(majorHash, projName, username){
     
     projectspath = path.resolve(__dirname, '..', 'projects');
-    barerepopath = path.resolve(__dirname, '..', 'projects', projName+'.git'); 
+    barepath = path.resolve(__dirname, '..', 'projects', 'bare');
+    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     projNamepath = path.resolve(__dirname, '..', 'projects', projName);
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 

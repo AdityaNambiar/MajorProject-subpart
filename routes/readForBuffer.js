@@ -7,7 +7,6 @@
  */
 
 const getFromIPFS = require('../utilities/getFromIPFS');
-const cloneBare = require('../utilities/cloneBare');
 
 const path = require('path');
 const fs = require('fs');

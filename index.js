@@ -9,7 +9,7 @@ const path = require('path');
 const Server = require('node-git-server');
 
 // utility import:
-const pushToRepo = require('./utilities/pushToRepo');
+const pushToBare = require('./utilities/pushToBare');
 
 
 // route imports:
@@ -80,11 +80,6 @@ repos.on('push', (push) => {
     console.log(`push ${push.repo}/${push.commit} (${push.branch})`);
     push.accept();
 });
-
-repos.on('fetch', (fetch) => {
-    console.log('fetch object: ', fetch);
-    fetch.accept();
-})
 
 repos.listen(port2, () => {
     console.log(`node-git-server running at http://localhost:${port2}`)

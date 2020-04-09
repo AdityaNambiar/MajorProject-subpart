@@ -90,3 +90,74 @@ After devOnCLI pushed changes and devOnRemote is working on the repository,
 
 
 This branch is ahead / front - check how to do this programmatically. (how to check difference b/w bare & work dir)
+
+
+
+
+
+
+
+
+
+
+
+
+
+MAIN CALLER:
+    projName = req.body.projName;  
+    majorHash = '';
+
+    // Git work:
+    authoremail = 'adi@g.c';
+    authorname = 'Aditya';
+    buffer = req.body.filebuff || README.md;
+    filename = req.body.filename || "README.md";
+    usermsg = req.body.usermsg || "Initial Commit";
+    username = req.body.username || 'AdityaN';
+    branchToUpdate = 'master';
+
+    projectspath = path.resolve(__dirname, '..', 'projects');
+    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
+    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+
+    let resOP;
+    try {
+        if (!fs.existsSync(projectspath)){
+            resOP = await main(projName, workdirpath, barerepopath, username,
+                        majorHash, buffer, filename, 
+                       usermsg, authorname, authoremail, branchToUpdate)
+            .then( () => {
+                res.status(200).send(resOP)
+            })
+        }
+    } catch (err) {
+        res.status(400).send("git init main err: "+err);
+    }
+
+MAIN FUNCTION:
+
+async function main(projName, workdirpath, barerepopath, username, majorHash, buffer, filename, usermsg, authorname, authoremail, branchToUpdate) { 
+    return new Promise ( async (resolve, reject) => {
+        gitInit(workdirpath)
+        .then( async () => {
+            await writeFile(projName, username, filename, buffer);
+        })
+        .then( async () => {
+            await autoCommit(workdirpath,filename, usermsg, authorname, authoremail);
+        })
+        .then( async () => {
+            await gitInitBare(projName, username)
+        })
+        .then( async () => {
+            await pushToBare(projName, branchToUpdate);
+        })
+        .then( async () => {
+            majorHash = await addToIPFS(barerepopath);
+            console.log("MajorHash (git init): ", majorHash);
+            resolve({projName: projName, majorHash: majorHash});
+        })
+        .catch((e) => {
+            reject(`main err: ${e}`);
+        })
+    })
+}

@@ -7,11 +7,13 @@
 
 const path = require('path');
 
+const { exec } = require('child_process');
+
 let workdirpath, barerepopath;
 
 module.exports = function pushToBare(projName, branchName) {
 
-    barerepopath = path.resolve(__dirname, '..', 'projects', projName+'.git'); 
+    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname,'..','projects',projName);
 
     return new Promise( async (resolve, reject) => {

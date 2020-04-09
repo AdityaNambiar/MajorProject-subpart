@@ -4,7 +4,6 @@
 // Misc:
 const addToIPFS = require('../utilities/addToIPFS');
 const getFromIPFS = require('../utilities/getFromIPFS');
-const cloneBare = require('../utilities/cloneBare');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
 
 // isomorphic-git related imports and setup
@@ -16,17 +15,22 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
+var workdirpath, barerepopath, projectspath, majorHash, 
+    authoremail, authorname, buffer, username,
+    filename, usermsg, branchToUpdate;
+
 
 router.post('/addBranch', async (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = req.body.projName;
-    var branchName = req.body.name;
-    var majorHash = 'QmWkL3LV3JHJVv4g83TQzeGKpP35cstD241VccNvqn6vA7'; // hard coded
+    projName = req.body.projName;
+    branchName = req.body.name;
+    majorHash = 'QmNPHq5eQaZvB3pDjxLy2r5se9m17bFw2omtmuwYNnAmqq'; // hard coded
     // IPFS work:
     try{
         if (!fs.existsSync(path.resolve(__dirname,'..','projects',projName+'.git'))) {
             await getFromIPFS(majorHash, projLeader) // Fetch bare repo
             await cloneBare(projName); // Clone the bare repo
+            
+            
             main(projLeader,projName,branchName,majorHash,res)
         } else {
             main(projLeader,projName,branchName,majorHash,res)

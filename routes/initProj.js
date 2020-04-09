@@ -26,51 +26,50 @@ let projName = 'app'
 let projDesc = 'HCLApp is a new web app for BE students.'
 let README = `PROJECT NAME: ${projName} \n PROJECT DESCRIPTION: ${projDesc} \n`
 
-var workdirpath, barerepopath, majorHash, authoremail, 
-    authorname, buffer, filename, 
-    usermsg, branchToUpdate;
+var workdirpath, barerepopath, projectspath, majorHash, 
+    authoremail, authorname, buffer, username,
+    filename, usermsg, branchToUpdate;
 
 router.post('/initProj', async (req,res) => {
-    projName = req.body.projName;  
-    majorHash = 'QmX4nZGMdwhDCz4NvLrcaVUWJAFL4YzoRS98unY9xx8cLs'; // MOST RECENT IPFS HASH - DO NOT REMOVE
-
+    projName = req.body.projName.replace(/\s/g,'-'); 
+    majorHash = '';
     // Git work:
     authoremail = 'adi@g.c';
     authorname = 'Aditya';
     buffer = req.body.filebuff || README.md;
     filename = req.body.filename || "README.md";
     usermsg = req.body.usermsg || "Initial Commit";
+    username = req.body.username.replace(/\s/g,'-') || 'AdityaN';
     branchToUpdate = 'master';
 
-    barerepopath = path.resolve(__dirname, '..', 'projects', projName+'.git'); 
+    projectspath = path.resolve(__dirname, '..', 'projects');
+    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
     try {
-        await main(projName, workdirpath, barerepopath, majorHash, buffer, filename, usermsg, authorname, authoremail, branchToUpdate)
-        .then( () => {
-            res.status(200).send({projName: projName, majorHash: majorHash})
-        })
+        await main(res, projName, workdirpath, barerepopath, username, majorHash, buffer, filename, 
+                    usermsg, authorname, authoremail, branchToUpdate)
     } catch (err) {
         res.status(400).send("git init main err: "+err);
     }
 })
 
-async function main(projName, workdirpath, barerepopath, majorHash, buffer, filename, usermsg, authorname, authoremail, branchToUpdate) { 
+async function main(res, projName, workdirpath, barerepopath, username, majorHash, buffer, filename, usermsg, authorname, authoremail) { 
     return new Promise ( async (resolve, reject) => {
-        await gitInit(workdirpath)
+        gitInit(workdirpath)
         .then( async () => {
-            await writeFile(projName,filename, buffer);
+            await writeFile(projName, username, filename, buffer);
         })
         .then( async () => {
             await autoCommit(workdirpath,filename, usermsg, authorname, authoremail);
         })
         .then( async () => {
-            await pushToBare(projName, branchToUpdate);
+            await gitInitBare(projName, username)
         })
         .then( async () => {
             majorHash = await addToIPFS(barerepopath);
             console.log("MajorHash (git init): ", majorHash);
-            resolve({projName: projName, majorHash: majorHash});
+            res.status(200).send({projName: projName, majorHash: majorHash});
         })
         .catch((e) => {
             reject(`main err: ${e}`);
@@ -86,6 +85,22 @@ async function gitInit(workdirpath) {
                 dir: workdirpath
             });
             resolve(true)
+        } catch(e) {
+            reject(`git-init err: ${e}`);
+        }
+    })
+}
+async function gitInitBare(projName, username) {
+    return new Promise( async (resolve, reject) => {
+        try {
+            await exec(`git clone --bare ${projName}/${username} bare/${projName+'.git'}`, {
+                cwd: projectspath,
+                shell: true
+            }, (err, stdout, stderr) => {
+                if (err) reject(`git-bare-clone err: ${err}`);
+                if (stderr) //reject(`git-bare-clone stderr: ${stderr}`);
+                resolve(true);
+            })
         } catch(e) {
             reject(`git-init err: ${e}`);
         }
@@ -116,9 +131,9 @@ async function autoCommit(workdirpath, filename, usermsg, authorname, authoremai
     })
 }
 
-async function writeFile(projName, filename, buffer) {
+async function writeFile(projName, username, filename, buffer) {
     return new Promise( async (resolve, reject) => {
-        fs.writeFile(path.resolve('projects', projName, filename), Buffer.from(buffer), (err) => {
+        fs.writeFile(path.resolve(__dirname, '..','projects', projName, username, filename), Buffer.from(buffer), (err) => {
             if (err) reject(` fs write err: ${err} `);
             resolve(true);
         })

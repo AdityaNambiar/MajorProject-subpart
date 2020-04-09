@@ -7,6 +7,7 @@
 
 // Misc:
 const addToIPFS = require('../utilities/addToIPFS');
+const preRouteChecks = require('../utilities/preRouteChecks');
 
 // Terminal execution:
 const { exec } = require('child_process');

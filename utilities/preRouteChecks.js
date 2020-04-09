@@ -15,10 +15,11 @@ const cloneFromBare = require('../utilities/cloneFromBare');
 
 const path = require('path');
 
-let projectspath = path.resolve(__dirname, '..', 'projects');
-let workdirpath, barerepopath, projNamepath;
-module.exports = async function preRouteChecks(majorHash, projName, username){
+let projectspath, workdirpath, barerepopath, projNamepath;
 
+module.exports = async function preRouteChecks(majorHash, projName, username){
+    
+    projectspath = path.resolve(__dirname, '..', 'projects');
     barerepopath = path.resolve(__dirname, '..', 'projects', projName+'.git'); 
     projNamepath = path.resolve(__dirname, '..', 'projects', projName);
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);

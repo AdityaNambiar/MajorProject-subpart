@@ -16,7 +16,7 @@ projLeader/projName directory structure for all routes has to be REPLACED with p
     - new route (diffFiles.js) 
 
 8. Features remaining:
-    - (85% done)Branch Commit history (git log) (use isomorphic's git.log) (save or pass the parent commit hash of current hash)
+    - (85% done) Branch Commit history (git log) (use isomorphic's git.log) (save or pass the parent commit hash of current hash)
     - File Commit history (git log --oneline -p file_name) (use exec) (https://stackoverflow.com/questions/1786027/how-to-view-file-history-in-git)
     - diffFiles (Relevant ToDo - 6) (https://stackoverflow.com/questions/424071/how-to-list-all-the-files-in-a-commit - for showing the list of files in a commit) 
     - (DONE): readForBuffer (Just a single fs.readFile) 

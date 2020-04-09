@@ -15,14 +15,13 @@ const ipfsClient = require('ipfs-http-client');
 const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'});
 
 
-let barerepopath = path.resolve(__dirname, '..', 'projects');
-
 module.exports = function getFromIPFS(majorHash, projName){
 
     return new Promise( async (resolve, reject) => {
         try {
             await ipfs.get(majorHash, async (err, results) => {
                 if (err) throw new Error("ipfs.get err: \n", err);
+                console.log(results);
                 var leader_dirpathhash = results[0].path
 
                 await exec(`ipfs get ${leader_dirpathhash} -o ${projName+'.git'}`, {

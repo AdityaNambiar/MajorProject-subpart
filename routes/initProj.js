@@ -47,14 +47,18 @@ router.post('/initProj', async (req,res) => {
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
     try {
-        await main(res, projName, workdirpath, barerepopath, username, majorHash, buffer, filename, 
+        await main(projName, workdirpath, barerepopath, username, majorHash, buffer, filename, 
                     usermsg, authorname, authoremail, branchToUpdate)
+                    .then( (response) => 
+                    {
+                        res.status(200).send(response);
+                    })
     } catch (err) {
         res.status(400).send("git init main err: "+err);
     }
 })
 
-async function main(res, projName, workdirpath, barerepopath, username, majorHash, buffer, filename, usermsg, authorname, authoremail) { 
+async function main(projName, workdirpath, barerepopath, username, majorHash, buffer, filename, usermsg, authorname, authoremail) { 
     return new Promise ( async (resolve, reject) => {
         gitInit(workdirpath)
         .then( async () => {
@@ -69,7 +73,7 @@ async function main(res, projName, workdirpath, barerepopath, username, majorHas
         .then( async () => {
             majorHash = await addToIPFS(barerepopath);
             console.log("MajorHash (git init): ", majorHash);
-            res.status(200).send({projName: projName, majorHash: majorHash});
+            resolve({projName: projName, majorHash: majorHash});
         })
         .catch((e) => {
             reject(`main err: ${e}`);

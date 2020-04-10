@@ -122,8 +122,7 @@ MAIN CALLER:
 
     let resOP;
     try {
-        if (!fs.existsSync(projectspath)){
-            resOP = await main(projName, workdirpath, barerepopath, username,
+        await main(projName, workdirpath, barerepopath, username,
                         majorHash, buffer, filename, 
                        usermsg, authorname, authoremail, branchToUpdate)
             .then( () => {

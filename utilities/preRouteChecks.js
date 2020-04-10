@@ -27,14 +27,17 @@ module.exports = async function preRouteChecks(majorHash, projName, username){
 
     return new Promise( async (resolve, reject) => {
         projPathCheck(projectspath)
+        .then ( () => {
+            barePathCheck(barepath);
+        })
         .then( () => {
-            bareRepoPathCheck(barerepopath,majorHash,projName);
+            bareRepoPathCheck(barerepopath, majorHash, projName);
         })
         .then( () => {
             projNamePathCheck(projNamepath);
         })
         .then ( () => {
-            workdirPathCheck(workdirpath,projName, username);
+            workdirPathCheck(workdirpath, projName, username);
         })
         .then ( () => {
             resolve(true);
@@ -58,6 +61,22 @@ async function projPathCheck(projectspath){
         resolve(true); // means projects/ exist.
     })
 }
+
+
+async function barePathCheck(barepath){
+    return new Promise( (resolve, reject) => {
+        if (!fs.existsSync(barepath)){
+            fs.mkdir(barepath, (err) => {
+                if (err) {
+                    reject(`projPathCheck err: ${err}`);
+                }
+                resolve(true);
+            })
+        }
+        resolve(true); // means projects/bare exist.
+    })
+}
+
 
 async function bareRepoPathCheck(barerepopath, majorHash, projName) {
     return new Promise( async (resolve, reject) => {

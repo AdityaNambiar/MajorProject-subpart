@@ -4,8 +4,10 @@
 
 // Misc:
 const addToIPFS = require('../utilities/addToIPFS');
-const getFromIPFS = require('../utilities/getFromIPFS');
+const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
+const pushToBare = require('../utilities/pushToBare');
+const rmWorkdir = require('../utilities/rmWorkdir');
 
 // isomorphic-git related imports and setup
 const fs = require('fs');
@@ -18,25 +20,30 @@ const router = express.Router();
 
 
 var projName, authorname, authoremail, 
-    curr_majorHash, username;
+    usermsg, curr_majorHash, username,
+    filename, buffer;
 // vars used as global:
-var branchToUpdate, files, upstream_branch, barerepopath;
+var branchToUpdate, barerepopath;
 
 router.post('/commitFile', async (req,res) => {
     projName = req.body.projName;
     authorname = 'Aditya';
     authoremail = 'adi@g.c';
-    var i = 0;
-    usermsg = req.body.comm_msg || `My Commit ${i++}`;
+    usermsg = req.body.comm_msg || `My Commit #${Math.random()}`;
     curr_majorHash = req.body.majorHash; // latest
+    branchToUpdate = req.body.branchToUpdate;
+    username = req.body.username;
+    filename = req.body.filename;
+    buffer = req.body.filebuff;
+
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
     try{
-        await preRouteChecks(curr_majorHash, projName, username)
+        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => {
-            let response = await main(projName, workdirpath, branchName, curr_majorHash)
+            let response = await main(projName, workdirpath, curr_majorHash, authorname, authoremail, usermsg)
             return response;
         })
         .then ( (response) => {
@@ -46,30 +53,69 @@ router.post('/commitFile', async (req,res) => {
         res.status(400).send(`main caller err: ${e}`);
     }
 })
-async function main(projLeader, projName, majorHash, res, authorname, authoremail, usermsg) {
-    // Git work:
-    try {
-        let sha = await git.commit({
-            fs,
-            dir:  path.resolve(__dirname,'..',projName),
-            message: usermsg,
-            author: {
-                name: authorname,
-                email: authoremail
-            }
+async function main(projName, workdirpath, curr_majorHash, authorname, authoremail, usermsg) {
+    return new Promise ( async (resolve, reject) => {
+        await writeFile(projName, username, filename, buffer)
+        .then( async () => {
+            await autoCommit(workdirpath,filename, usermsg, authorname, authoremail);
         })
-        console.log("commit hash: \n",sha);
-        
-        var oldmajorHash = majorHash;
-        // Store new state of git repo:
-        majorHash = await addToIPFS(projLeader,projName);
-        // Prevent cluttering IPFS repo by unpinning (and garbage-collect) old states of repo:
-        await removeFromIPFS(oldmajorHash, projLeader, projName);
-        console.log("Updated MajorHash (git commit): ",majorHash);
-        res.status(200).send({projName: projName, majorHash: majorHash});
-    }catch(e){
-        console.log("commitFile git ERR: ",e);
-        res.status(400).send(e);
-    }
+        .then( async () => {
+            console.log(`Pushing to branch: ${branchToUpdate}`);
+            await pushToBare(projName, branchToUpdate, username);
+        })
+        .then( async () => {
+            await rmWorkdir(projName, username);
+        })
+        .then( async () => {
+            // Remove old state from IPFS.
+            await removeFromIPFS(curr_majorHash, projName);
+        })
+        .then( async () => {
+            // Add new state to IPFS.
+            let majorHash = await addToIPFS(barerepopath);
+            return majorHash;
+        })
+        .then( (majorHash) => {
+            console.log("MajorHash (git commitFile): ", majorHash);
+            resolve({projName: projName, majorHash: majorHash});
+        })
+        .catch((e) => {
+            reject(`main err: ${e}`);
+        })
+    })
+}
+
+
+async function autoCommit(workdirpath, filename, usermsg, authorname, authoremail){
+    return new Promise( async (resolve, reject) => {
+        try {
+            await git.add({
+                dir:  workdirpath,
+                filepath: filename
+            })
+            let sha = await git.commit({
+                    fs,
+                    dir:  workdirpath,
+                    message: usermsg,
+                    author: {
+                        name: authorname,
+                        email: authoremail
+                    }
+                })
+            console.log("commit hash: \n",sha);
+            resolve(true);
+        } catch(e) {
+            reject(`git-init-commit err: ${e}`);
+        }
+    })
+}
+
+async function writeFile(projName, username, filename, buffer) {
+    return new Promise( async (resolve, reject) => {
+        fs.writeFile(path.resolve(__dirname, '..','projects', projName, username, filename), Buffer.from(buffer), (err) => {
+            if (err) reject(` fs write err: ${err} `);
+            resolve(true);
+        })
+    })
 }
 module.exports = router;

@@ -18,7 +18,7 @@ const fs = require('fs');
 
 let projectspath, workdirpath, barerepopath, projNamepath;
 
-module.exports = async function preRouteChecks(majorHash, projName, username){
+module.exports = async function preRouteChecks(majorHash, projName, username, branchToUpdate){
     
     projectspath = path.resolve(__dirname, '..', 'projects');
     barepath = path.resolve(__dirname, '..', 'projects', 'bare');
@@ -38,7 +38,7 @@ module.exports = async function preRouteChecks(majorHash, projName, username){
             await projNamePathCheck(projNamepath);
         })
         .then ( async () => {
-            await workdirPathCheck(workdirpath, projName, username);
+            await workdirPathCheck(workdirpath, projName, username, branchToUpdate);
         })
         .then ( () => {
             resolve(true);
@@ -107,11 +107,11 @@ async function projNamePathCheck(projNamepath){
     })
 }
 
-async function workdirPathCheck(workdirpath, projName, username) {
+async function workdirPathCheck(workdirpath, projName, username, branchToUpdate) {
     return new Promise( async (resolve, reject) => {
         if (!fs.existsSync(workdirpath)) {
             try {
-                await cloneFromBare(projName,username);
+                await cloneFromBare(projName,username, branchToUpdate);
                 resolve(true);      
             } catch(err) {
                 reject(`workdirPathCheck err: ${err}`);

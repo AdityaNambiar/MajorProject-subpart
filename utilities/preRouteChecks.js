@@ -14,6 +14,7 @@ const getFromIPFS = require('../utilities/getFromIPFS');
 const cloneFromBare = require('../utilities/cloneFromBare');
 
 const path = require('path');
+const fs = require('fs');
 
 let projectspath, workdirpath, barerepopath, projNamepath;
 
@@ -116,6 +117,6 @@ async function workdirPathCheck(workdirpath, projName, username) {
                 reject(`workdirPathCheck err: ${err}`);
             }
         }
-        resolve(true); // means projects/projName/<workdir> exists
+        resolve(true); // means projects/projName/username/<workdir> exists
     })
 }

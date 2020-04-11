@@ -1,5 +1,6 @@
 /**
  *  - Check between bare repo status and username work dir status
+ *  - Called when the Merge Conflict page is loaded. (componentDidMount)
  *  - Utility.
  *      - `git pull barerepo master`
  *      - if conflicts arise, { do the same that you did for mergeFiles route when conflicts arise }.

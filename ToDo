@@ -1,12 +1,11 @@
 
-** Top priority **
-projLeader/projName directory structure for all routes has to be REPLACED with projName/ only.
-
 1. projName and majorHash in an object to be returned back to blockchain.
 
-2. (Inform Gopi) authorname = participantCard's Identifier (i.e. get name) and authoremail => Both should be kept in world state.
-
-3. (Need to confirm) Add a addRemote, deleteRemote, listRemotes API 
+2. (Inform Gopi) 
+    authorname = participantCard's Identifier (i.e. get name) and 
+    authoremail and
+    branchName (i.e. on which branch the user is currently performing the route actions)
+    => should be kept in world state 
 
 4. For getFiles, you'll get a branchName. So you need to first perform `git branch --set-upstream-to=master`
                                                      second, checkout to that branch 
@@ -23,6 +22,8 @@ projLeader/projName directory structure for all routes has to be REPLACED with p
     - downloadRepo (check the comment written in route) **LOW PRIORITY**
     - pushToBare (a route that auth layer can call for enabling push to the bare repo)
     - (SCRAPPED): issues (Relevant ToDo - 4, issues-datastructure.json)
+    - (Future - optional): Restore a branch.
+    - (Future - optional): Public repos, issues.
 
 
 

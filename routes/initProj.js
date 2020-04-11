@@ -7,8 +7,7 @@
 
 // Misc:
 const addToIPFS = require('../utilities/addToIPFS');
-const preRouteChecks = require('../utilities/preRouteChecks');
-const pushToBare = require('../utilities/pushToBare');
+const rmWorkdir = require('../utilities/rmWorkdir');
 
 // Terminal execution:
 const { exec } = require('child_process');
@@ -49,10 +48,9 @@ router.post('/initProj', async (req,res) => {
     try {
         await main(projName, workdirpath, barerepopath, username, majorHash, buffer, filename, 
                     usermsg, authorname, authoremail, branchToUpdate)
-                    .then( (response) => 
-                    {
-                        res.status(200).send(response);
-                    })
+        .then( (response) => {
+            res.status(200).send(response);
+        })
     } catch (err) {
         res.status(400).send("git init main err: "+err);
     }
@@ -69,6 +67,9 @@ async function main(projName, workdirpath, barerepopath, username, majorHash, bu
         })
         .then( async () => {
             await gitInitBare(projName, username)
+        })
+        .then ( async () => {
+            await rmWorkdir(projName, username)
         })
         .then( async () => {
             majorHash = await addToIPFS(barerepopath);

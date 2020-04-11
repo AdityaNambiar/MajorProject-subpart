@@ -12,7 +12,7 @@ module.exports = async function clone(projName, username) {
     return new Promise( async (resolve, reject) => {
         try {
             await exec(`git clone bare/${projName+'.git'} ${projName}/${username}`,{
-                cwd: path.resolve('projects',''),
+                cwd: path.resolve(__dirname, '..', 'projects',''),
                 shell: true
             }, (err, stdout, stderr) => {
                 if (err) { console.log('clone cli err: ',err); reject(err) }

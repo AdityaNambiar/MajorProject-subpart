@@ -27,18 +27,18 @@ module.exports = async function preRouteChecks(majorHash, projName, username){
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
     return new Promise( async (resolve, reject) => {
-        projPathCheck(projectspath)
-        .then ( () => {
-            barePathCheck(barepath);
+        await projPathCheck(projectspath)
+        .then ( async () => {
+            await barePathCheck(barepath);
         })
-        .then( () => {
-            bareRepoPathCheck(barerepopath, majorHash, projName);
+        .then( async () => {
+            await bareRepoPathCheck(barerepopath, majorHash, projName);
         })
-        .then( () => {
-            projNamePathCheck(projNamepath);
+        .then( async () => {
+            await projNamePathCheck(projNamepath);
         })
-        .then ( () => {
-            workdirPathCheck(workdirpath, projName, username);
+        .then ( async () => {
+            await workdirPathCheck(workdirpath, projName, username);
         })
         .then ( () => {
             resolve(true);

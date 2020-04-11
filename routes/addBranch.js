@@ -6,6 +6,7 @@ const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
 const pushToBare = require('../utilities/pushToBare');
+const rmWorkdir = require('../utilities/rmWorkdir');
 
 const { exec } = require('child_process');
 
@@ -19,16 +20,17 @@ const express = require('express');
 const router = express.Router();
 
 
-var workdirpath, barerepopath, curr_majorHash, username,
-    branchToUpdate, upstream_branch;
-
+var projName, branchName, workdirpath, 
+    curr_majorHash, username;
+// vars used as global:
+var branchToUpdate, files, upstream_branch, barerepopath;
 
 router.post('/addBranch', async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-') || 'app';
-    branchName = req.body.name.replace(/\s/g,'-') || 'f1';
-    username = req.body.username.replace(/\s/g,'-') || 'Aditya';
-    curr_majorHash = 'Qmeo4e37qoXprbVqCzkRRWAHkfP3uzfJnVs5kotYE6Mife';  // latest
-    branchToUpdate = 'master';
+    projName = req.body.projName.replace(/\s/g,'-');
+    branchName = req.body.name.replace(/\s/g,'-');
+    username = req.body.username.replace(/\s/g,'-');
+    curr_majorHash = req.body.majorHash;  // latest
+    branchToUpdate = '';
     upstream_branch = 'origin/master';
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
@@ -37,17 +39,18 @@ router.post('/addBranch', async (req,res) => {
     try{
         await preRouteChecks(curr_majorHash, projName, username)
         .then( async () => {
-            await main(projName, workdirpath, branchName, curr_majorHash, branchToUpdate, upstream_branch)
+            let response = await main(projName, workdirpath, branchName, curr_majorHash)
+            return response;
         })
         .then ( (response) => {
             res.status(200).send(response);
         })
     }catch(e){
-        res.status(400).send(`main err: ${e}`);
+        res.status(400).send(`main caller err: ${e}`);
     }
 })
 
-async function main(projName, workdirpath, branchName, curr_majorHash, branchToUpdate, upstream_branch){
+async function main(projName, workdirpath, branchName, curr_majorHash){
     return new Promise ( async (resolve, reject) => {
         gitBranchAdd(workdirpath, branchName)
         .then( async () => {
@@ -55,22 +58,27 @@ async function main(projName, workdirpath, branchName, curr_majorHash, branchToU
         })
         .then( async () => {
             // 'files' arr should be filled up.
-            var files = await gitListFiles(workdirpath);
-            return files; // Propagate further down the "then() chain" for last then to access and resolve.
+            files = await gitListFiles(workdirpath);
         })
-        .then( async (files) => {
-            await pushToBare(projName, branchToUpdate);
-            return files;
+        .then( async () => {
+            console.log(`Pushing to branch: ${branchToUpdate}`);
+            await pushToBare(projName, branchToUpdate, username);
         })
-        .then( async (files) => {
+        .then( async () => {
+            await rmWorkdir(projName, username);
+        })
+        .then( async () => {
             // Remove old state from IPFS.
             await removeFromIPFS(curr_majorHash, projName);
-            return files;
         })
-        .then( async (files) => {
+        .then( async () => {
             // Add new state to IPFS.
-            var majorHash = await addToIPFS(barerepopath);
-            console.log("MajorHash (git init): ", majorHash);
+            let majorHash = await addToIPFS(barerepopath);
+            return majorHash;
+        })
+        .then( (majorHash) => {
+            console.log("MajorHash (git addBranch): ", majorHash);
+            console.log(` Files: ${files}`);
             resolve({projName: projName, majorHash: majorHash, files: files});
         })
         .catch((e) => {
@@ -87,6 +95,7 @@ async function gitBranchAdd(workdirpath, branchName) {
                 ref: branchName,
                 checkout: true
             })
+            branchToUpdate = branchName;
             resolve(true);
         } catch(e) {
             reject(`git-branch err: ${e}`);

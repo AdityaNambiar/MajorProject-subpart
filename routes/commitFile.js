@@ -16,27 +16,34 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-router.post('/commitFile', async (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = req.body.projName;
-    var majorHash = '';
-    var authorname = 'Aditya';
-    var authoremail = 'adi@g.c';
-    var i = 0;
-    var usermsg = req.body.comm_msg || `My Commit ${i++}`;
-    majorHash = 'QmeUkGcBj7vCsPzeYVVdgRKdf64vMZpjUjgpaFAU7jqeGt'; // hard coded
 
-    // IPFS work:
+var projName, authorname, authoremail, 
+    curr_majorHash, username;
+// vars used as global:
+var branchToUpdate, files, upstream_branch, barerepopath;
+
+router.post('/commitFile', async (req,res) => {
+    projName = req.body.projName;
+    authorname = 'Aditya';
+    authoremail = 'adi@g.c';
+    var i = 0;
+    usermsg = req.body.comm_msg || `My Commit ${i++}`;
+    curr_majorHash = req.body.majorHash; // latest
+
+    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
+    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+
     try{
-        if (!fs.existsSync(path.resolve(__dirname,'..',projName))) {
-            await getFromIPFS(majorHash, projLeader) // This should run first and then the below code 
-            main(projLeader,projName, majorHash, res, authorname, authoremail, usermsg)
-        } else {
-            main(projLeader,projName, majorHash, res, authorname, authoremail, usermsg)
-        }
-    }catch(err){
-        console.log("commitFile main ERR \n",err);
-        res.status(400).send(e);
+        await preRouteChecks(curr_majorHash, projName, username)
+        .then( async () => {
+            let response = await main(projName, workdirpath, branchName, curr_majorHash)
+            return response;
+        })
+        .then ( (response) => {
+            res.status(200).send(response);
+        })
+    }catch(e){
+        res.status(400).send(`main caller err: ${e}`);
     }
 })
 async function main(projLeader, projName, majorHash, res, authorname, authoremail, usermsg) {

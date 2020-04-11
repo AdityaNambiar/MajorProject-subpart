@@ -25,7 +25,10 @@
     - (Future - optional): Restore a branch.
     - (Future - optional): Public repos, issues.
 
-
+9. Features done:
+    - initProj
+    - addBranch
+    - 
 
 After devOnCLI pushed changes and devOnRemote is working on the repository,
     [System checks] If pushed change is not conflicting,

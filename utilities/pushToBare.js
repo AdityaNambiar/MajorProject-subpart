@@ -11,18 +11,18 @@ const { exec } = require('child_process');
 
 let workdirpath, barerepopath;
 
-module.exports = function pushToBare(projName, branchName) {
+module.exports = function pushToBare(projName, branchName, username) {
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname,'..','projects',projName);
+    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
     return new Promise( async (resolve, reject) => {
         await exec(`git push ${barerepopath} ${branchName} `, {
             cwd: workdirpath,
             shell: true
         }, (err, stdout, stderr) => {
-            if (err) reject(`git push cli ${err}`) 
-            if (stderr) reject(`git push cli ${stderr}`) 
+            if (err) reject(`git push cli err: ${err}`) 
+            //if (stderr) reject(`git push cli stderr: ${stderr}`) 
             console.log('git push cli stdout: ',stdout)
             resolve(true);
         })

@@ -73,6 +73,8 @@ async function main(projName, workdirpath, barerepopath, username, majorHash, bu
         })
         .then( async () => {
             majorHash = await addToIPFS(barerepopath);
+        })
+        .then( () => {
             console.log("MajorHash (git init): ", majorHash);
             resolve({projName: projName, majorHash: majorHash});
         })

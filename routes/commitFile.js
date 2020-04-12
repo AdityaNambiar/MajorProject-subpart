@@ -23,15 +23,15 @@ var projName, authorname, authoremail,
     usermsg, curr_majorHash, username,
     filename, buffer;
 // vars used as global:
-var branchToUpdate, barerepopath;
+var branchToUpdate, barerepopath, workdirpath;
 
 router.post('/commitFile', async (req,res) => {
     projName = req.body.projName;
+    branchToUpdate = req.body.branchToUpdate;
+    curr_majorHash = req.body.majorHash; // latest
     authorname = 'Aditya';
     authoremail = 'adi@g.c';
     usermsg = req.body.comm_msg || `My Commit #${Math.random()}`;
-    curr_majorHash = req.body.majorHash; // latest
-    branchToUpdate = req.body.branchToUpdate;
     username = req.body.username;
     filename = req.body.filename;
     buffer = req.body.filebuff;

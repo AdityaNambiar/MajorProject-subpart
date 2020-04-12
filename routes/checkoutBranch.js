@@ -45,13 +45,6 @@ async function main(projLeader, projName, majorHash, res, branchName){
             ref: branchName,
         });
         
-        var oldmajorHash = majorHash;
-        // Store new state of git repo:
-        majorHash = await addToIPFS(projLeader,projName);
-        // Prevent cluttering IPFS repo by unpinning (and garbage-collect) old states of repo:
-        await removeFromIPFS(oldmajorHash, projLeader, projName);
-        console.log("Updated MajorHash (git checkout branch): ",majorHash);
-        res.status(200).send({projName: projName, majorHash: majorHash});
     }catch(e){
         //console.log("checkoutBranch git ERR: ",e);
         if (e.name == 'ResolveRefError'){

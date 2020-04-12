@@ -120,37 +120,22 @@ async function setUpstream(workdirpath, upstream_branch) {
         } 
     })
 }
-async function gitListFiles(workdirpath, branchName) {
+
+async function gitListFiles(workdirpath) {
+    let command = `FILES="$(git ls-tree --name-only HEAD .)";IFS="$(printf "\n\b")";for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x2D%cr" $f)"  printf "%s-%s\n" "$f" "$str" done`;
     return new Promise (async (resolve, reject) => {
         try {
-            files = await git.listFiles({
-                dir:  workdirpath,
-                ref:  branchName
+            exec(command, {
+                cwd: workdirpath,
+                shell: true
+            }, (err,stdout,stderr) => {
+                if(err) reject(`git-ls-tree cli err: ${err}`);
+                if(stderr) reject(`git-ls-tree cli stderr: ${stderr}`);
+                console.log(stdout);
             })
             resolve(files);
         }catch(e){
-            // For situations when user wants to list files at a commit hash:
-            if (e.name == 'ResolveRefError'){
-                await exec('git ls-files', {
-                    cwd: workdirpath,
-                    shell: true,
-                }, async (err, stdout, stderr) => {
-                    if (err) {
-                        reject("getFiles cli err: "+err); 
-                    }
-                    if (stderr) {
-                        reject("getFiles cli stderr: "+stderr);
-                    }
-                    if(stdout){
-                        console.log("getFiles cli : \n", stdout);
-                        filesarr = []
-                        filesarr = stdout.trim().split("\n");
-                        resolve(filesarr);
-                    }
-                })
-            } else {
-                reject(`git-ls-files err: ${e}`);
-            }
+            reject(`git-ls-tree err: ${e}`);
         }
     })
 }

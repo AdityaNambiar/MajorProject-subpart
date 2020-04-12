@@ -6,8 +6,9 @@
 
 // Misc:
 const addToIPFS = require('../utilities/addToIPFS');
-const getFromIPFS = require('../utilities/getFromIPFS');
+const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
+const rmWorkdir = require('../utilities/rmWorkdir');
 
 // Terminal execution import
 const { exec } = require('child_process');
@@ -21,74 +22,114 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
+var projName, branchName, 
+    curr_majorHash, username;
+// vars used as global:
+var branchToUpdate, files = [], 
+    barerepopath, workdirpath;
+
 router.post('/getFiles', async (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = req.body.projName;
-    var majorHash = req.body.majorHash; // hard coded
-    var branchName = req.body.name;
-    // IPFS work:
+    projName = req.body.projName;
+    curr_majorHash = req.body.majorHash; // hard coded
+    branchName = req.body.name;
+    branchToUpdate = req.body.branchToUpdate;
+    username = req.body.username;
+    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
+    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+
     try{
-        console.log(fs.existsSync(path.resolve(__dirname,'..',projName)));
-        if (!fs.existsSync(path.resolve(__dirname,'..',projName))) {
-            await getFromIPFS(majorHash, projLeader) // This should run first and then the below code 
-            main(projLeader, projName, res, majorHash, branchName)
-        } else {
-            main(projLeader, projName, res, majorHash, branchName)
-        }
-    }catch(e) {
-        console.log("getFiles main err: ", e);
-        res.status(400).send(e);
+        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
+        .then( async () => {
+            let response = await main(projName, curr_majorHash, branchName)
+            return response;
+        })
+        .then ( (response) => {
+            res.status(200).send(response);
+        })
+    }catch(e){
+        res.status(400).send(`main caller err: ${e}`);
     }
 })
 
-async function main(projLeader, projName, res, majorHash, branchName){
-    try {
-        let files = await git.listFiles({
-            dir:  path.resolve(__dirname,'..',projName),
-            ref:  `${branchName}`
+async function main(projName, curr_majorHash){
+    return new Promise ( async (resolve, reject) => {
+        await gitCheckout(workdirpath)
+        .then( async () => {
+            await gitListFiles(workdirpath)
         })
-        var oldmajorHash = majorHash;
-        // Store new state of git repo:
-        majorHash = await addToIPFS(projLeader,projName);
-        // Prevent cluttering IPFS repo by unpinning old states of repo:
-        await removeFromIPFS(oldmajorHash, projLeader, projName);
-        console.log("Updated MajorHash (git ls-files): ",majorHash);
-        res.status(200).send({projName: projName, majorHash: majorHash, files: files});
-    }catch(e){
-        console.log("getFiles git ERR: ",e);
-        if (e.name == 'ResolveRefError'){
-            // For situations when user wants to checkout to a commit hash:
-            await exec('git ls-files', {
-                cwd: path.resolve(__dirname,'..',projLeader, projName),
-                shell: true,
-            }, async (err, stdout, stderr) => {
-                if (err) {
-                    console.log("getFiles cli err: \n", err); 
-                    res.status(400).send(err);
-                }
-                else if (stderr) {
-                    console.log("getFiles cli stderr: \n", stderr);
-                    res.status(400).send(stderr);
-                }
-                else if(stdout){
-                    console.log("getFiles cli : \n", stdout);
-                    var filesarr = []
-                    filesarr = stdout.trim().split("\n");
-                    var oldmajorHash = majorHash;
-                    // Store new state of git repo:
-                    majorHash = await addToIPFS(projLeader,projName);
-                    // Prevent cluttering IPFS repo by unpinning (and garbage-collect) old states of repo:
-                    await removeFromIPFS(oldmajorHash, projLeader, projName);
-                    console.log("Updated MajorHash (git ls-files) ",majorHash);
-                    res.status(200).send({projName: projName, majorHash: majorHash, files: filesarr});
-                }
-                else{
+        .then( async () => {
+            console.log(`Pushing to branch: ${branchToUpdate}`);
+            //await pushToBare(projName, branchToUpdate, username);
+        })
+        //.then( async () => {
+            //await rmWorkdir(projName, username);
+        //})
+        .then( async () => {
+            // Remove old state from IPFS.
+            await removeFromIPFS(curr_majorHash, projName);
+        })
+        .then( async () => {
+            // Add new state to IPFS.
+            let majorHash = await addToIPFS(barerepopath);
+            return majorHash;
+        })
+        .then( (majorHash) => {
+            console.log("MajorHash (git getFiles): ", majorHash);
+            console.log(` Files: ${files}`);
+            resolve({projName: projName, majorHash: majorHash, files: files});
+        })
+        .catch((e) => {
+            reject(`main err: ${e}`);
+        })
+    })
+}
 
-                }
+async function gitCheckout(workdirpath){
+    return new Promise (async (resolve, reject) => {
+        try {
+            exec(`git checkout ${branchToUpdate}`, {
+                cwd: workdirpath,
+                shell: true
+            }, (err,stdout,stderr) => {
+                if(err) { console.log('err: '+err); reject(`git-ls-tree cli err: ${err}`);}
+                //if(stderr) {console.log('stderr: '+stderr);reject(`git-ls-tree cli stderr: ${stderr}`);}
+                resolve(true);
             })
-        } else {
-            res.status(400).send(e);
+        }catch(e){
+            reject(`git-checkout err: ${e}`);
         }
-    }
+    })
+}
+async function gitListFiles(workdirpath) {
+    let command = `FILES="$(git ls-tree --name-only HEAD .)";IFS="$(printf "\n\b")";for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x2D%cr" $f)";  printf "%s-%s\n" "$f" "$str"; done`;
+    return new Promise (async (resolve, reject) => {
+        try {
+            exec(command, {
+                cwd: workdirpath,
+                shell: true
+            }, (err,stdout,stderr) => {
+                if(err) { console.log('err: '+err); reject(`git-ls-tree cli err: ${err}`);}
+                //if(stderr) {console.log('stderr: '+stderr);reject(`git-ls-tree cli stderr: ${stderr}`);}
+                
+                /**
+                 * 1. Convert stdout to string array
+                 * 2. Split by '-' seperator.
+                 * 3. create an object and pass it out of this function in resolve().
+                 */
+                files = [];
+                stdout.trim().split('\n').forEach( output_arr => {
+                    let file = output_arr.split('-')[0];
+                    let commitmsg = output_arr.split('-')[1];
+                    let time = output_arr.split('-')[2];
+                    let obj = { file: file, commitmsg: commitmsg, time: time}
+                    console.log(obj);
+                    files.push(obj);
+                })
+                resolve(files);
+            })
+        }catch(e){
+            reject(`git-ls-tree err: ${e}`);
+        }
+    })
 }
 module.exports = router;

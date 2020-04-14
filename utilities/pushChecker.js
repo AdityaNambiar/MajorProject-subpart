@@ -46,7 +46,7 @@ async function gitPull(workdirpath){
             await exec(`git pull ${barerepopath}`, {
                 cwd: workdirpath,
                 shell: true
-            }, (err, stdout, stderr) => {
+            }, async (err, stdout, stderr) => {
                 // if (err) {
                 //     reject(`(pushchecker) git-pull cli err: ${err}`);
                 // }
@@ -55,19 +55,15 @@ async function gitPull(workdirpath){
                 // }
                 console.log(stdout);
 
-                var conflicted_lines_arr = [];
-                //console.log(conflicted_output.some((e) => elem_rgx.test(e)));
-                stdout.split('\n').forEach((elem) => {
-                    var elem_rgx = new RegExp(/CONFLICT/,'gm');
-                        if (elem_rgx.test(elem)){ // If we get a conflicted element.
-                            console.log(elem);
-                            conflicted_lines_arr.push(elem);
-                            //var filename_rgx = new RegExp(/([a-zA-Z0-9]+)\.[a-zA-Z0-9]+/,'g');
-                            //var filename = filename_rgx.exec(elem)[0]
-                            //filename_arr.push(filename);
-                        }
-                    })
-                console.log('conflict lines:\n',conflicted_lines_arr);
+                await exec(`git diff --name-only --diff-filter=U`, {
+                    cwd: workdirpath,
+                    shell: true
+                }, (err, stdout, stderr) => {
+                    if (err) console.log(`unmerged file show cli err: ${err}`)
+                    if (stderr) console.log(`unmerged file show cli stderr: ${stderr}`)
+                    filename_arr = stdout.split('\n');
+                })
+                
                 console.log('filename arr: \n', filename_arr);
                 resolve(filename_arr);
             })

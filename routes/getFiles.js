@@ -64,7 +64,7 @@ async function main(projName, curr_majorHash){
             await setUpstream(workdirpath, upstream_branch);
         })
         .then ( async () => {
-            statusLine = await statusChecker()
+            statusLine = await statusChecker(projName, username);
             return statusLine;
         })
         .then( async () => {

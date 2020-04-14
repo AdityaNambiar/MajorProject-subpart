@@ -11,9 +11,11 @@ const path = require('path');
 // ipfs related import and setup
 const ipfsClient = require('ipfs-http-client');
 const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'});
-var majorHash = '';
 
+var barerepopath;
 module.exports = async function removeFromIPFS(majorHash, projName){
+
+    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     return new Promise( async (resolve, reject) => {
         try{
             // IPFS.pin.rm() projectLeader's folder:
@@ -21,7 +23,7 @@ module.exports = async function removeFromIPFS(majorHash, projName){
                 if (err) console.log("IPFS PIN RM Err: ", err);
                 console.log("majorHash removed: ",res);
                 execSync('ipfs repo gc', {
-                    cwd: path.resolve(__dirname,'..','projects',projName),
+                    cwd: barerepopath,
                     shell: true,
                 });
                 resolve(true);

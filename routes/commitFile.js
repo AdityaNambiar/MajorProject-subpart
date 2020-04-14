@@ -6,6 +6,7 @@
 const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
+const pushChecker = require('../utilities/pushChecker');
 const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
@@ -23,7 +24,8 @@ var projName, authorname, authoremail,
     usermsg, curr_majorHash, username,
     filename, buffer;
 // vars used as global:
-var branchToUpdate, barerepopath, workdirpath;
+var branchToUpdate, barerepopath, workdirpath,
+    filenamearr = [];
 
 router.post('/commitFile', async (req,res) => {
     projName = req.body.projName;
@@ -42,7 +44,7 @@ router.post('/commitFile', async (req,res) => {
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
-        .then( async () => {
+        .then( async () => { 
             let response = await main(projName, workdirpath, curr_majorHash, authorname, authoremail, usermsg)
             return response;
         })
@@ -55,33 +57,38 @@ router.post('/commitFile', async (req,res) => {
 })
 async function main(projName, workdirpath, curr_majorHash, authorname, authoremail, usermsg) {
     return new Promise ( async (resolve, reject) => {
-        await writeFile(projName, username, filename, buffer)
-        .then( async () => {
-            await autoCommit(workdirpath,filename, usermsg, authorname, authoremail);
-        })
-        .then( async () => {
-            console.log(`Pushing to branch: ${branchToUpdate}`);
-            await pushToBare(projName, branchToUpdate, username);
-        })
-        .then( async () => {
-            await rmWorkdir(projName, username);
-        })
-        .then( async () => {
-            // Remove old state from IPFS.
-            await removeFromIPFS(curr_majorHash, projName);
-        })
-        .then( async () => {
-            // Add new state to IPFS.
-            let majorHash = await addToIPFS(barerepopath);
-            return majorHash;
-        })
-        .then( (majorHash) => {
-            console.log("MajorHash (git commitFile): ", majorHash);
-            resolve({projName: projName, majorHash: majorHash});
-        })
-        .catch((e) => {
+        try {
+            await writeFile(projName, username, filename, buffer)
+            .then( async () => {
+                await autoCommit(workdirpath,filename, usermsg, authorname, authoremail);
+            })
+            .then( async () => {
+                filenamearr = await pushChecker(projName, username); 
+                //resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr});
+            })
+            if (filenamearr.length == 0 || true) {  // if no conflicts only then proceed with cleaning up.
+                console.log(`Pushing to branch: ${branchToUpdate}`);
+                await pushToBare(projName, branchToUpdate, username)
+                .then( async () => {
+                    await rmWorkdir(projName, username);
+                })
+                .then( async () => {
+                    // Remove old state from IPFS.
+                    await removeFromIPFS(curr_majorHash, projName);
+                })
+                .then( async () => {
+                    // Add new state to IPFS.
+                    majorHash = await addToIPFS(barerepopath);
+                    return majorHash;
+                })
+                .then( (majorHash) => {
+                    console.log("MajorHash (git commitFile): ", majorHash);
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr});
+                })
+            }
+        } catch(e) {
             reject(`main err: ${e}`);
-        })
+        }
     })
 }
 

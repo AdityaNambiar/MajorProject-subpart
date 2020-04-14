@@ -32,14 +32,14 @@ router.post('/addBranch', async (req,res) => {
     branchName = req.body.branchName.replace(/\s/g,'-');
     username = req.body.username.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash;  // latest
-    branchToUpdate = '';
+    branchToUpdate = req.body.branchToUpdate;
     upstream_branch = 'origin/master';
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
     try{
-        await preRouteChecks(curr_majorHash, projName, username)
+        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => {
             let response = await main(projName, workdirpath, branchName, curr_majorHash)
             return response;

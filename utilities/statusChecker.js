@@ -2,18 +2,12 @@
  * - `git fetch`
  * - `git status`:-
  *      - Extract the line the "This branch is ahead / behind n commits ...."
- *      - Three different lines are:
+ *      - Different lines are:
  *          -- (default) Your branch is up to date with 'origin/master'.
  *          -- Your branch and 'origin/master' have diverged,
  *          -- Your branch is ahead of 'origin/master'
  *          -- Your branch is behind 'origin/master' by 1 commit.
  */
-
-
-// Misc:
-const addToIPFS = require('./addToIPFS');
-const preRouteChecks = require('./preRouteChecks');
-const pushToBare = require('./pushToBare');
 
 // Terminal execution:
 const { exec } = require('child_process');
@@ -24,8 +18,6 @@ const git = require('isomorphic-git');
 git.plugins.set('fs',fs); // Bring your own file system 
 
 const path = require('path');
-const express = require('express');
-const router = express.Router();
 
 
 var barerepopath, workdirpath;
@@ -94,5 +86,3 @@ async function gitStatus(workdirpath) {
         }
     })
 }
-
-module.exports = router;

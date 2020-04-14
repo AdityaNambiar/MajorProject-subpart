@@ -7,12 +7,6 @@
 *      - if conflicts dont arise, pull will be successful.
 */
 
-// Misc:
-const addToIPFS = require('../utilities/addToIPFS');
-const preRouteChecks = require('../utilities/preRouteChecks');
-const removeFromIPFS = require('../utilities/removeFromIPFS');
-const rmWorkdir = require('../utilities/rmWorkdir');
-
 // Terminal execution:
 const { exec } = require('child_process');
 
@@ -22,15 +16,13 @@ const git = require('isomorphic-git');
 git.plugins.set('fs',fs); // Bring your own file system 
 
 const path = require('path');
-const express = require('express');
-const router = express.Router();
 
 
 // vars used as global:
 var barerepopath, workdirpath;
 
 // elements to cover merge conflicts:
-var conflict_files_arr = []; 
+var conflicted_output = []; 
 var filename_arr = []; 
 
 module.exports = async function pushChecker(projName, username) {
@@ -55,29 +47,28 @@ async function gitPull(workdirpath){
                 cwd: workdirpath,
                 shell: true
             }, (err, stdout, stderr) => {
-                if (err) {
-                    reject(`(pushchecker) git-pull cli err: ${err}`);
-                }
+                // if (err) {
+                //     reject(`(pushchecker) git-pull cli err: ${err}`);
+                // }
                 // if (stderr) {
                 //     reject(`(pushchecker) git-pull cli stderr: ${stderr}`);
                 // }
                 console.log(stdout);
 
-                conflict_files_arr = stdout.split('\n');
-                console.log(conflict_files_arr);
-                
-                var elem_rgx = new RegExp(/CONFLICT/);
-                //console.log(conflict_files_arr.some((e) => elem_rgx.test(e)));
-                if (conflict_files_arr.some((e) => elem_rgx.test(e))){ // Check if there is any "conflict" line on output
-                    var filename_rgx = new RegExp(/([a-zA-Z0-9]+)\.[a-zA-Z0-9]+/);
-                    conflict_files_arr.forEach((elem) => {
+                var conflicted_lines_arr = [];
+                //console.log(conflicted_output.some((e) => elem_rgx.test(e)));
+                stdout.split('\n').forEach((elem) => {
+                    var elem_rgx = new RegExp(/CONFLICT/,'gm');
                         if (elem_rgx.test(elem)){ // If we get a conflicted element.
-                            var filename = filename_rgx.exec(elem)[0]
-                            filename_arr.push(filename);
+                            console.log(elem);
+                            conflicted_lines_arr.push(elem);
+                            //var filename_rgx = new RegExp(/([a-zA-Z0-9]+)\.[a-zA-Z0-9]+/,'g');
+                            //var filename = filename_rgx.exec(elem)[0]
+                            //filename_arr.push(filename);
                         }
                     })
-                }
-                console.log(filename_arr);
+                console.log('conflict lines:\n',conflicted_lines_arr);
+                console.log('filename arr: \n', filename_arr);
                 resolve(filename_arr);
             })
         } catch(e) {

@@ -51,7 +51,8 @@ async function main(projLeader, projName, res, branchName, majorHash) {
             shell: true,
         }, async (err, stdout, stderr) => {
             if (err) console.log("mergeFiles err: \n", err); 
-            /* NOTE ABOUT THE ERROR {  Error: Command failed: git merge f1, code: 1 / or any other than 0 integer }
+            /* 
+             * NOTE ABOUT THE ERROR {  Error: Command failed: git merge f1, code: 1 / or any other than 0 integer }
              * Intentional error shows up for a merge with a 
              * conflicted paths because such a merge command returns exit status as 1 and not 0 
              * (0 = successful, anything other than 0 = non-succesful => check by typing '$?' on terminal)
@@ -72,12 +73,7 @@ async function main(projLeader, projName, res, branchName, majorHash) {
                 })
             }
             console.log(filename_arr);
-            var oldmajorHash = majorHash;
-            // Store new state of git repo:
-            majorHash = await addToIPFS(projLeader,projName);
-            // Prevent cluttering IPFS repo by unpinning old states of repo:
-            await removeFromIPFS(oldmajorHash, projLeader, projName);
-            console.log("Updated MajorHash (git merge): ",majorHash);
+            
             res.status(200).send({
                 projName: projName, 
                 majorHash: majorHash, 

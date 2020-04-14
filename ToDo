@@ -51,7 +51,7 @@ After devOnCLI pushed changes and devOnRemote is working on the repository,
             username2/ 
         projectName2/
             username1/
- - (Utility - cleanUp(username)) Delete username folder under projectName folder whenever user's actions are completed (when route is about to end)
+ - (Utility - rmWorkdir(username)) Delete username folder under projectName folder whenever user's actions are completed (when route is about to end)
  - Operations:
         a. setup the directory structure.
         b. perform git operations.

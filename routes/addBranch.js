@@ -5,6 +5,7 @@
 const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
+const pushChecker = require('../utilities/pushChecker');
 const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
@@ -23,11 +24,12 @@ const router = express.Router();
 var projName, branchName, workdirpath, 
     curr_majorHash, username;
 // vars used as global:
-var branchToUpdate, files, upstream_branch, barerepopath;
+var branchToUpdate, files, upstream_branch, barerepopath,
+    filenamearr;
 
 router.post('/addBranch', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
-    branchName = req.body.name.replace(/\s/g,'-');
+    branchName = req.body.branchName.replace(/\s/g,'-');
     username = req.body.username.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash;  // latest
     branchToUpdate = '';
@@ -61,6 +63,9 @@ async function main(projName, workdirpath, branchName, curr_majorHash){
             files = await gitListFiles(workdirpath);
         })
         .then( async () => {
+            filenamearr = await pushChecker(projName, username);
+        })
+        .then( async () => {
             console.log(`Pushing to branch: ${branchToUpdate}`);
             await pushToBare(projName, branchToUpdate, username);
         })
@@ -79,7 +84,8 @@ async function main(projName, workdirpath, branchName, curr_majorHash){
         .then( (majorHash) => {
             console.log("MajorHash (git addBranch): ", majorHash);
             console.log(` Files: ${files}`);
-            resolve({projName: projName, majorHash: majorHash, files: files});
+            resolve({projName: projName, majorHash: majorHash,
+                     files: files, filenamearr: filenamearr});
         })
         .catch((e) => {
             reject(`main err: ${e}`);
@@ -91,7 +97,7 @@ async function gitBranchAdd(workdirpath, branchName) {
     return new Promise (async (resolve, reject) => {
         try {
             await git.branch({
-                dir:  workdirpath,
+                dir: workdirpath,
                 ref: branchName,
                 checkout: true
             })

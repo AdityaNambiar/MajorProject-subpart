@@ -21,10 +21,26 @@ const express = require('express');
 const router = express.Router();
 
 router.post('/fileCommitHistory', async (req,res) => {
-    let projName = req.body.projName;
+    projName = req.body.projName;
+    branchToUpdate = req.body.branchToUpdate;
+    curr_majorHash = req.body.majorHash; // latest
+    branchName = req.body.branchName;
+    
+    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
+    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
-    await main(projName)
-
+    try{
+        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
+        .then( async () => {
+            let response = await main(projName, workdirpath, curr_majorHash, branchName)
+            return response;
+        })
+        .then ( (response) => {
+            res.status(200).send(response);
+        })
+    }catch(e){
+        res.status(400).send(`main caller err: ${e}`);
+    }
 });
 
 async function main(projName) {

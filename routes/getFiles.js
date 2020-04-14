@@ -8,6 +8,9 @@
 const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
+const pushToBare = require('../utilities/pushToBare');
+const pushChecker = require('../utilities/pushChecker');
+const statusChecker = require('../utilities/statusChecker');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
 // Terminal execution import
@@ -26,7 +29,8 @@ var projName, branchName,
     curr_majorHash, username;
 // vars used as global:
 var branchToUpdate, files = [], 
-    barerepopath, workdirpath;
+    barerepopath, workdirpath, upstream_branch,
+    filenamearr, statusLine;
 
 router.post('/getFiles', async (req,res) => {
     projName = req.body.projName;
@@ -34,6 +38,8 @@ router.post('/getFiles', async (req,res) => {
     branchName = req.body.name;
     branchToUpdate = req.body.branchToUpdate;
     username = req.body.username;
+    upstream_branch = 'origin/master';
+
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
@@ -55,15 +61,25 @@ async function main(projName, curr_majorHash){
     return new Promise ( async (resolve, reject) => {
         await gitCheckout(workdirpath)
         .then( async () => {
-            await gitListFiles(workdirpath)
+            await setUpstream(workdirpath, upstream_branch);
+        })
+        .then ( async () => {
+            statusLine = await statusChecker()
+            return statusLine;
+        })
+        .then( async () => {
+            files = await gitListFiles(workdirpath)
+        })
+        .then( async () => {
+            filenamearr = await pushChecker(projName, username);
         })
         .then( async () => {
             console.log(`Pushing to branch: ${branchToUpdate}`);
-            //await pushToBare(projName, branchToUpdate, username);
+            await pushToBare(projName, branchToUpdate, username);
         })
-        //.then( async () => {
-            //await rmWorkdir(projName, username);
-        //})
+        .then( async () => {
+            await rmWorkdir(projName, username);
+        })
         .then( async () => {
             // Remove old state from IPFS.
             await removeFromIPFS(curr_majorHash, projName);
@@ -76,7 +92,8 @@ async function main(projName, curr_majorHash){
         .then( (majorHash) => {
             console.log("MajorHash (git getFiles): ", majorHash);
             console.log(` Files: ${files}`);
-            resolve({projName: projName, majorHash: majorHash, files: files});
+            resolve({projName: projName, majorHash: majorHash, 
+                     files: files, filenamearr: filenamearr});
         })
         .catch((e) => {
             reject(`main err: ${e}`);
@@ -100,6 +117,25 @@ async function gitCheckout(workdirpath){
         }
     })
 }
+
+async function setUpstream(workdirpath, upstream_branch) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            exec(`git branch --set-upstream-to=${upstream_branch}`, {
+                cwd: workdirpath,
+                shell: true
+            }, (err, stdout, stderr) => {
+                if (err) reject(`git-setupstream err: ${err}`);
+                if (stderr) reject(`git-setupstream stderr: ${stderr}`);
+                console.log(stdout);
+            })
+            resolve(true);
+        } catch(e) {
+            reject(`git-branch-setUpstream err: ${e}`)
+        } 
+    })
+}
+
 async function gitListFiles(workdirpath) {
     let command = `FILES="$(git ls-tree --name-only HEAD .)";IFS="$(printf "\n\b")";for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x2D%cr" $f)";  printf "%s-%s\n" "$f" "$str"; done`;
     return new Promise (async (resolve, reject) => {
@@ -122,7 +158,7 @@ async function gitListFiles(workdirpath) {
                     let commitmsg = output_arr.split('-')[1];
                     let time = output_arr.split('-')[2];
                     let obj = { file: file, commitmsg: commitmsg, time: time}
-                    console.log(obj);
+                    //console.log(obj);
                     files.push(obj);
                 })
                 resolve(files);

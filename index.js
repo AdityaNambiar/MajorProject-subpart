@@ -30,7 +30,6 @@ const deleteBranch = require('./routes/deleteBranch');
 const branchCommitHistory = require('./routes/branchCommitHistory');
 
 const pushChecker = require('./routes/pushChecker');
-const statusChecker = require('./routes/statusChecker');
 
 
 
@@ -58,7 +57,6 @@ app.post('/deleteBranch', deleteBranch);
 app.post('/branchCommitHistory', branchCommitHistory);
 
 app.post('/pushChecker', pushChecker);
-app.post('/statusChecker', statusChecker);
 
 const repos = new Server(path.resolve(__dirname), {
     autoCreate: true

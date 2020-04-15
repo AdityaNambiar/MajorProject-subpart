@@ -5,8 +5,12 @@
  */
 // Misc:
 const addToIPFS = require('../utilities/addToIPFS');
-const getFromIPFS = require('../utilities/getFromIPFS');
+const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
+const statusChecker = require('../utilities/statusChecker');
+const pushChecker = require('../utilities/pushChecker');
+const pushToBare = require('../utilities/pushToBare');
+const rmWorkdir = require('../utilities/rmWorkdir');
 
 // isomorphic-git related imports and setup
 const fs = require('fs');
@@ -17,19 +21,80 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
+var projName, workdirpath, curr_majorHash, 
+    username, branchToUpdate, 
+    upstream_branch, majorHash, barerepopath, 
+    filenamearr = [], statusLine;
 
 router.post('/downloadRepo', async (req,res) => {
-    var projName = req.body.projName;
-    var majorHash = 'QmWkL3LV3JHJVv4g83TQzeGKpP35cstD241VccNvqn6vA7'; // bare repo hash here
-    // IPFS work:
+    projName = req.body.projName.replace(/\s/g,'-');
+    username = req.body.username.replace(/\s/g,'-');
+    curr_majorHash = req.body.majorHash;  // latest
+    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    upstream_branch = 'origin/master';
+
+    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
+    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+
     try{
-        await getFromIPFS(majorHash, projName)
-        res.status(200).send({msg: "Downloaded requested project"}) 
+        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
+        .then( async () => {
+            let response = await main(projName, workdirpath, curr_majorHash)
+            return response;
+        })
+        .then ( (response) => {
+            res.status(200).send(response);
+        })
     }catch(e){
-        console.log("addBranch outer Err: ",e);
-        res.status(400).send(e);
+        res.status(400).send(`main caller err: ${e}`);
     }
 })
 
 
+async function main(projName, workdirpath, curr_majorHash){
+    return new Promise ( async (resolve, reject) => {
+        try {
+            downloadRepo(workdirpath)
+            .then ( async () => {
+                statusLine = await statusChecker(projName, username);
+                return statusLine;
+            })
+            .then( async () => {
+                filenamearr = [];
+                filenamearr = await pushChecker(projName, username, branchToUpdate); 
+                console.log("pushchecker returned this: \n", filenamearr);
+            })
+            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
+                console.log(`Pushing to branch: ${branchToUpdate}`);
+                await pushToBare(projName, branchToUpdate, username)
+                .then( async () => {
+                    await rmWorkdir(projName, username);
+                })
+                .then( async () => {
+                    // Remove old state from IPFS.
+                    await removeFromIPFS(curr_majorHash, projName);
+                })
+                .then( async () => {
+                    // Add new state to IPFS.
+                    majorHash = await addToIPFS(barerepopath);
+                    return majorHash;
+                })
+                .then( (majorHash) => {
+                    console.log("MajorHash (git downloadRepo): ", majorHash);
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
+                })
+            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
+            } else {
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, statusLine: statusLine});
+            }
+        } catch(e) {
+            reject(`main err: ${e}`);
+        }
+    })
+}
+
+async function downloadRepo(workdirpath) {
+    // code to download working dir in .zip format
+}
 module.exports = router;

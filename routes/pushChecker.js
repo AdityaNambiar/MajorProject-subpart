@@ -26,17 +26,15 @@ const express = require('express');
 const router = express.Router();
 
 
-var projName, curr_majorHash, username,
-    branchName;
-// vars used as global:
-var branchToUpdate, barerepopath, workdirpath;
+var projName, workdirpath, curr_majorHash, 
+    username, branchToUpdate, 
+    barerepopath, filenamearr;
 
 
 router.post('/pushChecker', async (req,res) => {
     projName = req.body.projName;
     branchToUpdate = req.body.branchToUpdate;
     curr_majorHash = req.body.majorHash; // latest
-    branchName = req.body.branchName;
     
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
@@ -44,7 +42,7 @@ router.post('/pushChecker', async (req,res) => {
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => {
-            let response = await main(projName, workdirpath, curr_majorHash, branchName)
+            let response = await main(workdirpath)
             return response;
         })
         .then ( (response) => {
@@ -55,31 +53,11 @@ router.post('/pushChecker', async (req,res) => {
     }
 });
 
-async function main(projName, workdirpath, curr_majorHash, username){
+async function main(workdirpath){
     return new Promise ( async (resolve, reject) => {
-        gitPull(workdirpath, branchName)
-        .then( async () => {
-            console.log(`Push to branch: ${branchToUpdate}`);
-            await deleteBranchAtBare(projName, branchToUpdate, username); 
-            // Essentially does a git push but with `--delete` to remove the remote tracking branch from bare.
-            // Exclusive to this route only.
-        })
-        .then( async () => {
-            await rmWorkdir(projName, username);
-        })
-        .then( async () => {
-            // Remove old state from IPFS.
-            await removeFromIPFS(curr_majorHash, projName);
-        })
-        .then( async () => {
-            // Add new state to IPFS.
-            let majorHash = await addToIPFS(barerepopath);
-            return majorHash;
-        })
-        .then( (majorHash) => {
-            console.log("MajorHash (git addBranch): ", majorHash);
-            console.log(` Files: ${files}`);
-            resolve({projName: projName, majorHash: majorHash, files: files});
+        await gitPull(workdirpath)
+        .then( (filenamearr) => {
+            resolve({filenamearr:filenamearr});
         })
         .catch((e) => {
             reject(`main err: ${e}`);
@@ -87,25 +65,76 @@ async function main(projName, workdirpath, curr_majorHash, username){
     })
 }
 
-async function gitPull(workdirpath) {
+async function gitPull(workdirpath){
+
     return new Promise( async (resolve, reject) => {
         try {
-            await exec(`git pull origin master`, {
+            await exec(`git pull ${barerepopath}`, {
                 cwd: workdirpath,
                 shell: true
-            }, (err, stdout, stderr) => {
-                if (err) {
-                    reject(`(pushchecker) git-pull cli err: ${err}`);
-                }
-                if (stderr) {
-                    reject(`(pushchecker) git-pull cli stderr: ${stderr}`);
-                }
+            }, async (err, stdout, stderr) => {
+                // if (err) {
+                //     reject(`(pushchecker) git-pull cli err: ${err}`);
+                // }
+                // if (stderr) {
+                //     reject(`(pushchecker) git-pull cli stderr: ${stderr}`);
+                // }
                 console.log(stdout);
-                resolve(stdout);
+                var conflict_lines_arr = stdout.split('\n');
+                var filename_arr = [];
+                var obj = {}, arr = [];
+                var elem_rgx = new RegExp(/CONFLICT/);
+                var inbetweenbrackets_rgx = new RegExp(/\((.*)\)/);
+                if (conflict_lines_arr.some((e) => elem_rgx.test(e))){
+                    //conflict_lines_arr.push("CONFLICT (add/add): Merge conflict in DESC4")
+                    conflict_lines_arr.push("CONFLICT (modify/delete): Merge conflict in DESC4")
+                    for (var i = 0; i < conflict_lines_arr.length; i++){
+                        if (conflict_lines_arr[i].match(inbetweenbrackets_rgx) != null) {
+                            // form an array of types of conflict occured.. like ['content', 'add/add', 'modify/delete', 'content' etc..]
+                            arr.push(conflict_lines_arr[i].match(inbetweenbrackets_rgx)[1]); 
+                        }
+                    }
+                    if (!arr.every((e) => e == "content")){ // If the array contains anything else than "content" type conflicts. Throw the error with instructions.
+                        filename_arr = [];
+                        filename_arr.push("Please solve this merge conflict via CLI")
+                        filename_arr.push(`1. git clone http://localhost:7005/projects/${projName}/${username} \n2. git checkout ${branchName} \n3. divcs pull origin \n- Fix your merge conflicts locally, then follow: \n1. divcs push origin \n Note: Unless you will be pushing onto the remote repository, \nYour local commit history would not be present when you \n operate on the web interface.
+                        `)
+                        resolve(filename_arr);
+                    } else {
+                        await exec(`git diff --name-only --diff-filter=U`, {
+                            cwd: workdirpath,
+                            shell: true
+                        }, async (err, stdout, stderr) => {
+                            if (err) console.log(`unmerged file show cli err: ${err}`)
+                            if (stderr) console.log(`unmerged file show cli stderr: ${stderr}`)
+                            filename_arr = [];
+                            filename_arr = stdout.trim().split('\n');
+                            console.log('filename arr: \n', filename_arr);
+                            for (var i = 0; i < filename_arr.length; i++) {
+                                obj[filename_arr[i]] = await readForBuffer(workdirpath, filename_arr[i]);
+                            }
+                            resolve(obj);
+                        })
+                    }
+                } else {
+                    resolve(filename_arr);
+                }
             })
         } catch(e) {
             reject(`(pushchecker) git-pull err: ${e}`)
         }
+    })
+}
+
+async function readForBuffer(workdirpath, filename){
+    return new Promise( async (resolve, reject) =>{
+        // Specify this as 2nd parameter: {encoding: 'utf-8'} - to prevent getting a buffer.
+        fs.readFile(path.resolve(workdirpath, filename),(err, data) => {
+            if (err) {
+                reject('(pushchecker) fs readfile err: '+err);
+            }
+            resolve(data);
+        })
     })
 }
 module.exports = router

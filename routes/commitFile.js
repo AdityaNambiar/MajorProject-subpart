@@ -6,6 +6,7 @@
 const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
+const statusChecker = require('../utilities/statusChecker');
 const pushChecker = require('../utilities/pushChecker');
 const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
@@ -19,23 +20,21 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-
-var projName, authorname, authoremail, 
-    usermsg, curr_majorHash, username,
+var projName, workdirpath, curr_majorHash, 
+    username, branchToUpdate, majorHash, 
+    barerepopath, filenamearr = [], statusLine,
+    authorname, authoremail, usermsg, 
     filename, buffer;
-// vars used as global:
-var branchToUpdate, barerepopath, workdirpath,
-    filenamearr = [];
 
 router.post('/commitFile', async (req,res) => {
-    projName = req.body.projName;
-    branchToUpdate = req.body.branchToUpdate;
-    curr_majorHash = req.body.majorHash; // latest
-    authorname = 'Aditya';
-    authoremail = 'adi@g.c';
+    projName = req.body.projName.replace(/\s/g,'-');
+    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    authorname = req.body.authorname;
+    authoremail = req.body.authoremail;
     usermsg = req.body.comm_msg || `My Commit #${Math.random()}`;
-    username = req.body.username;
-    filename = req.body.filename;
+    username = req.body.username.replace(/\s/g,'-');
+    filename = req.body.filename.replace(/\s/g,'-');
+    curr_majorHash = req.body.majorHash; // latest
     buffer = req.body.filebuff;
 
 
@@ -62,11 +61,16 @@ async function main(projName, workdirpath, curr_majorHash, authorname, authorema
             .then( async () => {
                 await autoCommit(workdirpath,filename, usermsg, authorname, authoremail);
             })
-            .then( async () => {
-                filenamearr = await pushChecker(projName, username); 
-                //resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr});
+            .then ( async () => {
+                statusLine = await statusChecker(projName, username);
+                return statusLine;
             })
-            if (filenamearr.length == 0 || true) {  // if no conflicts only then proceed with cleaning up.
+            .then( async () => {
+                filenamearr = [];
+                filenamearr = await pushChecker(projName, username, branchToUpdate); 
+                console.log("pushchecker returned this: \n", filenamearr);
+            })
+            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
                 console.log(`Pushing to branch: ${branchToUpdate}`);
                 await pushToBare(projName, branchToUpdate, username)
                 .then( async () => {
@@ -83,8 +87,12 @@ async function main(projName, workdirpath, curr_majorHash, authorname, authorema
                 })
                 .then( (majorHash) => {
                     console.log("MajorHash (git commitFile): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr});
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
                 })
+            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr,});
+            } else {
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr});
             }
         } catch(e) {
             reject(`main err: ${e}`);

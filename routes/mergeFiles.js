@@ -4,8 +4,12 @@
 
 // Misc:
 const addToIPFS = require('../utilities/addToIPFS');
-const getFromIPFS = require('../utilities/getFromIPFS');
+const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
+const statusChecker = require('../utilities/statusChecker');
+const pushChecker = require('../utilities/pushChecker');
+const pushToBare = require('../utilities/pushToBare');
+const rmWorkdir = require('../utilities/rmWorkdir');
 
 
 // Terminal execution import
@@ -21,68 +25,135 @@ const express = require('express');
 const router = express.Router();
 
 
+var projName, workdirpath, curr_majorHash, 
+    username, branchToUpdate, majorHash, 
+    barerepopath, filenamearr, statusLine;
+
+
 router.post('/mergeFiles',  async (req,res) => {
-    const projLeader = "Aditya" // Hard coded - has to card name or from blockchain?
-    var projName = "app" || req.body.projName;
-    var branchName = req.body.name; // Hard coded - has to fetch as: req.body.branchName
-    var majorHash = req.body.majorHash;
-    // IPFS work:
+    projName = req.body.projName.replace(/\s/g,'-');
+    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    curr_majorHash = req.body.majorHash; // latest
+    username = req.body.username.replace(/\s/g,'-');
+    
+    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
+    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+
     try{
-        if (!fs.existsSync(path.resolve(__dirname,'..',projName))) {
-            await getFromIPFS(majorHash, projLeader) // This should run first and then the below code 
-            main(projLeader, projName, res, branchName, majorHash)
-        } else {
-            main(projLeader, projName, res, branchName, majorHash)
-        }
-    } catch(e) {
-        console.log("mergeFiles main err: ", err);
-        res.status(400).send(e);
-    } 
+        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
+        .then( async () => {
+            let response = await main(projName, workdirpath, username, curr_majorHash)
+            return response;
+        })
+        .then ( (response) => {
+            res.status(200).send(response);
+        })
+    }catch(e){
+        res.status(400).send(`main caller err: ${e}`);
+    }
 }); 
 
-async function main(projLeader, projName, res, branchName, majorHash) {
-    // elements to cover merge conflicts:
-    var conflict_files_arr = []; 
-    var filename_arr = []; 
-    // Git work:
-    try {
-        await exec('git merge '+branchName , {
-            cwd: path.resolve(__dirname,'..',projLeader, projName),
-            shell: true,
-        }, async (err, stdout, stderr) => {
-            if (err) console.log("mergeFiles err: \n", err); 
-            /* 
-             * NOTE ABOUT THE ERROR {  Error: Command failed: git merge f1, code: 1 / or any other than 0 integer }
-             * Intentional error shows up for a merge with a 
-             * conflicted paths because such a merge command returns exit status as 1 and not 0 
-             * (0 = successful, anything other than 0 = non-succesful => check by typing '$?' on terminal)
-            */
-            if (stderr) console.log("mergeFiles stderr: \n", err);
-            conflict_files_arr = stdout.split('\n');
-            console.log(conflict_files_arr);
-            
-            var elem_rgx = RegExp(/CONFLICT/);
-            //console.log(conflict_files_arr.some((e) => elem_rgx.test(e)));
-            if (conflict_files_arr.some((e) => elem_rgx.test(e))){ // Check if there is any "conflict" line on output
-                var filename_rgx = RegExp(/([a-zA-Z0-9]+)\.[a-zA-Z0-9]+/);
-                conflict_files_arr.forEach((elem) => {
-                    if (elem_rgx.test(elem)){ // If we get a conflicted element.
-                        var filename = filename_rgx.exec(elem)[0]
-                        filename_arr.push(filename);
-                    }
+async function main(projName, workdirpath, username, curr_majorHash) {
+    return new Promise ( async (resolve, reject) => {
+        try {
+            filenamearr = await mergeFiles(workdirpath)
+            .then ( async () => {
+                statusLine = await statusChecker(projName, username);
+                return statusLine;
+            })
+            .then( async () => {
+                filenamearr = [];
+                filenamearr = await pushChecker(projName, username, branchToUpdate); 
+                console.log("pushchecker returned this: \n", filenamearr);
+            })
+            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
+                console.log(`Pushing to branch: ${branchToUpdate}`);
+                await pushToBare(projName, branchToUpdate, username)
+                .then( async () => {
+                    await rmWorkdir(projName, username);
                 })
+                .then( async () => {
+                    // Remove old state from IPFS.
+                    await removeFromIPFS(curr_majorHash, projName);
+                })
+                .then( async () => {
+                    // Add new state to IPFS.
+                    majorHash = await addToIPFS(barerepopath);
+                    return majorHash;
+                })
+                .then( (majorHash) => {
+                    console.log("MajorHash (git mergeFiles): ", majorHash);
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
+                })
+            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
+            } else {
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, statusLine: statusLine});
             }
-            console.log(filename_arr);
-            
-            res.status(200).send({
-                projName: projName, 
-                majorHash: majorHash, 
-                filename_arr: filename_arr
+        } catch (e) {
+            reject(`main err: ${e}`);
+        }
+    })
+}
+
+async function mergeFiles(workdirpath){
+    return new Promise( async (resolve, reject) => {
+        try {
+            await exec('git merge '+branchToUpdate , {
+                cwd: workdirpath,
+                shell: true,
+            }, async (err, stdout, stderr) => {
+                // if (err) {
+                //     reject(`(pushchecker) git-pull cli err: ${err}`);
+                // }
+                // if (stderr) {
+                //     reject(`(pushchecker) git-pull cli stderr: ${stderr}`);
+                // }
+                console.log(stdout);
+                var conflict_lines_arr = stdout.split('\n');
+                var filename_arr = [];
+                var obj = {}, arr = [];
+                var elem_rgx = new RegExp(/CONFLICT/);
+                var inbetweenbrackets_rgx = new RegExp(/\((.*)\)/);
+                
+                if (conflict_lines_arr.some((e) => elem_rgx.test(e))){
+                    //conflict_lines_arr.push("CONFLICT (add/add): Merge conflict in DESC4")
+                    conflict_lines_arr.push("CONFLICT (modify/delete): Merge conflict in DESC4")
+                    for (var i = 0; i < conflict_lines_arr.length; i++){
+                        if (conflict_lines_arr[i].match(inbetweenbrackets_rgx) != null) {
+                            // form an array of types of conflict occured.. like ['content', 'add/add', 'modify/delete', 'content' etc..]
+                            arr.push(conflict_lines_arr[i].match(inbetweenbrackets_rgx)[1]); 
+                        }
+                    }
+                    if (!arr.every((e) => e == "content")){ // If the array contains anything else than "content" type conflicts. Throw the error with instructions.
+                        filename_arr = [];
+                        filename_arr.push("Please solve this merge conflict via CLI")
+                        filename_arr.push(`1. git clone http://localhost:7005/projects/${projName}/${username} \n2. git checkout ${branchName} \n3. divcs pull origin \n- Fix your merge conflicts locally, then follow: \n1. divcs push origin \n Note: Unless you will be pushing onto the remote repository, \nYour local commit history would not be present when you \n operate on the web interface.
+                        `)
+                        resolve(filename_arr);
+                    } else {
+                        await exec(`git diff --name-only --diff-filter=U`, {
+                            cwd: workdirpath,
+                            shell: true
+                        }, async (err, stdout, stderr) => {
+                            if (err) console.log(`unmerged file show cli err: ${err}`)
+                            if (stderr) console.log(`unmerged file show cli stderr: ${stderr}`)
+                            filename_arr = [];
+                            filename_arr = stdout.trim().split('\n');
+                            console.log('filename arr: \n', filename_arr);
+                            for (var i = 0; i < filename_arr.length; i++) {
+                                obj[filename_arr[i]] = await readForBuffer(workdirpath, filename_arr[i]);
+                            }
+                            resolve(obj);
+                        })
+                    }
+                } else {
+                    resolve(filename_arr);
+                }
             });
-        });
-    }catch(e){
-        console.log("mergeFiles git err: ",e);
-        res.status(400).send(e);
-    }
+        }catch(e){
+            reject("mergeFiles git err: "+e);
+        }
+    })
 }
 module.exports = router

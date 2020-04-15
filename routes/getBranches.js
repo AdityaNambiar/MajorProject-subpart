@@ -7,6 +7,7 @@
 const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
+const statusChecker = require('../utilities/statusChecker');
 const pushChecker = require('../utilities/pushChecker');
 const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
@@ -20,18 +21,16 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-var projName, branchName, workdirpath, 
-    curr_majorHash, username;
-// vars used as global:
-var branchToUpdate, branchlist=[], barerepopath,
-    filenamearr;
+var projName, workdirpath, curr_majorHash, 
+    username, branchToUpdate, majorHash, 
+    barerepopath, filenamearr, statusLine,
+    branchlist=[];
 
 router.post('/getBranches', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
-    branchName = req.body.branchName.replace(/\s/g,'-');
     username = req.body.username.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash;  // latest
-    branchToUpdate = req.body.branchToUpdate;
+    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
@@ -52,36 +51,44 @@ router.post('/getBranches', async (req,res) => {
 
 async function main(projName, workdirpath, curr_majorHash){ 
     return new Promise ( async (resolve, reject) => {
-        await gitListBranches(workdirpath)
-        .then( async (branches) => {
-            branchlist = branches;
-            filenamearr = await pushChecker(projName, username);
-        })
-        .then( async () => {
-            console.log(`Pushing to branch: ${branchToUpdate}`);
-            await pushToBare(projName, branchToUpdate, username);
-        })
-        .then( async () => {
-            await rmWorkdir(projName, username);
-        })
-        .then( async () => {
-            // Remove old state from IPFS.
-            await removeFromIPFS(curr_majorHash, projName);
-        })
-        .then( async () => {
-            // Add new state to IPFS.
-            let majorHash = await addToIPFS(barerepopath);
-            return majorHash;
-        })
-        .then( (majorHash) => {
-            console.log("MajorHash (git getBranches): ", majorHash);
-            console.log(` branches: ${branchlist}`);
-            resolve({projName: projName, majorHash: majorHash,
-                     branchlist: branchlist, filenamearr: filenamearr});
-        })
-        .catch((e) => {
+        try {
+            branchlist = await gitListBranches(workdirpath)
+            .then ( async () => {
+                statusLine = await statusChecker(projName, username);
+                return statusLine;
+            })
+            .then( async () => {
+                filenamearr = [];
+                filenamearr = await pushChecker(projName, username, branchToUpdate); 
+                console.log("pushchecker returned this: \n", filenamearr);
+            })
+            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
+                console.log(`Pushing to branch: ${branchToUpdate}`);
+                await pushToBare(projName, branchToUpdate, username)
+                .then( async () => {
+                    await rmWorkdir(projName, username);
+                })
+                .then( async () => {
+                    // Remove old state from IPFS.
+                    await removeFromIPFS(curr_majorHash, projName);
+                })
+                .then( async () => {
+                    // Add new state to IPFS.
+                    majorHash = await addToIPFS(barerepopath);
+                    return majorHash;
+                })
+                .then( (majorHash) => {
+                    console.log("MajorHash (git getBranches): ", majorHash);
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, branchlist: branchlist, statusLine: statusLine});
+                })
+            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, branchlist: branchlist, statusLine: statusLine});
+            } else {
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, branchlist: branchlist, statusLine: statusLine});
+            }
+        } catch (e) {
             reject(`main err: ${e}`);
-        })
+        }
     })
 }
 
@@ -91,7 +98,6 @@ async function gitListBranches(workdirpath) {
             let branches = await git.listBranches({
                 dir: workdirpath
             })
-            console.log("branches in func: "+branches);
             resolve(branches);
         } catch(e) {
             reject(`git-list-branch err: ${e}`);

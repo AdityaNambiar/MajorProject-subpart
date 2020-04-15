@@ -8,9 +8,9 @@
 const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
-const pushToBare = require('../utilities/pushToBare');
-const pushChecker = require('../utilities/pushChecker');
 const statusChecker = require('../utilities/statusChecker');
+const pushChecker = require('../utilities/pushChecker');
+const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
 // Terminal execution import
@@ -25,19 +25,16 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-var projName, branchName, 
-    curr_majorHash, username;
-// vars used as global:
-var branchToUpdate, files = [], 
-    barerepopath, workdirpath, upstream_branch,
-    filenamearr, statusLine;
+var projName, workdirpath, curr_majorHash, 
+    username, branchToUpdate, majorHash, 
+    barerepopath, filenamearr, statusLine,
+    files = [], upstream_branch;
 
 router.post('/getFiles', async (req,res) => {
-    projName = req.body.projName;
+    projName = req.body.projName.replace(/\s/g,'-');
+    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    username = req.body.username.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // hard coded
-    branchName = req.body.name;
-    branchToUpdate = req.body.branchToUpdate;
-    username = req.body.username;
     upstream_branch = 'origin/master';
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
@@ -46,7 +43,7 @@ router.post('/getFiles', async (req,res) => {
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => {
-            let response = await main(projName, curr_majorHash, branchName)
+            let response = await main(projName, curr_majorHash)
             return response;
         })
         .then ( (response) => {
@@ -59,45 +56,50 @@ router.post('/getFiles', async (req,res) => {
 
 async function main(projName, curr_majorHash){
     return new Promise ( async (resolve, reject) => {
-        await gitCheckout(workdirpath)
-        .then( async () => {
-            await setUpstream(workdirpath, upstream_branch);
-        })
-        .then ( async () => {
-            statusLine = await statusChecker(projName, username);
-            return statusLine;
-        })
-        .then( async () => {
-            files = await gitListFiles(workdirpath)
-        })
-        .then( async () => {
-            filenamearr = await pushChecker(projName, username);
-        })
-        .then( async () => {
-            console.log(`Pushing to branch: ${branchToUpdate}`);
-            await pushToBare(projName, branchToUpdate, username);
-        })
-        .then( async () => {
-            await rmWorkdir(projName, username);
-        })
-        .then( async () => {
-            // Remove old state from IPFS.
-            await removeFromIPFS(curr_majorHash, projName);
-        })
-        .then( async () => {
-            // Add new state to IPFS.
-            let majorHash = await addToIPFS(barerepopath);
-            return majorHash;
-        })
-        .then( (majorHash) => {
-            console.log("MajorHash (git getFiles): ", majorHash);
-            console.log(` Files: ${files}`);
-            resolve({projName: projName, majorHash: majorHash, 
-                     files: files, filenamearr: filenamearr});
-        })
-        .catch((e) => {
+        try {
+            await gitCheckout(workdirpath)
+            .then( async () => {
+                await setUpstream(workdirpath, upstream_branch);
+            })
+            .then ( async () => {
+                statusLine = await statusChecker(projName, username);
+                return statusLine;
+            })
+            .then( async () => {
+                files = await gitListFiles(workdirpath)
+            })
+            .then( async () => {
+                filenamearr = [];
+                filenamearr = await pushChecker(projName, username, branchToUpdate); 
+                console.log("pushchecker returned this: \n", filenamearr);
+            })
+            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
+                console.log(`Pushing to branch: ${branchToUpdate}`);
+                await pushToBare(projName, branchToUpdate, username)
+                .then( async () => {
+                    await rmWorkdir(projName, username);
+                })
+                .then( async () => {
+                    // Remove old state from IPFS.
+                    await removeFromIPFS(curr_majorHash, projName);
+                })
+                .then( async () => {
+                    // Add new state to IPFS.
+                    majorHash = await addToIPFS(barerepopath);
+                    return majorHash;
+                })
+                .then( (majorHash) => {
+                    console.log("MajorHash (git getFiles): ", majorHash);
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, files: files, statusLine: statusLine});
+                })
+            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, files: files, statusLine: statusLine});
+            } else {
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, files: files, statusLine: statusLine});
+            }
+        } catch (e) {
             reject(`main err: ${e}`);
-        })
+        }
     })
 }
 

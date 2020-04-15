@@ -33,12 +33,12 @@ router.post('/initProj', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-'); 
     majorHash = '';
     // Git work:
-    authoremail = 'adi@g.c';
-    authorname = 'Aditya';
+    authoremail = req.body.authoremail;
+    authorname = req.body.authorname;
     buffer = req.body.filebuff || README.md;
     filename = req.body.filename || "README.md";
     usermsg = req.body.usermsg || "Initial Commit";
-    username = req.body.username.replace(/\s/g,'-') || 'AdityaN';
+    username = req.body.username.replace(/\s/g,'-');
     branchToUpdate = 'master';
 
     projectspath = path.resolve(__dirname, '..', 'projects');

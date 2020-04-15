@@ -6,6 +6,9 @@
 const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
+const statusChecker = require('../utilities/statusChecker');
+const pushChecker = require('../utilities/pushChecker');
+const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
 // isomorphic-git related imports and setup
@@ -23,11 +26,15 @@ var projName, curr_majorHash, username,
 var branchToUpdate, barerepopath, 
     workdirpath, filenamearr;
 
+
+var projName, workdirpath, curr_majorHash, 
+    username, branchToUpdate, majorHash, 
+    barerepopath, filenamearr = [], statusLine;
+
 router.post('/deleteBranch', async (req,res) => {
-    projName = req.body.projName;
-    branchToUpdate = req.body.branchToUpdate;
+    projName = req.body.projName.replace(/\s/g,'-');
+    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // latest
-    branchName = req.body.branchName;
     username = req.body.username;
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
@@ -36,7 +43,7 @@ router.post('/deleteBranch', async (req,res) => {
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => {
-            let response = await main(projName, workdirpath, curr_majorHash, branchName)
+            let response = await main(projName, workdirpath, curr_majorHash)
             return response;
         })
         .then ( (response) => {
@@ -47,39 +54,48 @@ router.post('/deleteBranch', async (req,res) => {
     }
 })
 
-async function main(projName, workdirpath, curr_majorHash, branchName) {
+async function main(projName, workdirpath, curr_majorHash, branchToUpdate) {
     return new Promise ( async (resolve, reject) => {
-        gitDeleteBranch(workdirpath, branchName)
-        .then( async () => {
-            filenamearr = await pushChecker(projName, username);
-        })
-        .then( async () => {
-            console.log(`Push (with --delete) to branch: ${branchToUpdate}`);
-            await deleteBranchAtBare(branchToUpdate); 
-            // Essentially does a git push but with `--delete` to remove the remote tracking branch from bare.
-            // Exclusive to this route only.
-        })
-        .then( async () => {
-            await rmWorkdir(projName, username);
-        })
-        .then( async () => {
-            // Remove old state from IPFS.
-            await removeFromIPFS(curr_majorHash, projName);
-        })
-        .then( async () => {
-            // Add new state to IPFS.
-            let majorHash = await addToIPFS(barerepopath);
-            return majorHash;
-        })
-        .then( (majorHash) => {
-            console.log("MajorHash (git addBranch): ", majorHash);
-            console.log(` Files: ${files}`);
-            resolve({projName: projName, majorHash: majorHash, 
-                     files: files, filenamearr: filenamearr});
-        })
-        .catch((e) => {
+        try {
+            gitDeleteBranch(workdirpath, branchToUpdate)
+            .then ( async () => {
+                statusLine = await statusChecker(projName, username);
+                return statusLine;
+            })
+            .then( async () => {
+                filenamearr = [];
+                filenamearr = await pushChecker(projName, username, branchToUpdate); 
+                console.log("pushchecker returned this: \n", filenamearr);
+            })
+            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
+                console.log(`Push (with --delete) to branch: ${branchToUpdate}`);
+                await deleteBranchAtBare(branchToUpdate)
+                // Essentially does a git push but with `--delete` to remove the remote tracking branch from bare.
+                // Exclusive to this route only.
+                .then( async () => {
+                    await rmWorkdir(projName, username);
+                })
+                .then( async () => {
+                    // Remove old state from IPFS.
+                    await removeFromIPFS(curr_majorHash, projName);
+                })
+                .then( async () => {
+                    // Add new state to IPFS.
+                    majorHash = await addToIPFS(barerepopath);
+                    return majorHash;
+                })
+                .then( (majorHash) => {
+                    console.log("MajorHash (git deleteBranch): ", majorHash);
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
+                })
+            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
+            } else {
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, statusLine: statusLine});
+            }
+        } catch (e) {
             reject(`main err: ${e}`);
-        })
+        }
     })
 }
 

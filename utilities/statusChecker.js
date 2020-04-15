@@ -28,7 +28,7 @@ module.exports = async function statusChecker(projName, username) {
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
     return new Promise( async (resolve, reject) => {
-        await gitFetch(workdirpath, branchName)
+        await gitFetch(workdirpath)
         .then( async () => {
             let statusLine = await gitStatus(workdirpath)
             return statusLine;
@@ -52,10 +52,9 @@ async function gitFetch(workdirpath) {
                 if (err) { 
                     reject(`git-fetch cli err: ${err}`);
                 }
-                if (stderr) {
-                    reject(`git-fetch cli stderr: ${stderr}`);
-                }
-                console.log(stdout);
+                // if (stderr) {
+                //     reject(`git-fetch cli stderr: ${stderr}`);
+                // }
                 resolve(true);
             })
         } catch(e) {
@@ -77,7 +76,7 @@ async function gitStatus(workdirpath) {
                 if (stderr) {
                     reject(`git-status cli stderr: ${stderr}`);
                 }
-                console.log(stdout);
+                //console.log(stdout);
                 let statusLine = stdout.trim().split('\n')[1];
                 resolve(statusLine);    
             })

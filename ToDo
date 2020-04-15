@@ -20,7 +20,6 @@
     - diffFiles (Relevant ToDo - 6) (https://stackoverflow.com/questions/424071/how-to-list-all-the-files-in-a-commit - for showing the list of files in a commit) 
     - (DONE): readForBuffer (Just a single fs.readFile) 
     - downloadRepo (check the comment written in route) **LOW PRIORITY**
-    - pushToBare (a route that auth layer can call for enabling push to the bare repo)
     - (SCRAPPED): issues (Relevant ToDo - 4, issues-datastructure.json)
     - (Future - optional): Restore a branch.
     - (Future - optional): Public repos, issues.

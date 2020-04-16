@@ -19,8 +19,8 @@ const express = require('express');
 const router = express.Router();
 
 var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, majorHash, 
-    barerepopath, filenamearr = [], statusLine;
+    username, branchToUpdate, barerepopath,
+    projNamepath;
 
 router.post('/deleteProj', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
@@ -30,11 +30,12 @@ router.post('/deleteProj', async (req,res) => {
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+    projNamepath = path.resolve(__dirname, '..', 'projects', projName);
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => {
-            let response = await main(projName, workdirpath, curr_majorHash)
+            let response = await main()
             return response;
         })
         .then ( (response) => {
@@ -45,50 +46,48 @@ router.post('/deleteProj', async (req,res) => {
     }
 })
 
-async function main(projName, workdirpath, curr_majorHash){
+async function main(){
     return new Promise ( async (resolve, reject) => {
-        try {
-            deleteProj(workdirpath)
-            .then ( async () => {
-                statusLine = await statusChecker(projName, username);
-                return statusLine;
-            })
-            .then( async () => {
-                filenamearr = [];
-                filenamearr = await pushChecker(projName, username, branchToUpdate); 
-                console.log("pushchecker returned this: \n", filenamearr);
-            })
-            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
-                console.log(`Pushing to branch: ${branchToUpdate}`);
-                await pushToBare(projName, branchToUpdate, username)
-                .then( async () => {
-                    await rmWorkdir(projName, username);
-                })
-                .then( async () => {
-                    // Remove old state from IPFS.
-                    await removeFromIPFS(curr_majorHash, projName);
-                })
-                .then( async () => {
-                    // Add new state to IPFS.
-                    majorHash = await addToIPFS(barerepopath);
-                    return majorHash;
-                })
-                .then( (majorHash) => {
-                    console.log("MajorHash (git deleteProj): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
-                })
-            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
-            } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, statusLine: statusLine});
-            }
-        } catch(e) {
+        await deleteProj(workdirpath)
+        .then( async () => {
+            // Remove old state from IPFS.
+            await removeFromIPFS(curr_majorHash, projName);
+        })
+        .then( () => {
+            console.log("MajorHash (git deleteProj): ", curr_majorHash);
+            resolve({projName: projName, majorHash: curr_majorHash});
+        })
+        .catch ((e) => {
             reject(`main err: ${e}`);
-        }
+        })
     })
 }
 
 async function deleteProj(workdirpath){
-    // Delete workdir & barerepo of the project. (refer to initProj sequence of .then() for main() - above copy-pasted is wrong)
+    return new Promise( async (resolve, reject) => {
+        try {
+            // Delete work dir repo
+            fs.rmdir(workdirpath, { 
+                recursive: true
+            }, (err) => {
+                if (err) reject('(deleteProj) workdirdelete err:'+err);
+                // Delete projName folder:
+                fs.rmdir(projNamepath, { 
+                    recursive: true
+                }, (err) => {
+                    if (err) reject('(deleteProj) projName folder err:'+err);
+                    // Delete bare repo:
+                    fs.rmdir(barerepopath, { 
+                        recursive: true
+                    }, (err) => {
+                        if (err) reject('(deleteProj) barerepodelete err:'+err);
+                        resolve(true);
+                    })
+                })
+            })
+        } catch(e) {
+            reject(`deleteProj error: ${e}`);
+        }  
+    }) 
 }
 module.exports = router

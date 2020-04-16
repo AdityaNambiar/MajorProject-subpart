@@ -16,6 +16,7 @@ const pushToBare = require('./utilities/pushToBare');
 const initProj = require('./routes/initProj');
 const gitGraph = require('./routes/gitGraph');
 const downloadRepo = require('./routes/downloadRepo');
+const deleteProj = require('./routes/deleteProj');
 
 const getFiles = require('./routes/getFiles');
 const commitFile = require('./routes/commitFile');
@@ -43,6 +44,7 @@ app.get('/',() => {
 app.post('/initProj', initProj);
 app.post('/gitGraph', gitGraph); 
 app.post('/downloadRepo', downloadRepo);
+app.post('/deleteProj', deleteProj);
 
 app.post('/getFiles',getFiles);
 app.post('/commitFile',commitFile);

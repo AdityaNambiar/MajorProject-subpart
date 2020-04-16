@@ -44,9 +44,9 @@ async function gitPull(workdirpath, projName, username, branchName){
                 cwd: workdirpath,
                 shell: true
             }, async (err, stdout, stderr) => {
-                // if (err) {
-                //     reject(`(pushchecker) git-pull cli err: ${err}`);
-                // }
+                if (err) {
+                    reject(`(pushchecker) git-pull cli err: ${err}`);
+                }
                 // if (stderr) {
                 //     reject(`(pushchecker) git-pull cli stderr: ${stderr}`);
                 // }

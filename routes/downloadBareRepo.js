@@ -42,9 +42,9 @@ router.post('/downloadRepo', async (req,res) => {
             await rmWorkdir(projName, username);
         })
         .then ( () => {
-            res.download(workdirpath,`${projName}.zip`,(err)=> {
+            res.download(barerepopath,`${projName}.zip`,(err)=> {
                 if (err) {
-                    res.status(400).send(`Could not download workdir repo: \n ${err}`);
+                    res.status(400).send(`Could not download barerepo repo: \n ${err}`);
                 } 
             })
         })

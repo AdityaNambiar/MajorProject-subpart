@@ -79,6 +79,12 @@ repos.on('push', (push) => {
     push.accept();
 });
 
+repos.on('fetch', (fetch) => {
+    console.log('push object: ',fetch)
+    console.log(`fetch ${fetch.repo}/${fetch.commit} (${fetch.branch})`);
+    fetch.accept();
+});
+
 repos.listen(port2, () => {
     console.log(`node-git-server running at http://localhost:${port2}`)
 });

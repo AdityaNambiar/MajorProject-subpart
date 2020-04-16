@@ -27,7 +27,7 @@ let README = `PROJECT NAME: ${projName} \n PROJECT DESCRIPTION: ${projDesc} \n`
 
 var workdirpath, barerepopath, projectspath, majorHash, 
     authoremail, authorname, buffer, username,
-    filename, usermsg, branchToUpdate;
+    filename, usermsg, branchToUpdate, barepath;
 
 router.post('/initProj', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-'); 
@@ -42,11 +42,16 @@ router.post('/initProj', async (req,res) => {
     usermsg = req.body.usermsg || "Initial Commit";
 
     projectspath = path.resolve(__dirname, '..', 'projects');
+    barepath = path.resolve(__dirname, '..', 'projects', 'bare');
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
     try {
-        await main()
+        await barePathCheck(barepath)
+        .then( async () => {
+            let response = await main()
+            return response;
+        })
         .then( (response) => {
             res.status(200).send(response);
         })
@@ -80,6 +85,19 @@ async function main() {
         .catch((e) => {
             reject(`main err: ${e}`);
         })
+    })
+}
+async function barePathCheck(barepath){
+    return new Promise( (resolve, reject) => {
+        if (!fs.existsSync(barepath)){
+            fs.mkdir(barepath, (err) => {
+                if (err) {
+                    reject(`projPathCheck err: ${err}`);
+                }
+                resolve(true);
+            })
+        }
+        resolve(true); // means projects/bare exist.
     })
 }
 

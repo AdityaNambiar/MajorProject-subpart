@@ -13,6 +13,8 @@ const pushChecker = require('../utilities/pushChecker');
 const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
+// Terminal execution import:
+const { exec } = require('child_process');
 // isomorphic-git related imports and setup
 const fs = require('fs');
 const git = require('isomorphic-git');

@@ -23,7 +23,7 @@ const router = express.Router();
 
 
 var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, files = [], 
+    username, branchToUpdate, branchName, files = [], 
     upstream_branch, majorHash, barerepopath, 
     filenamearr = [], statusLine;
 
@@ -32,6 +32,7 @@ router.post('/addBranch', async (req,res) => {
     username = req.body.username.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash;  // latest
     branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    branchName = req.body.branchName.replace(/\s/g,'-');
     upstream_branch = 'origin/master';
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
@@ -54,13 +55,14 @@ router.post('/addBranch', async (req,res) => {
 async function main(projName, workdirpath, curr_majorHash){
     return new Promise ( async (resolve, reject) => {
         try {
-            gitBranchAdd(workdirpath, branchToUpdate)
+            await gitBranchAdd(workdirpath, branchName)
             .then( async () => {
                 await setUpstream(workdirpath, upstream_branch);
             })
             .then( async () => {
                 // 'files' arr should be filled up.
                 files = await gitListFiles(workdirpath);
+                return files;
             })
             .then ( async () => {
                 statusLine = await statusChecker(projName, username);
@@ -109,7 +111,7 @@ async function gitBranchAdd(workdirpath, branchName) {
                 ref: branchName,
                 checkout: true
             })
-            //branchToUpdate = branchName;
+            branchToUpdate = branchName;
             resolve(true);
         } catch(e) {
             reject(`git-branch err: ${e}`);
@@ -136,18 +138,32 @@ async function setUpstream(workdirpath, upstream_branch) {
 }
 
 async function gitListFiles(workdirpath) {
-    let command = `FILES="$(git ls-tree --name-only HEAD .)";IFS="$(printf "\n\b")";for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x2D%cr" $f)"  printf "%s-%s\n" "$f" "$str" done`;
+    let command = `FILES="$(git ls-tree --name-only HEAD .)";IFS="$(printf "\n\b")";for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x2D%cr" $f)";  printf "%s-%s\n" "$f" "$str"; done`;
     return new Promise (async (resolve, reject) => {
         try {
             exec(command, {
                 cwd: workdirpath,
                 shell: true
             }, (err,stdout,stderr) => {
-                if(err) reject(`git-ls-tree cli err: ${err}`);
-                if(stderr) reject(`git-ls-tree cli stderr: ${stderr}`);
-                console.log(stdout);
+                if(err) { console.log('err: '+err); reject(`git-ls-tree cli err: ${err}`);}
+                //if(stderr) {console.log('stderr: '+stderr);reject(`git-ls-tree cli stderr: ${stderr}`);}
+                
+                /**
+                 * 1. Convert stdout to string array
+                 * 2. Split by '-' seperator.
+                 * 3. create an object and pass it out of this function in resolve().
+                 */
+                files = [];
+                stdout.trim().split('\n').forEach( output_arr => {
+                    let file = output_arr.split('-')[0];
+                    let commitmsg = output_arr.split('-')[1];
+                    let time = output_arr.split('-')[2];
+                    let obj = { file: file, commitmsg: commitmsg, time: time}
+                    //console.log(obj);
+                    files.push(obj);
+                })
+                resolve(files);
             })
-            resolve(files);
         }catch(e){
             reject(`git-ls-tree err: ${e}`);
         }

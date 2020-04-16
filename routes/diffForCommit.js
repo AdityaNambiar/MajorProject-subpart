@@ -13,6 +13,7 @@ const pushChecker = require('../utilities/pushChecker');
 const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
+const { exec } = require('child_process');
 // isomorphic-git related imports and setup
 const fs = require('fs');
 const git = require('isomorphic-git');
@@ -38,7 +39,7 @@ router.post('/diffForCommit', async (req,res) => {
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
     try{
-        await preRouteChecks(curr_majorHash, projName, username)
+        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => {
             let response = await main(projName, workdirpath, curr_majorHash, ref1)
             return response;

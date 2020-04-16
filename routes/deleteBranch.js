@@ -43,7 +43,7 @@ router.post('/deleteBranch', async (req,res) => {
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => {
-            let response = await main(projName, workdirpath, curr_majorHash)
+            let response = await main()
             return response;
         })
         .then ( (response) => {
@@ -54,7 +54,7 @@ router.post('/deleteBranch', async (req,res) => {
     }
 })
 
-async function main(projName, workdirpath, curr_majorHash, branchToUpdate) {
+async function main() {
     return new Promise ( async (resolve, reject) => {
         try {
             await gitDeleteBranch(workdirpath, branchToUpdate)
@@ -99,12 +99,14 @@ async function main(projName, workdirpath, curr_majorHash, branchToUpdate) {
     })
 }
 
-async function gitDeleteBranch(workdirpath, branchName){
+async function gitDeleteBranch(workdirpath, branchToUpdate){
+    console.log("branch name to delete: ", branchToUpdate);
     return new Promise( async (resolve, reject) => {
         try {
             await git.deleteBranch({
                 dir:  workdirpath,
-                ref: branchName
+                ref: branchToUpdate,
+                
             })
             resolve(true);
         }catch(e){
@@ -113,10 +115,10 @@ async function gitDeleteBranch(workdirpath, branchName){
     })
 }
 
-async function deleteBranchAtBare(branchName) {
-    console.log(`git push --delete ${barerepopath} ${branchName}`);
+async function deleteBranchAtBare(branchToUpdate) {
+    console.log(`git push --delete ${barerepopath} ${branchToUpdate}`);
     return new Promise( async (resolve, reject) => {
-        await exec(`git push --delete ${barerepopath} ${branchName} `, {
+        await exec(`git push --delete ${barerepopath} ${branchToUpdate} `, {
             cwd: workdirpath,
             shell: true
         }, (err, stdout, stderr) => {

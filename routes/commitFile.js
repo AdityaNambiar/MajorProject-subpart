@@ -34,7 +34,7 @@ router.post('/commitFile', async (req,res) => {
     
     authorname = req.body.authorname;
     authoremail = req.body.authoremail;
-    usermsg = req.body.comm_msg || `My Commit #${Math.random()}`;
+    usermsg = req.body.usermsg || `My Commit #${Math.random()}`;
     filename = req.body.filename.replace(/\s/g,'-');
     buffer = req.body.filebuff;
 

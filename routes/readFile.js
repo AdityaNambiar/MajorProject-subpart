@@ -28,11 +28,12 @@ var projName, workdirpath, curr_majorHash,
     data;
 
 
-router.post('/readForBuffer', async (req, res) => {
+router.post('/readFile', async (req, res) => {
     filename = req.body.filename;
     projName = req.body.projName.replace(/\s/g,'-');
     branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // latest
+    username = req.body.username.replace(/\s/g,'-');
     
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);

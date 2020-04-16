@@ -17,6 +17,11 @@ const rmWorkdir = require('../utilities/rmWorkdir');
 
 const path = require('path');
 const fs = require('fs');
+const { exec } = require('child_process');
+
+// isomorphic-git related imports and setup
+const git = require('isomorphic-git');
+git.plugins.set('fs',fs); // Bring your own file system 
 
 const express = require('express');
 const router = express.Router();
@@ -24,7 +29,8 @@ const router = express.Router();
 var projName, workdirpath, curr_majorHash, 
     username, branchToUpdate, filename, 
     majorHash, barerepopath, filepath, 
-    filenamearr = [], statusLine;
+    filenamearr = [], statusLine, usermsg,
+    authorname, authoremail;
 
 
 router.post('/deleteFile', async (req, res) => {
@@ -34,6 +40,11 @@ router.post('/deleteFile', async (req, res) => {
     curr_majorHash = req.body.majorHash; // latest
     filename = req.body.filename;
     
+    authorname = req.body.authorname;
+    authoremail = req.body.authoremail;
+    usermsg = req.body.usermsg || `My Commit #${Math.random()}`;
+    filename = req.body.filename.replace(/\s/g,'-');
+
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
     filepath = path.resolve(workdirpath,filename)
@@ -56,6 +67,9 @@ async function main(projName, curr_majorHash) {
     return new Promise ( async (resolve, reject) => {
         try {
             await deleteFile(filepath)
+            .then( async () => {
+                await autoCommit(workdirpath,filename, usermsg, authorname, authoremail);
+            })
             .then ( async () => {
                 statusLine = await statusChecker(projName, username);
                 return statusLine;
@@ -104,6 +118,34 @@ async function deleteFile(filepath){
             }
             resolve(true);
         })
+    })
+}
+
+
+async function autoCommit(workdirpath, filename, usermsg, authorname, authoremail){
+    return new Promise( async (resolve, reject) => {
+        try {
+            await exec(`git add .`, {
+                cwd: workdirpath,
+                shell: true
+            }, async (err, stdout, stderr) => {
+                if (err) reject(` git-add cli err: ${err}`);
+                if (stderr) reject(` git-add cli stderr: ${err}`);
+                let sha = await git.commit({
+                    fs,
+                    dir:  workdirpath,
+                    message: usermsg,
+                    author: {
+                        name: authorname,
+                        email: authoremail
+                    }
+                })
+                console.log("commit hash: \n",sha);
+                resolve(true);
+            })
+        } catch(e) {
+            reject(`git-commit err: ${e}`);
+        }
     })
 }
 module.exports = router;

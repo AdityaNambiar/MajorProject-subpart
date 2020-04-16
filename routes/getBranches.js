@@ -52,8 +52,9 @@ router.post('/getBranches', async (req,res) => {
 async function main(projName, workdirpath, curr_majorHash){ 
     return new Promise ( async (resolve, reject) => {
         try {
-            branchlist = await gitListBranches(workdirpath)
-            .then ( async () => {
+            await gitListBranches(workdirpath)
+            .then ( async (bList) => {
+                branchlist = bList
                 statusLine = await statusChecker(projName, username);
                 return statusLine;
             })
@@ -102,8 +103,9 @@ async function gitListBranches(workdirpath) {
             let localBranches = await git.listBranches({
                 dir: workdirpath
             })
-            branchlist.push(localBranches.concat(remoteBranches));
-            branchlist = branchlist.filter( branchname => branchname != 'HEAD')
+            branchlist = localBranches.concat(remoteBranches);
+            branchlist = branchlist.filter( branchname => branchname != "HEAD")
+            branchlist = branchlist.filter( (v, i, a) => a.indexOf(v) === i ); // Removing duplicates - credits - https://stackoverflow.com/a/14438954
             resolve(branchlist);
         } catch(e) {
             reject(`git-list-branch err: ${e}`);

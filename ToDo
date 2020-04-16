@@ -1,9 +1,3 @@
-
-4. Logic of these routes are pending:
-    - downloadRepo
-    - deleteProj
-
-
 1. projName and majorHash in an object to be returned back to blockchain.
 
 2. (Inform Gopi) 
@@ -13,8 +7,6 @@
     => should be kept in world state 
 
 3. Features remaining:
-    - (DONE): readForBuffer (Just a single fs.readFile) 
-    - downloadRepo (check the comment written in route) **LOW PRIORITY**
     - (SCRAPPED): issues (Relevant ToDo - 4, issues-datastructure.json)
     - (Future - optional): Restore a branch.
     - (Future - optional): Public repos, issues.

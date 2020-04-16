@@ -1,29 +1,35 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const path = require('path');
+const Server = require('node-git-server');
 
 const cors = require('cors');
 const port = process.env.PORT || 5000;
 
-const path = require('path');
-const Server = require('node-git-server');
+const repos = new Server(path.resolve(__dirname), {
+    autoCreate: true
+});
+const port2 = process.env.PORT || 7005;
 
-// utility import:
-const pushToBare = require('./utilities/pushToBare');
 
 
 // route imports:
 const initProj = require('./routes/initProj');
 const gitGraph = require('./routes/gitGraph');
 const downloadRepo = require('./routes/downloadRepo');
+const downloadBareRepo = require('./routes/downloadBareRepo');
 const deleteProj = require('./routes/deleteProj');
 
 const getFiles = require('./routes/getFiles');
+const deleteFile = require('./routes/deleteFile');
 const commitFile = require('./routes/commitFile');
 const diffFiles = require('./routes/diffFiles');
+const diffForCommit = require('./routes/diffForCommit');
 const mergeFiles = require('./routes/mergeFiles');
+const fixConsistency = require('./routes/fixConsistency');
 const fileCommitHistory = require('./routes/fileCommitHistory');
-const readForBuffer = require('./routes/readForBuffer');
+const readFile = require('./routes/readFile');
 
 const addBranch = require('./routes/addBranch');
 const getBranches = require('./routes/getBranches');
@@ -44,14 +50,18 @@ app.get('/',() => {
 app.post('/initProj', initProj);
 app.post('/gitGraph', gitGraph); 
 app.post('/downloadRepo', downloadRepo);
+app.post('/downloadBareRepo', downloadBareRepo);
 app.post('/deleteProj', deleteProj);
 
 app.post('/getFiles',getFiles);
+app.post('/deleteFile',deleteFile);
 app.post('/commitFile',commitFile);
 app.post('/diffFiles', diffFiles);
+app.post('/diffForCommit', diffForCommit);
 app.post('/mergeFiles', mergeFiles); 
+app.post('/fixConsistency', fixConsistency);
 app.post('/fileCommitHistory', fileCommitHistory);
-app.post('/readForBuffer',readForBuffer);
+app.post('/readFile',readFile);
 
 app.post('/addBranch', addBranch);
 app.post('/getBranches', getBranches);
@@ -59,21 +69,6 @@ app.post('/deleteBranch', deleteBranch);
 app.post('/branchCommitHistory', branchCommitHistory);
 
 app.post('/pushChecker', pushChecker);
-
-const repos = new Server(path.resolve(__dirname), {
-    autoCreate: true
-});
-const port2 = process.env.PORT || 7005;
-/**
- * Git merge procedure:
- * 1. Get the leader's folder (just to get the git repo inside it) from IPFS
- * 2. Perform merge as written in the below route
- * 3. (In case of Merge conflict) Get the conflicting file names: 
- *      a. Convert the lines of string into string array
- *      b. Split and put the file names in the output to a seperate array. (So that it can be displayed on frontend)
- *      c. Fetch the file contents of each file in the conflict (i.e. iterate the above obtained array and store their content in another array)
- * 4. Now the user has to be told to resolve the conflicts and Click on 'Save' and 'Apply' to 'git add file' and 'git commit file' respectively. (direct the routes of these buttons to the git API of addFile, without check and with check for commit) 
- */
 
 repos.on('push', (push) => {
     console.log('push object: ',push)

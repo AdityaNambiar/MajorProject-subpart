@@ -35,7 +35,7 @@ router.post('/deleteBranch', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
     branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // latest
-    username = req.body.username;
+    username = req.body.username.replace(/\s/g,'-');
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
@@ -57,7 +57,7 @@ router.post('/deleteBranch', async (req,res) => {
 async function main(projName, workdirpath, curr_majorHash, branchToUpdate) {
     return new Promise ( async (resolve, reject) => {
         try {
-            gitDeleteBranch(workdirpath, branchToUpdate)
+            await gitDeleteBranch(workdirpath, branchToUpdate)
             .then ( async () => {
                 statusLine = await statusChecker(projName, username);
                 return statusLine;

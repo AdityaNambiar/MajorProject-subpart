@@ -30,9 +30,8 @@ var projName, workdirpath, curr_majorHash,
 
 router.post('/readForBuffer', async (req, res) => {
     filename = req.body.filename;
-    buffer = req.body.filebuff;
-    projName = req.body.projName;
-    branchToUpdate = req.body.branchToUpdate;
+    projName = req.body.projName.replace(/\s/g,'-');
+    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // latest
     
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
@@ -56,8 +55,9 @@ router.post('/readForBuffer', async (req, res) => {
 async function main(projName, curr_majorHash) {
     return new Promise ( async (resolve, reject) => {
         try {
-            data = await readForBuffer(filepath)
-            .then ( async () => {
+            await readForBuffer(filepath)
+            .then ( async (data) => {
+                buffer = data
                 statusLine = await statusChecker(projName, username);
                 return statusLine;
             })
@@ -82,13 +82,13 @@ async function main(projName, curr_majorHash) {
                     return majorHash;
                 })
                 .then( (majorHash) => {
-                    console.log("MajorHash (git readForBuffer): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, data: data, statusLine: statusLine});
+                    console.log("MajorHash (git readFile): ", majorHash);
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, buffer: buffer, statusLine: statusLine});
                 })
             } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, data: data, statusLine: statusLine});
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, buffer: buffer, statusLine: statusLine});
             } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, data: data, statusLine: statusLine});
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, buffer: buffer, statusLine: statusLine});
             }
         } catch(e) {
             reject(`main err: ${e}`);

@@ -110,8 +110,8 @@ async function gitCheckout(workdirpath){
                 cwd: workdirpath,
                 shell: true
             }, (err,stdout,stderr) => {
-                if(err) { console.log('err: '+err); reject(`git-ls-tree cli err: ${err}`);}
-                //if(stderr) {console.log('stderr: '+stderr);reject(`git-ls-tree cli stderr: ${stderr}`);}
+                if(err) { console.log('err: '+err); reject(`git-checkout cli err: ${err}`);}
+                //if(stderr) {console.log('stderr: '+stderr);reject(`git-checkout cli stderr: ${stderr}`);}
                 resolve(true);
             })
         }catch(e){

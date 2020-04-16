@@ -23,7 +23,7 @@ const router = express.Router();
 
 
 var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, files, 
+    username, branchToUpdate, files = [], 
     upstream_branch, majorHash, barerepopath, 
     filenamearr = [], statusLine;
 
@@ -88,12 +88,12 @@ async function main(projName, workdirpath, curr_majorHash){
                 })
                 .then( (majorHash) => {
                     console.log("MajorHash (git addBranch): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, files: files, statusLine: statusLine});
                 })
             } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, files: files, statusLine: statusLine});
             } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, statusLine: statusLine});
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, files: files, statusLine: statusLine});
             }
         } catch(e) {
             reject(`main err: ${e}`);

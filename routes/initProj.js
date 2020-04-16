@@ -31,23 +31,22 @@ var workdirpath, barerepopath, projectspath, majorHash,
 
 router.post('/initProj', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-'); 
+    username = req.body.username.replace(/\s/g,'-');
     majorHash = '';
+    branchToUpdate = 'master';
     // Git work:
     authoremail = req.body.authoremail;
     authorname = req.body.authorname;
     buffer = req.body.filebuff || README.md;
     filename = req.body.filename || "README.md";
     usermsg = req.body.usermsg || "Initial Commit";
-    username = req.body.username.replace(/\s/g,'-');
-    branchToUpdate = 'master';
 
     projectspath = path.resolve(__dirname, '..', 'projects');
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
     try {
-        await main(projName, workdirpath, barerepopath, username, majorHash, buffer, filename, 
-                    usermsg, authorname, authoremail, branchToUpdate)
+        await main()
         .then( (response) => {
             res.status(200).send(response);
         })
@@ -56,7 +55,7 @@ router.post('/initProj', async (req,res) => {
     }
 })
 
-async function main(projName, workdirpath, barerepopath, username, majorHash, buffer, filename, usermsg, authorname, authoremail) { 
+async function main() { 
     return new Promise ( async (resolve, reject) => {
         gitInit(workdirpath)
         .then( async () => {

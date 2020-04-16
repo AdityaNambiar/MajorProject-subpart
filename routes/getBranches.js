@@ -95,10 +95,16 @@ async function main(projName, workdirpath, curr_majorHash){
 async function gitListBranches(workdirpath) {
     return new Promise (async (resolve, reject) => {
         try {
-            let branches = await git.listBranches({
+            let remoteBranches = await git.listBranches({
+                dir: workdirpath,
+                remote: 'origin'
+            })
+            let localBranches = await git.listBranches({
                 dir: workdirpath
             })
-            resolve(branches);
+            branchlist.push(localBranches.concat(remoteBranches));
+            branchlist = branchlist.filter( branchname => branchname != 'HEAD')
+            resolve(branchlist);
         } catch(e) {
             reject(`git-list-branch err: ${e}`);
         }

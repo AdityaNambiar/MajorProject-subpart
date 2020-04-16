@@ -23,12 +23,6 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-var projName, branchName, workdirpath, 
-    curr_majorHash, username, ref1, ref2;
-// vars used as global:
-var branchToUpdate, files, upstream_branch, barerepopath;
-
-
 var projName, workdirpath, curr_majorHash, 
     username, branchToUpdate, majorHash, 
     barerepopath, filenamearr = [], statusLine, 
@@ -54,6 +48,7 @@ router.post('/diffFiles', async (req,res) => {
             return response;
         })
         .then ( (response) => {
+            fs.writeFileSync('diffOp', response.diffOutput);
             res.status(200).send(response);
         })
     }catch(e){
@@ -64,8 +59,9 @@ router.post('/diffFiles', async (req,res) => {
 async function main(projName, workdirpath, curr_majorHash){
     return new Promise ( async (resolve, reject) => {
         try {
-            diffOutput = await gitDiffRefs(workdirpath)
-            .then ( async () => {
+            await gitDiffRefs(workdirpath)
+            .then ( async (diffOp) => {
+                diffOutput = diffOp;
                 statusLine = await statusChecker(projName, username);
                 return statusLine;
             })
@@ -91,12 +87,12 @@ async function main(projName, workdirpath, curr_majorHash){
                 })
                 .then( (majorHash) => {
                     console.log("MajorHash (git diffFiles): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, diffOutput: diffOutput, statusLine: statusLine, });
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, diffOutput: Buffer.from(diffOutput), statusLine: statusLine, });
                 })
             } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, diffOutput: diffOutput, statusLine: statusLine, });
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, diffOutput: Buffer.from(diffOutput), statusLine: statusLine, });
             } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, diffOutput: diffOutput, statusLine: statusLine, });
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, diffOutput: Buffer.from(diffOutput), statusLine: statusLine, });
             } 
         } catch (e) {
             reject(`main err: ${e}`);
@@ -113,17 +109,14 @@ async function gitDiffRefs(workdirpath) {
             }, (err, stdout, stderr) => {
                 if (err) reject(`git-setupstream err: ${err}`);
                 if (stderr) reject(`git-setupstream stderr: ${stderr}`);
-                console.log(stdout);
-
+                
                 let a = stdout.split("diff --git");
                 for (let i = 1; i < a.length; i++) {
                     a[i] = "diff --git" + a[i];
                 }
                 a.shift();
-                console.log(a.join('\n'));
                 resolve(a.join('\n'))
             })
-            resolve(true);
         } catch(e) {
             reject(`git-branch-setUpstream err: ${e}`)
         } 

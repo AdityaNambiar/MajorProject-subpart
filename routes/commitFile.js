@@ -29,12 +29,13 @@ var projName, workdirpath, curr_majorHash,
 router.post('/commitFile', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
     branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    username = req.body.username.replace(/\s/g,'-');
+    curr_majorHash = req.body.majorHash; // latest
+    
     authorname = req.body.authorname;
     authoremail = req.body.authoremail;
     usermsg = req.body.comm_msg || `My Commit #${Math.random()}`;
-    username = req.body.username.replace(/\s/g,'-');
     filename = req.body.filename.replace(/\s/g,'-');
-    curr_majorHash = req.body.majorHash; // latest
     buffer = req.body.filebuff;
 
 
@@ -44,7 +45,7 @@ router.post('/commitFile', async (req,res) => {
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => { 
-            let response = await main(projName, workdirpath, curr_majorHash, authorname, authoremail, usermsg)
+            let response = await main()
             return response;
         })
         .then ( (response) => {
@@ -54,7 +55,7 @@ router.post('/commitFile', async (req,res) => {
         res.status(400).send(`main caller err: ${e}`);
     }
 })
-async function main(projName, workdirpath, curr_majorHash, authorname, authoremail, usermsg) {
+async function main() {
     return new Promise ( async (resolve, reject) => {
         try {
             await writeFile(projName, username, filename, buffer)
@@ -90,9 +91,9 @@ async function main(projName, workdirpath, curr_majorHash, authorname, authorema
                     resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
                 })
             } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr,});
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
             } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr});
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, statusLine: statusLine});
             }
         } catch(e) {
             reject(`main err: ${e}`);

@@ -56,8 +56,9 @@ router.post('/gitGraph', async (req,res) => {
 async function main(projName, workdirpath, curr_majorHash){
     return new Promise ( async (resolve, reject) => {
         try {
-            graphOutput = await gitGraph(workdirpath)
-            .then ( async () => {
+            await gitGraph(workdirpath)
+            .then ( async (gOp) => {
+                graphOutput = gOp
                 statusLine = await statusChecker(projName, username);
                 return statusLine;
             })

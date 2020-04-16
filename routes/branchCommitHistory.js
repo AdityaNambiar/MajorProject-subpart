@@ -31,6 +31,7 @@ var projName, workdirpath, curr_majorHash,
 router.post('/branchCommitHistory', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
     branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    username = req.body.username.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // latest
     
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
@@ -53,8 +54,9 @@ router.post('/branchCommitHistory', async (req,res) => {
 async function main(projName, workdirpath, curr_majorHash) {
     return new Promise ( async (resolve, reject) => {
         try {
-            commitsObj = await branchCommitHistory(workdirpath)
-            .then ( async () => {
+            await branchCommitHistory(workdirpath)
+            .then ( async (cObj) => {
+                commitsObj = cObj;
                 statusLine = await statusChecker(projName, username);
                 return statusLine;
             })

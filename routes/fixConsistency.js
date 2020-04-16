@@ -1,19 +1,18 @@
 /**
-*  - Check between bare repo status and username work dir status
-*  - Called when the Merge Conflict page is loaded. (componentDidMount)
-*  - Utility.
-*      - `git pull barerepo master`
-*      - if conflicts arise, { do the same that you did for mergeFiles route when conflicts arise }.
-*      - if conflicts dont arise, pull will be successful.
-*/
+ * Show the 'branch diagram' or 'git log graph' on frontend.
+ */
 
 // Misc:
 const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
+const statusChecker = require('../utilities/statusChecker');
+const pushChecker = require('../utilities/pushChecker');
+const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
-// Terminal execution:
+
+// Terminal execution import
 const { exec } = require('child_process');
 
 // isomorphic-git related imports and setup
@@ -27,11 +26,11 @@ const router = express.Router();
 
 
 var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, 
-    barerepopath, filenamearr;
+    username, branchToUpdate, majorHash, 
+    barerepopath, merge_op, statusLine;
 
 
-router.post('/pushChecker', async (req,res) => {
+router.post('/fixConsistency',  async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
     branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // latest
@@ -43,7 +42,7 @@ router.post('/pushChecker', async (req,res) => {
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => {
-            let response = await main(workdirpath)
+            let response = await main(projName, workdirpath, username, curr_majorHash)
             return response;
         })
         .then ( (response) => {
@@ -52,27 +51,92 @@ router.post('/pushChecker', async (req,res) => {
     }catch(e){
         res.status(400).send(`main caller err: ${e}`);
     }
-});
+}); 
 
-async function main(workdirpath){
+async function main(projName, workdirpath, username, curr_majorHash) {
     return new Promise ( async (resolve, reject) => {
-        await gitPull(workdirpath)
-        .then( (filenamearr) => {
-            resolve({filenamearr:filenamearr});
-        })
-        .catch((e) => {
+        try {
+            await gitCheckout(workdirpath)
+            .then( async () => {
+                await setUpstream(workdirpath, upstream_branch);
+            })
+            .then( async () => {
+                await mergeFiles(workdirpath)
+            })
+            .then ( async (arr) => {
+                merge_op = arr
+                statusLine = await statusChecker(projName, username);
+                return statusLine;
+            })
+            if (merge_op.length == 0) {  // if no conflicts only then proceed with cleaning up.
+                console.log(`Pushing to branch: ${branchToUpdate}`);
+                await pushToBare(projName, branchToUpdate, username)
+                .then( async () => {
+                    await rmWorkdir(projName, username);
+                })
+                .then( async () => {
+                    // Remove old state from IPFS.
+                    await removeFromIPFS(curr_majorHash, projName);
+                })
+                .then( async () => {
+                    // Add new state to IPFS.
+                    majorHash = await addToIPFS(barerepopath);
+                    return majorHash;
+                })
+                .then( (majorHash) => {
+                    console.log("MajorHash (git fixConsistency): ", majorHash);
+                    resolve({projName: projName, majorHash: majorHash, merge_op: merge_op, statusLine: statusLine});
+                })
+            } else if (merge_op[0] != "Please solve this merge conflict via CLI"){
+                resolve({projName: projName, majorHash: majorHash, merge_op: merge_op, statusLine: statusLine});
+            } else {
+                resolve({projName: projName, majorHash: curr_majorHash, merge_op: merge_op, statusLine: statusLine});
+            }
+        } catch (e) {
             reject(`main err: ${e}`);
-        })
+        }
+    })
+}
+async function gitCheckout(workdirpath){
+    return new Promise (async (resolve, reject) => {
+        try {
+            exec(`git checkout master`, {
+                cwd: workdirpath,
+                shell: true
+            }, (err,stdout,stderr) => {
+                if(err) { console.log('err: '+err); reject(`git-checkout cli err: ${err}`);}
+                //if(stderr) {console.log('stderr: '+stderr);reject(`git-checkout cli stderr: ${stderr}`);}
+                resolve(true);
+            })
+        }catch(e){
+            reject(`git-checkout err: ${e}`);
+        }
     })
 }
 
-async function gitPull(workdirpath){
-
-    return new Promise( async (resolve, reject) => {
+async function setUpstream(workdirpath, upstream_branch) {
+    return new Promise(async (resolve, reject) => {
         try {
-            await exec(`git pull ${barerepopath}`, {
+            exec(`git branch --set-upstream-to=${upstream_branch}`, {
                 cwd: workdirpath,
                 shell: true
+            }, (err, stdout, stderr) => {
+                if (err) reject(`git-setupstream err: ${err}`);
+                if (stderr) reject(`git-setupstream stderr: ${stderr}`);
+                console.log(stdout);
+            })
+            resolve(true);
+        } catch(e) {
+            reject(`git-branch-setUpstream err: ${e}`)
+        } 
+    })
+}
+async function mergeFiles(workdirpath){
+    return new Promise( async (resolve, reject) => {
+        try {
+            await exec(`git merge ${branchToUpdate}` , {
+                cwd: workdirpath,
+                shell: true,
             }, async (err, stdout, stderr) => {
                 // if (err) {
                 //     reject(`(pushchecker) git-pull cli err: ${err}`);
@@ -86,6 +150,7 @@ async function gitPull(workdirpath){
                 var obj = {}, arr = [];
                 var elem_rgx = new RegExp(/CONFLICT/);
                 var inbetweenbrackets_rgx = new RegExp(/\((.*)\)/);
+                
                 if (conflict_lines_arr.some((e) => elem_rgx.test(e))){
                     //conflict_lines_arr.push("CONFLICT (add/add): Merge conflict in DESC4")
                     conflict_lines_arr.push("CONFLICT (modify/delete): Merge conflict in DESC4")
@@ -120,22 +185,10 @@ async function gitPull(workdirpath){
                 } else {
                     resolve(filename_arr);
                 }
-            })
-        } catch(e) {
-            reject(`(pushchecker) git-pull err: ${e}`)
+            });
+        }catch(e){
+            reject("mergeFiles git err: "+e);
         }
-    })
-}
-
-async function readForBuffer(workdirpath, filename){
-    return new Promise( async (resolve, reject) =>{
-        // Specify this as 2nd parameter: {encoding: 'utf-8'} - to prevent getting a buffer.
-        fs.readFile(path.resolve(workdirpath, filename),(err, data) => {
-            if (err) {
-                reject('(pushchecker) fs readfile err: '+err);
-            }
-            resolve(data);
-        })
     })
 }
 module.exports = router

@@ -1,9 +1,12 @@
 /**
- * Download the repository (the one with working directory - the normal one)
- * https://localhost:5000/projName.git <- URL. 
- * res.status(200).send(url).
+ * readFile and send its Buffer.
+ * 
+ * 1. Get file name
+ * 2. fs.readFile(...path...filename)
+ * 3. return the buffer
  */
-// Misc:
+
+//MISC:
 const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
 const removeFromIPFS = require('../utilities/removeFromIPFS');
@@ -12,52 +15,47 @@ const pushChecker = require('../utilities/pushChecker');
 const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
-// isomorphic-git related imports and setup
-const fs = require('fs');
-const git = require('isomorphic-git');
-git.plugins.set('fs',fs); // Bring your own file system 
-
 const path = require('path');
+const fs = require('fs');
+
 const express = require('express');
 const router = express.Router();
 
 var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, 
-    upstream_branch, majorHash, barerepopath, 
+    username, branchToUpdate, filename, 
+    majorHash, barerepopath, filepath, 
     filenamearr = [], statusLine;
 
-router.post('/downloadBareRepo', async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-');
-    username = req.body.username.replace(/\s/g,'-');
-    curr_majorHash = req.body.majorHash;  // latest
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
-    upstream_branch = 'origin/master';
 
+router.post('/deleteFile', async (req, res) => {
+    projName = req.body.projName.replace(/\s/g,'-');
+    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    username = req.body.username.replace(/\s/g,'-');
+    curr_majorHash = req.body.majorHash; // latest
+    filename = req.body.filename;
+    
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+    filepath = path.resolve(workdirpath,filename)
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => {
-            await rmWorkdir(projName, username);
+            let response = await main(projName, curr_majorHash)
+            return response;
         })
-        .then ( () => {
-            res.download(barerepopath,`${projName}.zip`,(err)=> {
-                if (err) {
-                    res.status(400).send(`Could not download barerepo repo: \n ${err}`);
-                } 
-            })
+        .then ( (response) => {
+            res.status(200).send(response);
         })
     }catch(e){
         res.status(400).send(`main caller err: ${e}`);
     }
 })
 
-
-async function main(projName, workdirpath, curr_majorHash){
+async function main(projName, curr_majorHash) {
     return new Promise ( async (resolve, reject) => {
         try {
-            await downloadRepo(workdirpath)
+            await deleteFile(filepath)
             .then ( async () => {
                 statusLine = await statusChecker(projName, username);
                 return statusLine;
@@ -70,7 +68,9 @@ async function main(projName, workdirpath, curr_majorHash){
             if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
                 console.log(`Pushing to branch: ${branchToUpdate}`);
                 await pushToBare(projName, branchToUpdate, username)
-                
+                .then( async () => {
+                    await rmWorkdir(projName, username);
+                })
                 .then( async () => {
                     // Remove old state from IPFS.
                     await removeFromIPFS(curr_majorHash, projName);
@@ -81,7 +81,7 @@ async function main(projName, workdirpath, curr_majorHash){
                     return majorHash;
                 })
                 .then( (majorHash) => {
-                    console.log("MajorHash (git downloadRepo): ", majorHash);
+                    console.log("MajorHash (git deleteFile): ", majorHash);
                     resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
                 })
             } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
@@ -95,9 +95,15 @@ async function main(projName, workdirpath, curr_majorHash){
     })
 }
 
-async function downloadRepo(workdirpath) {
-    // code to download working dir in .zip format
-
-    
+async function deleteFile(filepath){
+    return new Promise( async (resolve, reject) =>{
+        console.log(filepath);
+        fs.unlink(filepath,(err) => {
+            if (err) {
+                reject('fs deletefile err: '+err);
+            }
+            resolve(true);
+        })
+    })
 }
 module.exports = router;

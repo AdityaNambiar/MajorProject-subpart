@@ -33,8 +33,6 @@ router.post('/diffForCommit', async (req,res) => {
     branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');;
     curr_majorHash = req.body.majorHash;  // latest
     ref1 = req.body.ref1.replace(/\s/g,'-');
-    ref2 = req.body.ref2.replace(/\s/g,'-');
-
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
@@ -56,8 +54,9 @@ router.post('/diffForCommit', async (req,res) => {
 async function main(projName, workdirpath, curr_majorHash, ref1){
     return new Promise ( async (resolve, reject) => {
         try {
-            diffOutput = gitDiffRef(workdirpath, ref1)
-            .then ( async () => {
+             await gitDiffRef(workdirpath, ref1)
+            .then ( async (diffOp) => {
+                diffOutput = diffOp
                 statusLine = await statusChecker(projName, username);
                 return statusLine;
             })
@@ -83,12 +82,12 @@ async function main(projName, workdirpath, curr_majorHash, ref1){
                 })
                 .then( (majorHash) => {
                     console.log("MajorHash (git diffForCommit): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, diffOutput: diffOutput, statusLine: statusLine});
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, diffOutput: Buffer.from(diffOutput), statusLine: statusLine});
                 })
             } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, diffOutput: diffOutput, statusLine: statusLine});
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, diffOutput: Buffer.from(diffOutput), statusLine: statusLine});
             } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, diffOutput: diffOutput, statusLine: statusLine});
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, diffOutput: Buffer.from(diffOutput), statusLine: statusLine});
             }
         } catch (e) {
             reject(`main err: ${e}`);
@@ -99,7 +98,7 @@ async function main(projName, workdirpath, curr_majorHash, ref1){
 async function gitDiffRef(workdirpath, ref1) {
     return new Promise(async (resolve, reject) => {
         try {
-            exec(`git log -p --pretty="raw" ${ref1}`, {
+            await exec(`git log -p --pretty="raw" ${ref1}`, {
                 cwd: workdirpath,
                 shell: true
             }, (err, stdout, stderr) => {
@@ -115,7 +114,6 @@ async function gitDiffRef(workdirpath, ref1) {
                 console.log(a.join('\n'));
                 resolve(a.join('\n'))
             })
-            resolve(true);
         } catch(e) {
             reject(`git-diffrefs err: ${e}`)
         } 

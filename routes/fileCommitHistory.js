@@ -33,6 +33,7 @@ var projName, workdirpath, curr_majorHash,
 router.post('/fileCommitHistory', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
     branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    username = req.body.username.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // latest
     filename = req.body.filename;
     
@@ -56,8 +57,9 @@ router.post('/fileCommitHistory', async (req,res) => {
 async function main(projName, workdirpath, curr_majorHash, filename) {
     return new Promise ( async (resolve, reject) => {
         try {
-            commitsObj = await fileCommitHistory(workdirpath, filename)
-            .then ( async () => {
+            await fileCommitHistory(workdirpath, filename)
+            .then ( async (cObj) => {
+                commitsObj = cObj;
                 statusLine = await statusChecker(projName, username);
                 return statusLine;
             })

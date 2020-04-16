@@ -27,7 +27,7 @@ const router = express.Router();
 
 var projName, workdirpath, curr_majorHash, 
     username, branchToUpdate, majorHash, 
-    barerepopath, filenamearr, statusLine;
+    barerepopath, merge_op, statusLine;
 
 
 router.post('/mergeFiles',  async (req,res) => {
@@ -56,17 +56,13 @@ router.post('/mergeFiles',  async (req,res) => {
 async function main(projName, workdirpath, username, curr_majorHash) {
     return new Promise ( async (resolve, reject) => {
         try {
-            filenamearr = await mergeFiles(workdirpath)
-            .then ( async () => {
+            await mergeFiles(workdirpath)
+            .then ( async (arr) => {
+                merge_op = arr
                 statusLine = await statusChecker(projName, username);
                 return statusLine;
             })
-            .then( async () => {
-                filenamearr = [];
-                filenamearr = await pushChecker(projName, username, branchToUpdate); 
-                console.log("pushchecker returned this: \n", filenamearr);
-            })
-            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
+            if (merge_op.length == 0) {  // if no conflicts only then proceed with cleaning up.
                 console.log(`Pushing to branch: ${branchToUpdate}`);
                 await pushToBare(projName, branchToUpdate, username)
                 .then( async () => {
@@ -83,12 +79,12 @@ async function main(projName, workdirpath, username, curr_majorHash) {
                 })
                 .then( (majorHash) => {
                     console.log("MajorHash (git mergeFiles): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
+                    resolve({projName: projName, majorHash: majorHash, merge_op: merge_op, statusLine: statusLine});
                 })
-            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
+            } else if (merge_op[0] != "Please solve this merge conflict via CLI"){
+                resolve({projName: projName, majorHash: majorHash, merge_op: merge_op, statusLine: statusLine});
             } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, statusLine: statusLine});
+                resolve({projName: projName, majorHash: curr_majorHash, merge_op: merge_op, statusLine: statusLine});
             }
         } catch (e) {
             reject(`main err: ${e}`);

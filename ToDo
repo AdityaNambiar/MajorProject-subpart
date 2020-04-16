@@ -1,3 +1,39 @@
+- Final test results:
+    - initProj, yes.
+    - commitFile, yes.
+    - addBranch, yes.
+    - getBranches, yes.
+    - getFiles, yes.
+    - deleteBranch,
+        -- Test1, nope.
+            { Err (fix tomorrow):
+                main err: deleteBranch git ERR: RefNotExistsError: Failed to delete branch "f2" because branch "f2"
+                does not exists.
+                at Object.deleteBranch
+            }
+    - deleteFile, yes
+    - fileCommitHistory, yes
+    - branchCommitHistory, yes
+    - checkoutBranch, yes
+    - gitGraph, yes
+    - diffFiles, yes
+    - diffForCommit, yes. But talk with Gopi about showing the parent(s) and the commit hash itself (using state management) - because this route only gives the diff patch which is shown below.
+    - downloadBareRepo,
+        -- Test1, nope.
+            { Err (fix tomorrow):
+                Could not download barerepo repo:
+                Error: EISDIR, read
+                SO link for insight on this error: https://stackoverflow.com/questions/20417118/using-node-js-i-get-error-eisdir-read 
+            }
+    - readFile, yes.
+
+- Routes whose test remain:
+    - downloadRepo (apply the same fix which you'd do for /downloadBareRepo)
+    - fixConsistency
+    - mergeFiles
+    - pushChecker
+
+
 1. projName and majorHash in an object to be returned back to blockchain.
 
 2. (Inform Gopi) 

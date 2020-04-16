@@ -37,6 +37,7 @@ const deleteBranch = require('./routes/deleteBranch');
 const branchCommitHistory = require('./routes/branchCommitHistory');
 
 const pushChecker = require('./routes/pushChecker');
+const checkoutBranch = require('./routes/checkoutBranch');
 
 
 
@@ -69,6 +70,7 @@ app.post('/deleteBranch', deleteBranch);
 app.post('/branchCommitHistory', branchCommitHistory);
 
 app.post('/pushChecker', pushChecker);
+app.post('/checkoutBranch', checkoutBranch);
 
 repos.on('push', (push) => {
     console.log('push object: ',push)

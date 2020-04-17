@@ -11,6 +11,8 @@ const pushChecker = require('../utilities/pushChecker');
 const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
+const { exec } = require('child_process');
+
 // isomorphic-git related imports and setup
 const fs = require('fs');
 const git = require('isomorphic-git');
@@ -106,11 +108,14 @@ async function gitDeleteBranch(workdirpath, branchToUpdate){
             await git.deleteBranch({
                 dir:  workdirpath,
                 ref: branchToUpdate,
-                
             })
             resolve(true);
         }catch(e){
-            reject("deleteBranch git ERR: "+e)
+            if (e.name == "RefNotExistsError"){
+                resolve(true);
+            } else {
+                reject("deleteBranch git ERR: "+e)
+            }
         }
     })
 }

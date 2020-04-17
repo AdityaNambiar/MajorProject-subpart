@@ -11,6 +11,7 @@
                 does not exists.
                 at Object.deleteBranch
             }
+        -- Test2, yes. - Added a workaround for this error. It makes sense to bypass this one specific error because all we need to do is to delete the branch from remote repo as well (locally it does not exist).
     - deleteFile, yes
     - fileCommitHistory, yes
     - branchCommitHistory, yes
@@ -20,18 +21,19 @@
     - diffForCommit, yes. But talk with Gopi about showing the parent(s) and the commit hash itself (using state management) - because this route only gives the diff patch which is shown below.
     - downloadBareRepo,
         -- Test1, nope.
-            { Err (fix tomorrow):
+            { Err (workaround found - confirm with Raj about procedure):
                 Could not download barerepo repo:
                 Error: EISDIR, read
                 SO link for insight on this error: https://stackoverflow.com/questions/20417118/using-node-js-i-get-error-eisdir-read 
             }
+    - downloadRepo (apply the same fix which you'd do for /downloadBareRepo)
+        -- Only keeping this for now. This route works and returns .zip in "res.download"
     - readFile, yes.
+    - fixConsistency, yes
+    - mergeFiles, yes
+    - pushChecker - works same as /mergeFiles except it's jut git pull origin srcBranch.
 
 - Routes whose test remain:
-    - downloadRepo (apply the same fix which you'd do for /downloadBareRepo)
-    - fixConsistency
-    - mergeFiles
-    - pushChecker
 
 
 1. projName and majorHash in an object to be returned back to blockchain.

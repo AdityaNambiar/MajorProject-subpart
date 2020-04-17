@@ -28,7 +28,7 @@ const router = express.Router();
 
 var projName, workdirpath, curr_majorHash, 
     username, branchToUpdate, 
-    barerepopath, filenamearr;
+    barerepopath, branchName;
 
 
 router.post('/pushChecker', async (req,res) => {
@@ -36,6 +36,7 @@ router.post('/pushChecker', async (req,res) => {
     branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // latest
     username = req.body.username.replace(/\s/g,'-');
+    branchName = req.body.branchName.replace(/\s/g,'-');
     
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
@@ -70,17 +71,17 @@ async function gitPull(workdirpath){
 
     return new Promise( async (resolve, reject) => {
         try {
-            await exec(`git pull ${barerepopath}`, {
+            await exec(`git pull ${barerepopath} ${branchName}`, {
                 cwd: workdirpath,
                 shell: true
             }, async (err, stdout, stderr) => {
                 // if (err) {
-                //     reject(`(pushchecker) git-pull cli err: ${err}`);
+                //     reject(`(pushchecker -route) git-pull cli err: ${err}`);
                 // }
                 // if (stderr) {
-                //     reject(`(pushchecker) git-pull cli stderr: ${stderr}`);
+                //     reject(`(pushchecker - route) git-pull cli stderr: ${stderr}`);
                 // }
-                console.log(stdout);
+                console.log(err,stdout,stderr);
                 var conflict_lines_arr = stdout.split('\n');
                 var filename_arr = [];
                 var obj = {}, arr = [];
@@ -88,7 +89,7 @@ async function gitPull(workdirpath){
                 var inbetweenbrackets_rgx = new RegExp(/\((.*)\)/);
                 if (conflict_lines_arr.some((e) => elem_rgx.test(e))){
                     //conflict_lines_arr.push("CONFLICT (add/add): Merge conflict in DESC4")
-                    conflict_lines_arr.push("CONFLICT (modify/delete): Merge conflict in DESC4")
+                    //conflict_lines_arr.push("CONFLICT (modify/delete): Merge conflict in DESC4")
                     for (var i = 0; i < conflict_lines_arr.length; i++){
                         if (conflict_lines_arr[i].match(inbetweenbrackets_rgx) != null) {
                             // form an array of types of conflict occured.. like ['content', 'add/add', 'modify/delete', 'content' etc..]
@@ -122,7 +123,7 @@ async function gitPull(workdirpath){
                 }
             })
         } catch(e) {
-            reject(`(pushchecker) git-pull err: ${e}`)
+            reject(`(pushchecker - route) git-pull err: ${e}`)
         }
     })
 }

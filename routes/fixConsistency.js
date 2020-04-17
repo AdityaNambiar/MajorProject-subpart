@@ -27,7 +27,8 @@ const router = express.Router();
 
 var projName, workdirpath, curr_majorHash, 
     username, branchToUpdate, majorHash, 
-    barerepopath, merge_op, statusLine;
+    barerepopath, merge_op, statusLine,
+    upstream_branch;
 
 
 router.post('/fixConsistency',  async (req,res) => {
@@ -35,6 +36,7 @@ router.post('/fixConsistency',  async (req,res) => {
     branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // latest
     username = req.body.username.replace(/\s/g,'-');
+    upstream_branch = 'origin/master';
     
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
@@ -61,13 +63,15 @@ async function main(projName, workdirpath, username, curr_majorHash) {
                 await setUpstream(workdirpath, upstream_branch);
             })
             .then( async () => {
-                await mergeFiles(workdirpath)
+                let arr = await mergeFiles(workdirpath)
+                return arr;
             })
             .then ( async (arr) => {
                 merge_op = arr
                 statusLine = await statusChecker(projName, username);
                 return statusLine;
             })
+            console.log('mergeop: ',merge_op);
             if (merge_op.length == 0) {  // if no conflicts only then proceed with cleaning up.
                 console.log(`Pushing to branch: ${branchToUpdate}`);
                 await pushToBare(projName, branchToUpdate, username)
@@ -144,7 +148,7 @@ async function mergeFiles(workdirpath){
                 // if (stderr) {
                 //     reject(`(pushchecker) git-pull cli stderr: ${stderr}`);
                 // }
-                console.log(stdout);
+                console.log(err,stdout,stderr);
                 var conflict_lines_arr = stdout.split('\n');
                 var filename_arr = [];
                 var obj = {}, arr = [];
@@ -153,7 +157,7 @@ async function mergeFiles(workdirpath){
                 
                 if (conflict_lines_arr.some((e) => elem_rgx.test(e))){
                     //conflict_lines_arr.push("CONFLICT (add/add): Merge conflict in DESC4")
-                    conflict_lines_arr.push("CONFLICT (modify/delete): Merge conflict in DESC4")
+                    //conflict_lines_arr.push("CONFLICT (modify/delete): Merge conflict in DESC4")
                     for (var i = 0; i < conflict_lines_arr.length; i++){
                         if (conflict_lines_arr[i].match(inbetweenbrackets_rgx) != null) {
                             // form an array of types of conflict occured.. like ['content', 'add/add', 'modify/delete', 'content' etc..]
@@ -189,6 +193,18 @@ async function mergeFiles(workdirpath){
         }catch(e){
             reject("mergeFiles git err: "+e);
         }
+    })
+}
+
+async function readForBuffer(workdirpath, filename){
+    return new Promise( async (resolve, reject) =>{
+        // Specify this as 2nd parameter: {encoding: 'utf-8'} - to prevent getting a buffer.
+        fs.readFile(path.resolve(workdirpath, filename),(err, data) => {
+            if (err) {
+                reject('(pushchecker) fs readfile err: '+err);
+            }
+            resolve(data);
+        })
     })
 }
 module.exports = router

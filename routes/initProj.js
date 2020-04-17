@@ -21,10 +21,6 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-let projName = 'app'
-let projDesc = 'HCLApp is a new web app for BE students.'
-let README = `PROJECT NAME: ${projName} \n PROJECT DESCRIPTION: ${projDesc} \n`
-
 var workdirpath, barerepopath, projectspath, majorHash, 
     authoremail, authorname, buffer, username,
     filename, usermsg, branchToUpdate, barepath;
@@ -37,7 +33,7 @@ router.post('/initProj', async (req,res) => {
     // Git work:
     authoremail = req.body.authoremail;
     authorname = req.body.authorname;
-    buffer = req.body.filebuff || README.md;
+    buffer = req.body.filebuff;
     filename = req.body.filename || "README.md";
     usermsg = req.body.usermsg || "Initial Commit";
 

@@ -90,12 +90,12 @@ async function main(projName, workdirpath, curr_majorHash){
                 })
                 .then( (majorHash) => {
                     console.log("MajorHash (git addBranch): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, files: files, statusLine: statusLine});
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, url: url, files: files, statusLine: statusLine});
                 })
             } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, files: files, statusLine: statusLine});
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, url: url, files: files, statusLine: statusLine});
             } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, files: files, statusLine: statusLine});
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, url: url, files: files, statusLine: statusLine});
             }
         } catch(e) {
             reject(`main err: ${e}`);
@@ -138,7 +138,7 @@ async function setUpstream(workdirpath, upstream_branch) {
 }
 
 async function gitListFiles(workdirpath) {
-    let command = `FILES="$(git ls-tree --name-only HEAD .)";IFS="$(printf "\n\b")";for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x2D%cr" $f)";  printf "%s-%s\n" "$f" "$str"; done`;
+    let command = `FILES="$(git ls-tree --name-only HEAD .)";IFS="$(printf "\n\b")";for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x28%x7c%x29%x2D%x7c%x2D%x28%x7c%x29%cr" $f)";  printf "%s(|)-|-(|)%s\n" "$f" "$str"; done`;
     return new Promise (async (resolve, reject) => {
         try {
             exec(command, {
@@ -150,14 +150,14 @@ async function gitListFiles(workdirpath) {
                 
                 /**
                  * 1. Convert stdout to string array
-                 * 2. Split by '-' seperator.
+                 * 2. Split by '(|)-|-(|)' seperator. Had to decide upon a weirdest symbol - my imaginations are helpful with this. Thanks lenny face.
                  * 3. create an object and pass it out of this function in resolve().
                  */
                 files = [];
                 stdout.trim().split('\n').forEach( output_arr => {
-                    let file = output_arr.split('-')[0];
-                    let commitmsg = output_arr.split('-')[1];
-                    let time = output_arr.split('-')[2];
+                    let file = output_arr.split('(|)-|-(|)')[0];
+                    let commitmsg = output_arr.split('(|)-|-(|)')[1];
+                    let time = output_arr.split('(|)-|-(|)')[2];
                     let obj = { file: file, commitmsg: commitmsg, time: time}
                     //console.log(obj);
                     files.push(obj);

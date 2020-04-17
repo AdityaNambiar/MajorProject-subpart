@@ -21,7 +21,14 @@ module.exports = function pushToBare(projName, branchName, username) {
             cwd: workdirpath,
             shell: true
         }, (err, stdout, stderr) => {
-            if (err) reject(`git push cli err: ${err}`) 
+            if (err) {
+                let err_arr = err.toString().split('\n');
+                console.log(err);
+                if (err_arr.some( (e) => e == `fatal: ${branchName} cannot be resolved to branch`)) 
+                    resolve(true)
+                else  
+                    reject(`git push cli err: ${err}`);
+            }
             //if (stderr) reject(`git push cli stderr: ${stderr}`) 
             console.log('git push cli stdout: ',stdout)
             resolve(true);

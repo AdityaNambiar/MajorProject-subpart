@@ -35,7 +35,7 @@ router.post('/commitFile', async (req,res) => {
     authorname = req.body.authorname;
     authoremail = req.body.authoremail;
     usermsg = req.body.usermsg || `My Commit #${Math.random()}`;
-    filename = req.body.filename.replace(/\s/g,'-');
+    filename = req.body.filename; // Maybe you dont need ".replace(/\s/g,'-')" here. Means it should allow having spaces in filenames.
     buffer = req.body.filebuff;
 
 

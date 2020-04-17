@@ -12,6 +12,7 @@ const pushChecker = require('../utilities/pushChecker');
 const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
+const { zip } = require('zip-a-folder');
 // isomorphic-git related imports and setup
 const fs = require('fs');
 const git = require('isomorphic-git');
@@ -22,7 +23,7 @@ const express = require('express');
 const router = express.Router();
 
 var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, 
+    username, branchToUpdate, projNamepath,
     upstream_branch, majorHash, barerepopath, 
     filenamearr = [], statusLine;
 
@@ -35,14 +36,19 @@ router.post('/downloadRepo', async (req,res) => {
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+    
+    projNamepath = path.resolve(__dirname, '..', 'projects', projName+'.zip');
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => {
+            await zip(workdirpath, projNamepath);
+        })
+        .then( async () => {
             await rmWorkdir(projName, username);
         })
         .then ( () => {
-            res.download(workdirpath,`${projName}.zip`,(err)=> {
+            res.download(projNamepath,`${projName}.zip`,(err)=> {
                 if (err) {
                     res.status(400).send(`Could not download workdir repo: \n ${err}`);
                 } 

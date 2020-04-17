@@ -18,7 +18,7 @@ const port2 = process.env.PORT || 7005;
 const initProj = require('./routes/initProj');
 const gitGraph = require('./routes/gitGraph');
 const downloadRepo = require('./routes/downloadRepo');
-const downloadBareRepo = require('./routes/downloadBareRepo');
+//const downloadBareRepo = require('./routes/downloadBareRepo');
 const deleteProj = require('./routes/deleteProj');
 
 const getFiles = require('./routes/getFiles');
@@ -51,7 +51,7 @@ app.get('/',() => {
 app.post('/initProj', initProj);
 app.post('/gitGraph', gitGraph); 
 app.post('/downloadRepo', downloadRepo);
-app.post('/downloadBareRepo', downloadBareRepo);
+//app.post('/downloadBareRepo', downloadBareRepo);
 app.post('/deleteProj', deleteProj);
 
 app.post('/getFiles',getFiles);

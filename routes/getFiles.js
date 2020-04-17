@@ -41,7 +41,6 @@ router.post('/getFiles', async (req,res) => {
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
-
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
         .then( async () => {

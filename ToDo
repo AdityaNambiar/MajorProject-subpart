@@ -32,6 +32,7 @@
     - fixConsistency, yes
     - mergeFiles, yes
     - pushChecker - works same as /mergeFiles except it's jut git pull origin srcBranch.
+    - deleteProj, yes
 
 - Routes whose test remain:
 

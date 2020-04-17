@@ -74,7 +74,7 @@ async function main(projName, workdirpath, curr_majorHash, ref1){
                 })
                 .then( async () => {
                     // Remove old state from IPFS.
-                    await removeFromIPFS(curr_majorHash, projName);
+                    await removeFromIPFS(curr_majorHash);
                 })
                 .then( async () => {
                     // Add new state to IPFS.

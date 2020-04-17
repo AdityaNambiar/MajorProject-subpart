@@ -28,7 +28,7 @@ const router = express.Router();
 var projName, workdirpath, curr_majorHash, 
     username, branchToUpdate, majorHash, 
     barerepopath, merge_op, statusLine,
-    upstream_branch;
+    upstream_branch, url;
 
 
 router.post('/fixConsistency',  async (req,res) => {
@@ -37,6 +37,7 @@ router.post('/fixConsistency',  async (req,res) => {
     curr_majorHash = req.body.majorHash; // latest
     username = req.body.username.replace(/\s/g,'-');
     upstream_branch = 'origin/master';
+    url = `http://localhost:7005/projects/bare/${projName}.git`
     
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
@@ -80,7 +81,7 @@ async function main(projName, workdirpath, username, curr_majorHash) {
                 })
                 .then( async () => {
                     // Remove old state from IPFS.
-                    await removeFromIPFS(curr_majorHash, projName);
+                    await removeFromIPFS(curr_majorHash);
                 })
                 .then( async () => {
                     // Add new state to IPFS.
@@ -89,12 +90,12 @@ async function main(projName, workdirpath, username, curr_majorHash) {
                 })
                 .then( (majorHash) => {
                     console.log("MajorHash (git fixConsistency): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, merge_op: merge_op, statusLine: statusLine});
+                    resolve({projName: projName, majorHash: majorHash, url: url, merge_op: merge_op, statusLine: statusLine});
                 })
             } else if (merge_op[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, merge_op: merge_op, statusLine: statusLine});
+                resolve({projName: projName, majorHash: majorHash, url: url, merge_op: merge_op, statusLine: statusLine});
             } else {
-                resolve({projName: projName, majorHash: curr_majorHash, merge_op: merge_op, statusLine: statusLine});
+                resolve({projName: projName, majorHash: curr_majorHash, url: url, merge_op: merge_op, statusLine: statusLine});
             }
         } catch (e) {
             reject(`main err: ${e}`);

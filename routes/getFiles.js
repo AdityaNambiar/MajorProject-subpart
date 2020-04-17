@@ -28,7 +28,7 @@ const router = express.Router();
 var projName, workdirpath, curr_majorHash, 
     username, branchToUpdate, majorHash, 
     barerepopath, filenamearr, statusLine,
-    files = [], upstream_branch;
+    files = [], upstream_branch, url;
 
 router.post('/getFiles', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
@@ -36,9 +36,11 @@ router.post('/getFiles', async (req,res) => {
     username = req.body.username.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // hard coded
     upstream_branch = 'origin/master';
+    url = `http://localhost:7005/projects/bare/${projName}.git`
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
@@ -81,7 +83,7 @@ async function main(projName, curr_majorHash){
                 })
                 .then( async () => {
                     // Remove old state from IPFS.
-                    await removeFromIPFS(curr_majorHash, projName);
+                    await removeFromIPFS(curr_majorHash);
                 })
                 .then( async () => {
                     // Add new state to IPFS.
@@ -90,12 +92,12 @@ async function main(projName, curr_majorHash){
                 })
                 .then( (majorHash) => {
                     console.log("MajorHash (git getFiles): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, files: files, statusLine: statusLine});
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, url: url, files: files, statusLine: statusLine});
                 })
             } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, files: files, statusLine: statusLine});
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, url: url, files: files, statusLine: statusLine});
             } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, files: files, statusLine: statusLine});
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, url: url, files: files, statusLine: statusLine});
             }
         } catch (e) {
             reject(`main err: ${e}`);

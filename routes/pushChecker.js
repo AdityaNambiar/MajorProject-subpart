@@ -27,8 +27,8 @@ const router = express.Router();
 
 
 var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, 
-    barerepopath, branchName;
+    username, branchToUpdate, barerepopath, 
+    branchName, url;
 
 
 router.post('/pushChecker', async (req,res) => {
@@ -37,7 +37,8 @@ router.post('/pushChecker', async (req,res) => {
     curr_majorHash = req.body.majorHash; // latest
     username = req.body.username.replace(/\s/g,'-');
     branchName = req.body.branchName.replace(/\s/g,'-');
-    
+    url = `http://localhost:7005/projects/bare/${projName}.git`
+
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
 
@@ -59,7 +60,7 @@ async function main(workdirpath){
     return new Promise ( async (resolve, reject) => {
         await gitPull(workdirpath)
         .then( (filenamearr) => {
-            resolve({filenamearr:filenamearr});
+            resolve({url: url,filenamearr:filenamearr});
         })
         .catch((e) => {
             reject(`main err: ${e}`);

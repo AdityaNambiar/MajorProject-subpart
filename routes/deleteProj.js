@@ -48,10 +48,10 @@ router.post('/deleteProj', async (req,res) => {
 
 async function main(){
     return new Promise ( async (resolve, reject) => {
-        await deleteProj(workdirpath)
+        await deleteProj()
         .then( async () => {
             // Remove old state from IPFS.
-            await removeFromIPFS(curr_majorHash, projName);
+            await removeFromIPFS(curr_majorHash);
         })
         .then( () => {
             console.log("MajorHash (git deleteProj): ", curr_majorHash);
@@ -63,7 +63,7 @@ async function main(){
     })
 }
 
-async function deleteProj(workdirpath){
+async function deleteProj(){
     return new Promise( async (resolve, reject) => {
         try {
             // Delete work dir repo

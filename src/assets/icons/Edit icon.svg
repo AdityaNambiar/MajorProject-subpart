@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="Edit_icon" data-name="Edit icon" viewBox="0 0 23.186 23.186">
+    <defs>
+        <style>
+            .cls-1{fill:#78849e}.cls-2{fill:none}
+        </style>
+    </defs>
+    <path id="Path_6" d="M3 16.767v3.623h3.623L17.308 9.7l-3.623-3.618zM20.109 6.9a.962.962 0 0 0 0-1.362l-2.26-2.258a.962.962 0 0 0-1.362 0l-1.768 1.768 3.623 3.623z" class="cls-1" data-name="Path 6" transform="translate(-.102 -.102)"/>
+    <path id="Path_7" d="M0 0h23.186v23.186H0z" class="cls-2" data-name="Path 7"/>
+</svg>

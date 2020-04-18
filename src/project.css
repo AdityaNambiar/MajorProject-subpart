@@ -1,0 +1,114 @@
+.files input {
+  outline: 2px dashed #92b0b3;
+  outline-offset: -10px;
+  -webkit-transition: outline-offset 0.15s ease-in-out,
+    background-color 0.15s linear;
+  transition: outline-offset 0.15s ease-in-out, background-color 0.15s linear;
+  padding: 120px 0px 85px 35%;
+  text-align: center !important;
+  margin: 0;
+  width: 100% !important;
+}
+.files input:focus {
+  outline: 2px dashed #92b0b3;
+  outline-offset: -10px;
+  -webkit-transition: outline-offset 0.15s ease-in-out,
+    background-color 0.15s linear;
+  transition: outline-offset 0.15s ease-in-out, background-color 0.15s linear;
+  border: 1px solid #92b0b3;
+}
+.files {
+  position: relative;
+}
+.files:after {
+  pointer-events: none;
+  position: absolute;
+  top: 60px;
+  left: 0;
+  width: 50px;
+  right: 0;
+  height: 56px;
+  content: "";
+  background-image: url(https://image.flaticon.com/icons/svg/1091/1091223.svg);
+  display: block;
+  margin: 0 auto;
+  background-size: 100%;
+  background-repeat: no-repeat;
+}
+.color input {
+  background-color: #f1f1f1;
+}
+.files:before {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  pointer-events: none;
+  width: 100%;
+  right: 0;
+  height: 57px;
+  content: " or drag it here. ";
+  display: block;
+  margin: 0 auto;
+  color: #2ea591;
+  font-weight: 600;
+  text-transform: capitalize;
+  text-align: center;
+}
+
+#main {
+  margin: auto;
+  width: 682px;
+  position: fixed;
+  bottom: 0;
+  margin-left: 0;
+  margin-bottom: 4px;
+}
+
+#sendprojectmessagetextdiv {
+  width: 580px;
+  max-height: 50px;
+  float: left;
+}
+#sendprojectmessagetextarea {
+  width: 595px;
+  max-height: 50px;
+  margin-left: -16px;
+}
+
+#sendprojectmessagebtndiv {
+  width: 85px;
+  min-height: 30px;
+  float: left;
+}
+
+#sendprojectmessagebtn {
+  width: 100px;
+  min-height: 50px;
+}
+
+#createFile {
+  width: 940px;
+  height: 450px;
+}
+/* #createFile > div > div {
+  height: 460px;
+  width: 627px;
+  margin-left: 0px;
+  left: 9px;
+  position: fixed;
+} */
+.rdw-editor-toolbar.toolbarClassName {
+  width: 620px;
+  background-color: slategrey;
+  margin-bottom: 0px;
+}
+.editorClassName.rdw-editor-main > div > div > div > div > div > div {
+  margin: 0px;
+}
+.editorClassName.rdw-editor-main > div > div > div {
+  height: 375px;
+
+  width: 620px;
+  background-color: #363636;
+  color: white;
+}

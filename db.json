@@ -1,0 +1,254 @@
+{
+  "fileArray": [
+    {
+      "fileName": "file1.txt",
+      "fileBuffer": "#include <stdio.h>\nint main() {\n    int n, reversedN = 0, remainder, originalN;\n    printf(\"Enter an integer: \");\n    scanf(\"%d\", &n);\n    originalN = n;\n\n    // reversed integer is stored in reversedN\n    while (n != 0) {\n        remainder = n % 10;\n        reversedN = reversedN * 10 + remainder;\n        n /= 10;\n    }\n\n    // palindrome if orignalN and reversedN are equal\n    if (originalN == reversedN)\n        printf(\"%d is a palindrome.\", originalN);\n    else\n        printf(\"%d is not a palindrome.\", originalN);\n\n    return 0;\n}",
+      "id": 1
+    },
+    {
+      "fileName": "asdasd",
+      "fileBuffer": "file check",
+      "id": 2
+    }
+  ],
+  "newFile": [
+    {
+      "newFileName": "file1.txt",
+      "newFileContent": "#include <stdio.h>\nint main() {\n    int n, reversedN = 0, remainder, originalN;\n    printf(\"Enter an integer: \");\n    scanf(\"%d\", &n);\n    originalN = n;\n\n    // reversed integer is stored in reversedN\n    while (n != 0) {\n        remainder = n % 10;\n        reversedN = reversedN * 10 + remainder;\n        n /= 10;\n    }\n\n    // palindrome if orignalN and reversedN are equal\n    if (originalN == reversedN)\n        printf(\"%d is a palindrome.\", originalN);\n    else\n        printf(\"%d is not a palindrome.\", originalN);\n\n    return 0;\n}",
+      "id": 1
+    },
+    {
+      "newFileName": "asdasd",
+      "newFileContent": "file check",
+      "id": 2
+    },
+    {
+      "newFileName": "journey.txt",
+      "newFileContent": "O Aakash = O Aasmaan\nO Pawlash Rashi Rashi= O Pawlash(flower)  bohot bohot\nEktu shobujey=Thodi si hariyali me,\nChokh muchiye de=Aankh pohch k de,\nGhawr Chara manusher mawney=Ghar chora hua insaan k Dil par",
+      "id": 3
+    }
+  ],
+  "fileCommits": [
+    {
+      "name": "Gopi Mehta",
+      "message": "File commit 1",
+      "hash": "2ddsad0",
+      "date": "25/02/1997"
+    },
+    {
+      "name": "Raj Mandal",
+      "message": "File commit 2",
+      "hash": "2ddsad0",
+      "date": "30/08/1998"
+    },
+    {
+      "name": "Aditya Nambiar",
+      "message": "File commit 3",
+      "hash": "2dadsd0",
+      "date": "12/12/2020"
+    },
+    {
+      "name": "Ritika Arya",
+      "message": "File commit 4",
+      "hash": "8ddsad0",
+      "date": "21/01/1998"
+    },
+    {
+      "name": "Ankita Patel",
+      "message": "File commit 5",
+      "hash": "5ddsad0",
+      "date": "12/12/2020"
+    }
+  ],
+  "projectCommits": [
+    {
+      "name": "Gopi Mehta",
+      "message": "Dolor cillum ex ullamco minim ex nostrud voluptate eu.",
+      "hash": "2ddsad0",
+      "date": "12/12/2020"
+    },
+    {
+      "name": "Raj Mandal",
+      "message": "adding of two nos",
+      "hash": "2ddsad0",
+      "date": "12/12/2020"
+    },
+    {
+      "name": "Aditya Nambiar",
+      "message": "Dolor cillum ex ullamco minim ex nostrud voluptate eu.",
+      "hash": "2ddsad0",
+      "date": "12/12/2020"
+    }
+  ],
+  "posts": [
+    {
+      "creator": "Gopi",
+      "designation": "Project Manager",
+      "timestamp": "30/3/2020 - 4:7:20 IST",
+      "desc": "This is message 1"
+    },
+    {
+      "creator": "Raj",
+      "designation": "Developer",
+      "timestamp": "30/3/2020 - 4:7:20 IST",
+      "desc": "Minim sint velit excepteur deserunt labore. Laborum velit in cupidatat sunt excepteur quis duis et eiusmod irure. Do consectetur cupidatat sunt et duis aliquip et commodo."
+    },
+    {
+      "creator": "Aditya",
+      "designation": "Consultant",
+      "timestamp": "30/3/2020 - 4:7:20 IST",
+      "desc": "This is message 3"
+    },
+    {
+      "creator": "Shyam",
+      "designation": "Intern",
+      "timestamp": "30/3/2020 - 4:7:20 IST",
+      "desc": "Commodo esse velit cupidatat culpa culpa velit laboris occaecat. Culpa non qui nostrud minim. Enim sint aliqua adipisicing irure cupidatat amet est."
+    },
+    {
+      "creator": "Ram",
+      "designation": "Tester",
+      "timestamp": "30/3/2020 - 4:7:20 IST",
+      "desc": "Reprehenderit cillum amet consectetur ipsum in sit ipsum officia officia velit consequat. Mollit aliquip exercitation deserunt eiusmod culpa laboris commodo est ex voluptate adipisicing nostrud. Ex non anim labore esse id id qui nisi id excepteur. Excepteur anim exercitation eiusmod reprehenderit laborum dolor tempor sunt culpa qui nostrud est ut. Deserunt commodo et officia incididunt mollit voluptate labore anim reprehenderit."
+    }
+  ],
+  "post": {},
+  "branches": [
+    {
+      "bid": "1",
+      "bname": "Master",
+      "bdescription": "Basic"
+    },
+    {
+      "bid": "2",
+      "bname": "feature 1",
+      "bdescription": "feature update 1"
+    },
+    {
+      "bid": "3",
+      "bname": "feature 2",
+      "bdescription": "feature update 2"
+    },
+    {
+      "bid": "4",
+      "bname": "feature 3",
+      "bdescription": "feature update 3"
+    }
+  ],
+  "branch": {},
+  "projects": [
+    {
+      "pname": "Frontend",
+      "pdescription": "react library",
+      "pstatus": "public",
+      "ptimestamp": "30/3/2020 - 4:7:20 IST",
+      "pmanager": "Gopi",
+      "id": 1
+    },
+    {
+      "pname": "IPFS",
+      "pdescription": "Storage",
+      "pstatus": "public",
+      "ptimestamp": "30/3/2020 - 4:9:14 IST",
+      "pmanager": "Aditya",
+      "id": 2
+    },
+    {
+      "pname": "Backend",
+      "pdescription": "node js ",
+      "pstatus": "private",
+      "ptimestamp": "30/3/2020 - 4:9:34 IST",
+      "pmanager": "Raj",
+      "id": 3
+    },
+    {
+      "pname": "ERP",
+      "pdescription": "for seminar",
+      "pstatus": "private",
+      "ptimestamp": "30/3/2020 - 4:10:14 IST",
+      "pmanager": "Raj",
+      "id": 4
+    },
+    {
+      "pname": "Timestamp",
+      "pdescription": "publicProjectspublicProjectspublicProjectspublicProjects",
+      "pstatus": "public",
+      "ptimestamp": "30/3/2020 - 4:34:52 IST",
+      "pmanager": "Raj",
+      "id": 5
+    },
+    {
+      "pname": "Network",
+      "pdescription": "avdgad agsda djvuyasd",
+      "pstatus": "private",
+      "ptimestamp": "7/4/2020 - 4:53:31 IST",
+      "pmanager": "Raj",
+      "id": 6
+    },
+    {
+      "pname": "Random",
+      "pdescription": "this is a random project",
+      "pstatus": "public",
+      "pmanager": "Gopi",
+      "ptimestamp": "14/4/2020 - 0:33:29 IST",
+      "id": 7
+    }
+  ],
+  "project": {},
+  "projectCollaborators": [
+    {
+      "pname": "",
+      "collaborators": ["001", "003", "002"],
+      "id": 1
+    },
+    {
+      "pname": "Frontend",
+      "collaborators": ["001", "003", "002", "002"],
+      "id": 2
+    },
+    {
+      "collaborators": ["002", "003", "001"],
+      "id": 3
+    },
+    {
+      "pname": "Backend",
+      "collaborators": ["002", "001", "003"],
+      "id": 4
+    },
+    {
+      "pname": "Backend",
+      "collaborators": ["003", "002", "001"],
+      "id": 5
+    }
+  ],
+  "members": [
+    {
+      "eid": "001",
+      "email": "gopi@gmail.com",
+      "fname": "Gopi",
+      "lname": "Mehta",
+      "gender": "male",
+      "designation": "consultant",
+      "contact": "8898843882"
+    },
+    {
+      "eid": "002",
+      "email": "raj@gmail.com",
+      "fname": "Raj",
+      "lname": "Mandal",
+      "gender": "male",
+      "designation": "developer",
+      "contact": "5487963214"
+    },
+    {
+      "eid": "003",
+      "email": "aditya@gmail.com",
+      "fname": "Aditya",
+      "lname": "Nambiar",
+      "gender": "male",
+      "designation": "tester",
+      "contact": "1234567890"
+    }
+  ],
+  "member": {}
+}

@@ -61,8 +61,8 @@ async function main(){
             await removeFromIPFS(curr_majorHash);
         })
         .then( () => {
-            console.log("MajorHash (git deleteProj): ", curr_majorHash);
-            resolve({projName: projName, majorHash: curr_majorHash});
+            console.log("MajorHash (git deleteProj) (same that was passed to this route): ", curr_majorHash);
+            resolve({projName: projName});
         })
         .catch ((e) => {
             reject(`main err: ${e}`);

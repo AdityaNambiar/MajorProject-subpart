@@ -11,6 +11,8 @@ const pushChecker = require('../utilities/pushChecker');
 const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
+const getFromIPFS = require('../utilities/getFromIPFS');
+
 // isomorphic-git related imports and setup
 const fs = require('fs');
 
@@ -18,22 +20,27 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, barerepopath,
-    projNamepath;
+var projName, curr_majorHash, projectspath,
+    barepath, barerepopath, projNamepath;
 
 router.post('/deleteProj', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
-    username = req.body.username.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash;  // latest
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
 
+    projectspath = path.resolve(__dirname, '..', 'projects');
+    barepath = path.resolve(__dirname, '..', 'projects', 'bare');
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
     projNamepath = path.resolve(__dirname, '..', 'projects', projName);
 
     try{
-        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
+        await projPathCheck(projectspath)
+        .then ( async () => {
+            await barePathCheck(barepath);
+        })
+        .then( async () => {
+            //console.log("Out of barerepopathcheck");
+            await projNamePathCheck(projNamepath);
+        })
         .then( async () => {
             let response = await main()
             return response;
@@ -62,27 +69,79 @@ async function main(){
         })
     })
 }
+async function projPathCheck(projectspath){
+    return new Promise( (resolve, reject) => {
+        if (!fs.existsSync(projectspath)){
+            fs.mkdir(projectspath, (err) => {
+                if (err) {
+                    reject(`projPathCheck err: ${err}`);
+                }
+                resolve(true);
+            })
+        }
+        resolve(true); // means projects/ exist.
+    })
+}
+
+
+async function barePathCheck(barepath){
+    return new Promise( (resolve, reject) => {
+        if (!fs.existsSync(barepath)){
+            fs.mkdir(barepath, (err) => {
+                if (err) {
+                    reject(`barePathCheck err: ${err}`);
+                }
+                resolve(true);
+            })
+        }
+        resolve(true); // means projects/bare exist.
+    })
+}
+
+// exclusive for deleteProj: if the barerepo of the project is not there, then its ok.
+/* async function bareRepoPathCheck(barerepopath, majorHash, projName) {
+    return new Promise( async (resolve, reject) => {
+        if (!fs.existsSync(barerepopath)) {
+            try {
+                //console.log("reached barerepopathcheck");
+                await getFromIPFS(majorHash, projName);
+                resolve(true);
+            } catch(e) {
+                reject(`bareRepoPathCheck err: ${e}`);
+            }
+        }
+        resolve(true); // means projects/bare/projName.git exists.
+    })
+}*/
+
+async function projNamePathCheck(projNamepath){
+    return new Promise( (resolve,reject) => {
+        if (!fs.existsSync(projNamepath)){
+            fs.mkdir(projNamepath, (err) => {
+                if (err) { 
+                    reject(`projNamePathCheck err: ${err}`);
+                }
+                resolve(true);
+            })
+        }
+        resolve(true); // means projects/projName/ exists
+    })
+}
 
 async function deleteProj(){
     return new Promise( async (resolve, reject) => {
         try {
-            // Delete work dir repo
-            fs.rmdir(workdirpath, { 
+            // Delete projects/projName folder:
+            fs.rmdir(projNamepath, { 
                 recursive: true
             }, (err) => {
-                if (err) reject('(deleteProj) workdirdelete err:'+err);
-                // Delete projName folder:
-                fs.rmdir(projNamepath, { 
+                if (err) reject('(deleteProj) projName folder err:'+err);
+                // Delete bare repo:
+                fs.rmdir(barerepopath, { 
                     recursive: true
                 }, (err) => {
-                    if (err) reject('(deleteProj) projName folder err:'+err);
-                    // Delete bare repo:
-                    fs.rmdir(barerepopath, { 
-                        recursive: true
-                    }, (err) => {
-                        if (err) reject('(deleteProj) barerepodelete err:'+err);
-                        resolve(true);
-                    })
+                    if (err) reject('(deleteProj) barerepodelete err:'+err);
+                    resolve(true);
                 })
             })
         } catch(e) {

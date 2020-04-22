@@ -16,7 +16,7 @@ const cloneFromBare = require('../utilities/cloneFromBare');
 const path = require('path');
 const fs = require('fs');
 
-let projectspath, workdirpath, barerepopath, projNamepath;
+let projectspath, barepath, workdirpath, barerepopath, projNamepath;
 
 module.exports = async function preRouteChecks(majorHash, projName, username, branchToUpdate){
     
@@ -69,7 +69,7 @@ async function barePathCheck(barepath){
         if (!fs.existsSync(barepath)){
             fs.mkdir(barepath, (err) => {
                 if (err) {
-                    reject(`projPathCheck err: ${err}`);
+                    reject(`barePathCheck err: ${err}`);
                 }
                 resolve(true);
             })
@@ -89,14 +89,14 @@ async function bareRepoPathCheck(barerepopath, majorHash, projName) {
                 reject(`bareRepoPathCheck err: ${e}`);
             }
         }
-        resolve(true); // means projects/projName.git exists.
+        resolve(true); // means projects/bare/projName.git exists.
     })
 }
 
 async function projNamePathCheck(projNamepath){
     return new Promise( (resolve,reject) => {
         if (!fs.existsSync(projNamepath)){
-            fs.mkdir(projectspath, (err) => {
+            fs.mkdir(projNamepath, (err) => {
                 if (err) { 
                     reject(`projNamePathCheck err: ${err}`);
                 }

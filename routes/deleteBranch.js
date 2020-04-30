@@ -31,13 +31,15 @@ var branchToUpdate, barerepopath,
 
 var projName, workdirpath, curr_majorHash, 
     username, branchToUpdate, majorHash, 
-    barerepopath, filenamearr = [], statusLine;
+    barerepopath, filenamearr = [], statusLine,
+    branchName;
 
 router.post('/deleteBranch', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
     branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // latest
     username = req.body.username.replace(/\s/g,'-');
+    branchName = req.body.branchName.replace(/\s/g,'-');
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
@@ -49,7 +51,7 @@ router.post('/deleteBranch', async (req,res) => {
             return response;
         })
         .then ( (response) => {
-            res.status(200).send(response);
+            res.status(200).send(response); 
         })
     }catch(e){
         res.status(400).send(`main caller err: ${e}`);
@@ -59,7 +61,7 @@ router.post('/deleteBranch', async (req,res) => {
 async function main() {
     return new Promise ( async (resolve, reject) => {
         try {
-            await gitDeleteBranch(workdirpath, branchToUpdate)
+            await gitDeleteBranch(workdirpath, branchName)
             .then ( async () => {
                 statusLine = await statusChecker(projName, username);
                 return statusLine;
@@ -70,8 +72,8 @@ async function main() {
                 console.log("pushchecker returned this: \n", filenamearr);
             })
             if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
-                console.log(`Push (with --delete) to branch: ${branchToUpdate}`);
-                await deleteBranchAtBare(branchToUpdate)
+                console.log(`Push (with --delete) to branch: ${branchName}`);
+                await deleteBranchAtBare(branchName)
                 // Essentially does a git push but with `--delete` to remove the remote tracking branch from bare.
                 // Exclusive to this route only.
                 .then( async () => {
@@ -101,13 +103,13 @@ async function main() {
     })
 }
 
-async function gitDeleteBranch(workdirpath, branchToUpdate){
-    console.log("branch name to delete: ", branchToUpdate);
+async function gitDeleteBranch(workdirpath, branchName){
+    console.log("branch name to delete: ", branchName);
     return new Promise( async (resolve, reject) => {
         try {
             await git.deleteBranch({
                 dir:  workdirpath,
-                ref: branchToUpdate,
+                ref: branchName,
             })
             resolve(true);
         }catch(e){
@@ -120,10 +122,10 @@ async function gitDeleteBranch(workdirpath, branchToUpdate){
     })
 }
 
-async function deleteBranchAtBare(branchToUpdate) {
-    console.log(`git push --delete ${barerepopath} ${branchToUpdate}`);
+async function deleteBranchAtBare(branchName) {
+    console.log(`git push --delete ${barerepopath} ${branchName}`);
     return new Promise( async (resolve, reject) => {
-        await exec(`git push --delete ${barerepopath} ${branchToUpdate} `, {
+        await exec(`git push --delete ${barerepopath} ${branchName} `, {
             cwd: workdirpath,
             shell: true
         }, (err, stdout, stderr) => {

@@ -25,7 +25,7 @@ const router = express.Router();
 var projName, workdirpath, curr_majorHash, 
     username, branchToUpdate, branchName, files = [], 
     upstream_branch, majorHash, barerepopath, 
-    filenamearr = [], statusLine;
+    filenamearr = [], statusLine, url;
 
 router.post('/addBranch', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
@@ -34,6 +34,7 @@ router.post('/addBranch', async (req,res) => {
     branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
     branchName = req.body.branchName.replace(/\s/g,'-');
     upstream_branch = 'origin/master';
+    url = `http://localhost:7005/projects/bare/${projName}.git`;
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);

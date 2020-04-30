@@ -36,7 +36,7 @@ router.post('/getFiles', async (req,res) => {
     username = req.body.username.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash; // hard coded
     upstream_branch = 'origin/master';
-    url = `http://localhost:7005/projects/bare/${projName}.git`
+    url = `http://localhost:7005/projects/bare/${projName}.git`;
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);

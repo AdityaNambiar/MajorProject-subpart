@@ -31,7 +31,7 @@ var projName, workdirpath, curr_majorHash,
 router.post('/diffForCommit', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
     username = req.body.username.replace(/\s/g,'-');
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');;
+    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
     curr_majorHash = req.body.majorHash;  // latest
     ref1 = req.body.ref1.replace(/\s/g,'-');
 

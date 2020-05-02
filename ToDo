@@ -1,38 +1,24 @@
-- Final test results:
+- Final 2nd test results:
     - initProj, yes.
-    - commitFile, yes.
-    - addBranch, yes.
-    - getBranches, yes.
-    - getFiles, yes.
-    - deleteBranch,
-        -- Test1, nope.
-            { Err (fix tomorrow):
-                main err: deleteBranch git ERR: RefNotExistsError: Failed to delete branch "f2" because branch "f2"
-                does not exists.
-                at Object.deleteBranch
-            }
-        -- Test2, yes. - Added a workaround for this error. It makes sense to bypass this one specific error because all we need to do is to delete the branch from remote repo as well (locally it does not exist).
-    - deleteFile, yes
-    - fileCommitHistory, yes
-    - branchCommitHistory, yes
-    - checkoutBranch, yes
-    - gitGraph, yes
-    - diffFiles, yes
-    - diffForCommit, yes. But talk with Gopi about showing the parent(s) and the commit hash itself (using state management) - because this route only gives the diff patch which is shown below.
-    - downloadBareRepo,
-        -- Test1, nope.
-            { Err (workaround found - confirm with Raj about procedure):
-                Could not download barerepo repo:
-                Error: EISDIR, read
-                SO link for insight on this error: https://stackoverflow.com/questions/20417118/using-node-js-i-get-error-eisdir-read 
-            }
-    - downloadRepo (apply the same fix which you'd do for /downloadBareRepo)
+    - commitFile, .
+    - addBranch, .
+    - getBranches, .
+    - getFiles, .
+    - deleteBranch, 
+    - deleteFile, 
+    - fileCommitHistory, 
+    - branchCommitHistory, 
+    - checkoutBranch, 
+    - gitGraph, 
+    - diffFiles, 
+    - diffForCommit, . 
+    - downloadRepo, 
         -- Only keeping this for now. This route works and returns .zip in "res.download"
-    - readFile, yes.
-    - fixConsistency, yes
-    - mergeFiles, yes
-    - pushChecker - works same as /mergeFiles except it's jut git pull origin srcBranch.
-    - deleteProj, yes
+    - readFile, .
+    - fixConsistency, 
+    - mergeFiles, 
+    - pushChecker - works same as /mergeFiles except it's just `git pull origin srcBranch`.
+    - deleteProj, yes. 
 
 - Routes whose test remain:
 
@@ -67,24 +53,23 @@ After devOnCLI pushed changes and devOnRemote is working on the repository,
     projects/
         projectName1.git (if it not exists, bring from IPFS)
         projectName1/ (if it not exists, clone it out from bare)
-            username1/  (created for each route - because it is removed for each route) ( this contains the work dir )
-            username2/ 
-        projectName2/
-            username1/
+            branchName/ (scanning point here - fs.readdir and perform the algo steps defined at end of this file.)
+                username+timestamp 
  - (Utility - rmWorkdir(username)) Delete username folder under projectName folder whenever user's actions are completed (when route is about to end)
  - Operations:
         a. setup the directory structure.
         b. perform git operations.
-        c. after commit, run Checker.
+        c. after ops, run Checker.
             if (Checker does not show conflicts):
                 push changes to project's bare folder. (pass the filename_arr as well - here it will be empty)
-            if (Checker throws err):
+            if (Checker shows conflicts):
+                Remove timestamp from username's folder (workdirpath).
                 take the filename_arr and buffer of those files and pass it.
         d. Remove username folder (utility as mentioned above) 
  - When user wants to merge, 
     a. execute mergeFiles route. 
-        -- if conflicts arise (filename_arr is not empty). { run Checker }
-            Do not delete this user's folder.
+        -- if conflicts arise (filename_arr is not empty - filled with file names):
+            Remove timestamp from username's folder (workdirpath).
             Pass the filename_arr and all the buffers of the respective files.
             if user wants to perform other operations (means while he is in merge state): (add a check at each route to know whether same user ka folder exists or not)
                 if it exists, throw err: "<git ka error>"
@@ -115,3 +100,85 @@ credits: https://stackoverflow.com/questions/17359370/git-show-last-commit-date-
 
 modified for my use case:
 FILES="$(git ls-tree --name-only HEAD .)";IFS="$(printf "\n\b")";for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x28%x7c%x29%x2D%x7c%x2D%x28%x7c%x29%cr" $f)";  printf "%s-%s\n" "$f" "$str"; done
+
+  - projName/
+    - branchName/ branchNamepath
+       - username+timestamp (workdirpath)
+
+Both are same:
+scanDir - utility (same as getMergeArr)
+getMergeArr - route (takes branchNamepath)
+- output:
+   merge_arr = [
+                    {  
+                        'mergeid': username+timestamp, (dir_list[i])
+                        'file': filename_list
+                    },
+                    {
+                        'mergeid': username+timestamp, 
+                        'file': filename_list
+                    }
+               ]
+readMerge - route (takes username+timestamp i.e. in this case, workdirpath)
+- output:
+    filebuffobj
+
+mergeCommit - route (don't create new username+timestamp -> the mergeid whose value will be provided, branchName, fileArr (filenamearr formatted))
+                - FIRST ITERATE THE fileArr
+                - SECOND ADD (fs.writeFile and git.add) all files' buffer
+                - THIRD Perform Commit ONCE to complete merge state.
+                - pushChecker cases:
+                    if (conflicts occur from pushChecker):
+                        Return filebuffobj
+                    if (conflicts do not occur from pushChecker):
+                        Delete username+timestamp folder under branchName/
+
+- if conflict occurs, do not remove workdirpath and perform scanDir utility.
+- if conflict does not occur (if operation successful and removing user's operated directory), perform scanDir utility. (should be performed after route operations + IPFS)
+< perform checkUnmergedPath.js utility on username+timestamp folder - fetch filenamearr >
+ 
+for all operations, send this below array
+merge_arr = [
+                {  
+                    'mergeid': username+timestamp (dir_list[i]), 
+                    'file': filename_list
+                },
+                {
+                    'mergeid': username+timestamp (dir_list[i]),
+                    'file': filename_list
+                }
+            ]
+
+{
+    "normal": merge_arr,
+    "special": [
+                {  
+                    'mergeid': username+timestamp (dir_list[i]), 
+                    'instructions': []
+                },
+                {
+                    'mergeid': username+timestamp (dir_list[i]),
+                    'instructions': []
+                }
+            ]
+}
+
+main_op
+pushChecker - fetch merge_arr:
+    try {
+    - git pull
+    - if (conflict present)
+        - if (conflict_line) 
+            - throw new Error("conflict")
+    - git push (if successful) - pushToBare
+        - scanDir - to form a path.
+        - statusChecker.
+        - rmWorkdir
+        - getMergeArr
+    } catch(e) {
+        if (e === "conflict")     
+            - scanDir - to form a path.
+            - statusChecker 
+            - getMergeArr 
+    }
+<IPFS_work>

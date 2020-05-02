@@ -26,7 +26,7 @@ const deleteFile = require('./routes/deleteFile');
 const commitFile = require('./routes/commitFile');
 const diffFiles = require('./routes/diffFiles');
 const diffForCommit = require('./routes/diffForCommit');
-const mergeFiles = require('./routes/mergeFiles');
+const mergeBranch = require('./routes/mergeBranch');
 const fixConsistency = require('./routes/fixConsistency');
 const fileCommitHistory = require('./routes/fileCommitHistory');
 const readFile = require('./routes/readFile');
@@ -51,7 +51,6 @@ app.get('/',() => {
 app.post('/initProj', initProj);
 app.post('/gitGraph', gitGraph); 
 app.post('/downloadRepo', downloadRepo);
-//app.post('/downloadBareRepo', downloadBareRepo);
 app.post('/deleteProj', deleteProj);
 
 app.post('/getFiles',getFiles);
@@ -59,7 +58,7 @@ app.post('/deleteFile',deleteFile);
 app.post('/commitFile',commitFile);
 app.post('/diffFiles', diffFiles);
 app.post('/diffForCommit', diffForCommit);
-app.post('/mergeFiles', mergeFiles); 
+app.post('/mergeBranch', mergeBranch); 
 app.post('/fixConsistency', fixConsistency);
 app.post('/fileCommitHistory', fileCommitHistory);
 app.post('/readFile',readFile);

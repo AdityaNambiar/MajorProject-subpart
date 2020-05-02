@@ -84,12 +84,12 @@ async function main(projName, workdirpath, curr_majorHash){
                 })
                 .then( (majorHash) => {
                     console.log("MajorHash (git gitGraph): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, graphOutput: Buffer.from(graphOutput), statusLine: statusLine});
+                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, graphOutput: graphOutput, statusLine: statusLine});
                 })
             } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, graphOutput: Buffer.from(graphOutput), statusLine: statusLine});
+                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, graphOutput: graphOutput, statusLine: statusLine});
             } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, graphOutput: Buffer.from(graphOutput), statusLine: statusLine});
+                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, graphOutput: graphOutput, statusLine: statusLine});
             }
         } catch (e) {
             reject(`main err: ${e}`);
@@ -100,14 +100,17 @@ async function main(projName, workdirpath, curr_majorHash){
 async function gitGraph(workdirpath){
     return new Promise( async (resolve, reject) => {
         try {
-            await exec('git log --all --graph --decorate --oneline', {
+            await exec('git log --all --graph --decorate --oneline >> graphop', {
                 cwd: workdirpath,
                 shell: true,
             }, (err, stdout, stderr) => {
                 if (err) reject("gitgraph err: \n"+err);
                 if (stderr) reject("gitgraph stderr: \n"+err);
                 //console.log("Graph: \n",stdout);
-                resolve(stdout);
+                fs.readFile(path.resolve(workdirpath,'graphop'), (err, data) => {
+                    if (err) reject(`gitgraph readfile err: ${err}`);
+                    resolve(data);
+                })
             });
         }catch(e){
             reject("gitgraph (git log) err: "+e);

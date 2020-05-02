@@ -4,6 +4,9 @@
  * res.status(200).send(url).
  */
 
+const preRouteChecks = require('../utilities/preRouteChecks');
+const rmWorkdir = require('../utilities/rmWorkdir');
+
 const { zip } = require('zip-a-folder');
 // isomorphic-git related imports and setup
 const fs = require('fs');

@@ -21,15 +21,18 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-var workdirpath, barerepopath, projectspath, majorHash, 
-    authoremail, authorname, buffer, username,
-    filename, usermsg, branchToUpdate, barepath;
+var projName, workdirpath, barerepopath, projectspath,
+    majorHash, authoremail, authorname, buffer, 
+    username, filename, usermsg, branchToUpdate, 
+    barepath, branchNamepath;
 
 router.post('/initProj', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-'); 
     username = req.body.username.replace(/\s/g,'-');
     majorHash = '';
     branchToUpdate = 'master';
+    timestamp = Date.now();
+
     // Git work:
     authoremail = req.body.authoremail;
     authorname = req.body.authorname;
@@ -40,10 +43,14 @@ router.post('/initProj', async (req,res) => {
     projectspath = path.resolve(__dirname, '..', 'projects');
     barepath = path.resolve(__dirname, '..', 'projects', 'bare');
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+    branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate);
+    workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username+timestamp);
 
     try {
         await barePathCheck(barepath)
+        .then( async () => {
+            await branchNamePathCheck(branchNamepath)
+        })
         .then( async () => {
             let response = await main()
             return response;
@@ -96,6 +103,21 @@ async function barePathCheck(barepath){
         resolve(true); // means projects/bare exist.
     })
 }
+
+async function branchNamePathCheck(branchNamepath) {
+    return new Promise( async (resolve, reject) => {
+        if (!fs.existsSync(branchNamepath)){
+            fs.mkdir(branchNamepath, (err) => {
+                if (err) { 
+                    reject(`branchNamePathCheck err: ${err}`);
+                }
+                resolve(true);
+            })
+        }
+        resolve(true); // means projects/projName/branchName exists
+    })
+}
+
 
 async function gitInit(workdirpath) {
     return new Promise( async (resolve, reject) => {

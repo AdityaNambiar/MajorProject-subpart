@@ -3,6 +3,10 @@ const app = express();
 const bodyParser = require('body-parser');
 const path = require('path');
 const Server = require('node-git-server');
+const axios = require('axios');
+
+const pushToBare = require('./utilities/pushToBare');
+const addToIPFS = require('./utilities/addToIPFS');
 
 const cors = require('cors');
 const port = process.env.PORT || 5000;
@@ -44,9 +48,10 @@ const checkoutBranch = require('./routes/checkoutBranch');
 app.use(cors());
 app.use(bodyParser.json());
 
-app.get('/',() => {
-    console.log("Home");
-})
+app.use(express.static(path.join(__dirname,'routes', 'sample.html')));
+app.get('/', function(req, res) {
+  res.sendFile(path.join(__dirname,'routes','sample.html'));
+});
 
 app.post('/initProj', initProj);
 app.post('/gitGraph', gitGraph); 
@@ -71,55 +76,39 @@ app.post('/branchCommitHistory', branchCommitHistory);
 app.post('/pushChecker', pushChecker);
 app.post('/checkoutBranch', checkoutBranch);
 
-repos.on('push', (push) => {
-    console.log('push object: ',push)
-    console.log(`push ${push.repo}/${push.commit} (${push.branch})`);
+repos.on('push', async (push) => {
     push.accept();
+    let majorHash = '';
+    let projName = push.repo.split('bare/')[1].split('.git')[0];
+    let barerepopath = path.resolve(__dirname, 'projects', 'bare', projName+'.git'); 
+    await addToIPFS(barerepopath)
+    .then( (mjrHash) => {
+        console.log("MajorHash (git push): ", mjrHash);
+        majorHash = mjrHash 
+    })
+    let url = 'http://localhost:4000/updateHash'
+    await axios.post(url, {
+        projid: projName,
+        hash: majorHash
+    })
+    console.log(`${projName} \n ${majorHash}`);
+    //console.log(`push ${push.repo}/${push.commit} (${push.branch})`);
 });
 
-repos.on('fetch', (fetch) => {
-    console.log('push object: ',fetch)
+repos.on('fetch', async (fetch) => {
+    console.log('fetch object: ',fetch);
     console.log(`fetch ${fetch.repo}/${fetch.commit} (${fetch.branch})`);
     fetch.accept();
 });
 
+repos.on('*', (clone) => {
+    console.log('clone object: ',clone);
+})
+
 repos.listen(port2, () => {
-    console.log(`node-git-server running at http://localhost:${port2}`)
+    console.log(`node-git-server running at http://localhost:${port2}`);
 });
 
 app.listen(port,()=>{
     console.log("Started NodeJS server on "+port);
 })
-
-
-
-
-
-
-/* 
- --- This below code snippet gives colored output for branch. But the color is first of all applied by the parent terminal (which is "process.stdout" and not in subprocess.stdout which is actually what spawn brings up..)
- --- Only problem is getting the value of variable 'output' out of node and get in react.
-app.get('/gitGraph', (req,res) => {
-    let output = '';
-    var gitgraph = spawnSync('git log', ['--all','--graph','--decorate','--oneline'], {
-        cwd: "../gittest",
-        shell: true,
-        stdio: [process.stdin, process.stdout, 'pipe']
-    });
-    const originalStdoutWrite = process.stdout.write.bind(process.stdout);
-
-    process.stdout.write = (chunk, encoding, callback) => {
-        if (typeof chunk === 'string') {
-            output += chunk;
-        }
-        gitgraph.stdout.on("data", (data) => {
-            console.log("DATA: ",data);
-        })
-        console.log(output);
-        
-        return originalStdoutWrite(chunk, encoding, callback);
-    };
-    process.stdout.write = originalStdoutWrite;
-    res.status(200).send(output);
-
-})*/

@@ -135,8 +135,7 @@ mergeCommit - route (don't create new username+timestamp -> the mergeid whose va
 
 - if conflict occurs, do not remove workdirpath and perform scanDir utility.
 - if conflict does not occur (if operation successful and removing user's operated directory), perform scanDir utility. (should be performed after route operations + IPFS)
-< perform checkUnmergedPath.js utility on username+timestamp folder - fetch filenamearr >
- 
+
 for all operations, send this below array
 merge_arr = [
                 {  
@@ -170,8 +169,9 @@ pushChecker - fetch merge_arr:
     - if (conflict present)
         - if (conflict_line) 
             - throw new Error("conflict")
-    - git push (if successful) - pushToBare
-        - scanDir - to form a path.
+    - git push (if successful) 
+        - pushToBare
+        - scanDir - to form a path. (iterate the files obj -> extract timestamp part by slicing out username -> )
         - statusChecker.
         - rmWorkdir
         - getMergeArr
@@ -182,3 +182,32 @@ pushChecker - fetch merge_arr:
             - getMergeArr 
     }
 <IPFS_work>
+
+
+getMergeArr in pushChecker - sequence:
+scanDir - to fetch directory listing
+read JSON file first to fetch type.
+compare the type (as written below)
+According to type, perform the operations (as written below)
+Form the mergeArr
+
+for mergeBranches route (don't involve pushChecker in this) (just pass the error the with status 400 - "conflicting merge, pls check merge conflicts" - that conflict occured - because getFiles will be sending merge array)
+    git merge branchName
+        -- mergeid will be the username and current timestamp value (workdirpath)
+        -- filename_list of the workdirpath in which conflicts occured.
+     -- git merge branchName
+    on any conflict,
+        - create json file with the name same as the current directory. 
+        - of the form: {
+                type: 'branch',
+                title: <form appropriate tile mentioning both the branch names> 
+        }
+for pushChecker's getMergeArr:
+        - read the json file and fetch type and title. 
+        - set the title value in merge arr object (which is in process)
+        - Compare the type:
+            1. if type !== "pull":
+                perform `git merge --abort`
+                then git pull origin branch 
+            2. if type === "branch":
+                fetch filename_list (git diff wala command)

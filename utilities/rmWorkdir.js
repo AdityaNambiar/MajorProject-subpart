@@ -6,14 +6,7 @@ const path = require('path');
 const fs = require('fs');
 
 
-let workdirpath;
-
-module.exports = async function rmWorkdir(projName, username) {
-
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
-    
-    projNamepath = path.resolve(__dirname, '..', 'projects', projName);
-
+module.exports = async function rmWorkdir(workdirpath) {
     return new Promise( async (resolve, reject) => {
         fs.rmdir(workdirpath, { 
             recursive: true

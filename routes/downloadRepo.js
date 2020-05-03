@@ -15,7 +15,11 @@ git.plugins.set('fs',fs); // Bring your own file system
 
 const path = require('path');
 const express = require('express');
+const bodyParser = require('body-parser');
 const router = express.Router();
+const app = express();
+
+app.use(bodyParser.json());
 
 var projName, workdirpath, curr_majorHash, 
     username, branchToUpdate, projNamepath,
@@ -23,10 +27,11 @@ var projName, workdirpath, curr_majorHash,
     filenamearr = [], statusLine;
 
 router.post('/downloadRepo', async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-') || 'app1';
-    username = req.body.username.replace(/\s/g,'-') || 'ap2';
-    curr_majorHash = req.body.majorHash || null;  // latest
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-') || null;
+    console.log(req.body);
+    projName = req.body.projName.replace(/\s/g,'-'); 
+    username =  req.body.username.replace(/\s/g,'-');
+    curr_majorHash = req.majorHash || null;  // latest
+    branchToUpdate =  null; // req.body.branchToUpdate.replace(/\s/g,'-') ||
     upstream_branch = 'origin/master';
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
@@ -34,12 +39,12 @@ router.post('/downloadRepo', async (req,res) => {
     projNamepath = path.resolve(__dirname, '..', 'projects', projName+'.zip');
 
     try{
-        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
-        .then( async () => {
+        //await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
+        //.then( async () => {
             await zip(workdirpath, projNamepath)
-        })
+        //})
         .then( async () => {
-            await rmWorkdir(projName, username);
+         //   await rmWorkdir(projName, username);
         })
         .then ( () => {
             res.download(path.resolve(__dirname,'..','projects',`${projName}.zip`),(err)=> {

@@ -28,7 +28,7 @@ const router = express.Router();
 var projName, workdirpath, curr_majorHash, 
     username, branchToUpdate, majorHash, 
     barerepopath, filenamearr, statusLine,
-    files = [], upstream_branch, url;
+    files = [], upstream_branch, url, timestamp;
 
 router.post('/getFiles', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
@@ -37,12 +37,13 @@ router.post('/getFiles', async (req,res) => {
     curr_majorHash = req.body.majorHash; // hard coded
     upstream_branch = 'origin/master';
     url = `http://localhost:7005/projects/bare/${projName}.git`;
+    timestamp = Date.now();
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username+timestamp);
 
     try{
-        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
+        await preRouteChecks(curr_majorHash, projName, username+timestamp, branchToUpdate)
         .then( async () => {
             let response = await main(projName, curr_majorHash)
             return response;
@@ -62,16 +63,16 @@ async function main(projName, curr_majorHash){
             .then( async () => {
                 await setUpstream(workdirpath, upstream_branch);
             })
-            .then ( async () => {
-                statusLine = await statusChecker(projName, username);
-                return statusLine;
-            })
             .then( async () => {
                 files = await gitListFiles(workdirpath)
             })
+            .then ( async () => {
+                statusLine = await statusChecker(barerepopath,  workdirpath);
+                return statusLine;
+            })
             .then( async () => {
                 filenamearr = [];
-                filenamearr = await pushChecker(projName, username, branchToUpdate); 
+                filenamearr = await pushChecker(projName, username+timestamp, branchToUpdate); 
                 console.log("pushchecker returned this: \n", filenamearr);
             })
             if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.

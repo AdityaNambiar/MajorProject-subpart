@@ -113,7 +113,14 @@ async function gitDiffRef(workdirpath, ref1) {
                 }
                 a.shift();
                 console.log(a.join('\n'));
-                resolve(a.join('\n'))
+                fs.writeFile(workdirpath, a.join('\n'), (err, data) => {
+                    if (err) 
+                    fs.readFile(path.resolve(workdirpath,'graphop'), (err, data) => {
+                        if (err) reject(`gitgraph readfile err: ${err}`);
+                        resolve(data);
+                    })
+                })
+                
             })
         } catch(e) {
             reject(`git-diffrefs err: ${e}`)

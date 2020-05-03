@@ -132,12 +132,12 @@ async function branchCommitHistory(workdirpath) {
                         case "parent": commitobj.parentHashArr.push(e.split(' ')[1]); break;
                         case "author": 
                             commitobj.author_name = e.split(' ')[1];
-                            commitobj.author_timestamp = new Date(e.split(' ')[3]*1000).toLocaleString('en-US', { hour12: false });;
+                            commitobj.author_timestamp = new Date(e.split(' ')[3]*1000).toLocaleString('en-US', { hour12: false });
                             break;
 
                         case "committer": 
                             commitobj.committer_name = e.split(' ')[1];
-                            commitobj.committer_timestamp = new Date(e.split(' ')[3]*1000).toLocaleString('en-US', { hour12: false });;
+                            commitobj.committer_timestamp = new Date(e.split(' ')[3]*1000).toLocaleString('en-US', { hour12: false });
                             break;
                         }
                         if (i == b.length - 1) {

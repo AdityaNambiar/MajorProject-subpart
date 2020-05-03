@@ -17,20 +17,15 @@ const fs = require('fs');
 const git = require('isomorphic-git');
 git.plugins.set('fs',fs); // Bring your own file system 
 
-const path = require('path');
-
-
-var barerepopath, workdirpath;
-
-module.exports = async function statusChecker(projName, username) {
-
-    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
-
+module.exports = async function statusChecker(barerepopath, branchNamepath, username, timestamp) {
     return new Promise( async (resolve, reject) => {
-        await gitFetch(workdirpath)
-        .then( async () => {
-            let statusLine = await gitStatus(workdirpath)
+        await scan(branchNamepath, username, timestamp)
+        .then( async (computedpath) => {
+            await gitFetch(barerepopath, computedpath)
+            return computedpath;
+        })
+        .then( async (computedpath) => {
+            let statusLine = await gitStatus(computedpath)
             return statusLine;
         })
         .then( (statusLine) => {
@@ -42,7 +37,29 @@ module.exports = async function statusChecker(projName, username) {
     })
 }
 
-async function gitFetch(workdirpath) {
+async function scan(branchNamepath, username, timestamp){
+    var tsarr = [], filesarr = [], minOftsarr, computedpath;
+    return new Promise( async (resolve, reject) => {
+        try {
+            fs.readdir(branchNamepath,(err,files)=>{
+                if (err) reject(`readdir err: ${err}`)
+                filesarr = files.filter(e => !e.search(username)); // Only fetch current user's folders (username+timestamp folder).
+                for (var i = 0; i < filesarr.length; i++) {
+                    var str = filesarr[i]; // username+timestamp
+                    var ts = parseInt(str.split(username)[1]); // timestamp of type "number".
+                    tsarr.push(ts);
+                }    
+                console.log(tsarr);
+                minOftsarr = tsarr.reduce( (a,b) => (a < b)? a : b);  // Fetch minimum of the timestamp arr.
+                computedpath = path.resolve(branchNamepath, username+minOftsarr);
+            })
+        } catch(e) {
+            reject(`(scan) fs.readdir err: ${e}`)
+        }
+    })
+}
+
+async function gitFetch(barerepopath, workdirpath) {
     return new Promise (async (resolve, reject) => {
         try {
             exec(`git fetch ${barerepopath} master`, {

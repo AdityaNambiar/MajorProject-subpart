@@ -67,16 +67,16 @@ async function main() {
     return new Promise ( async (resolve, reject) => {
         gitInit(workdirpath)
         .then( async () => {
-            await writeFile(projName, username, filename, buffer);
+            await writeFile(workdirpath, filename, buffer);
         })
         .then( async () => {
             await autoCommit(workdirpath,filename, usermsg, authorname, authoremail);
         })
         .then( async () => {
-            await gitInitBare(projName, username)
+            await gitInitBare(branchToUpdate, projName, username+timestamp)
         })
         .then ( async () => {
-            await rmWorkdir(projName, username)
+            await rmWorkdir(workdirpath)   
         })
         .then( async () => {
             majorHash = await addToIPFS(barerepopath);
@@ -85,7 +85,7 @@ async function main() {
             console.log("MajorHash (git init): ", majorHash);
             resolve({projName: projName, majorHash: majorHash});
         })
-        .catch((e) => {
+        .catch( (e) => {
             reject(`main err: ${e}`);
         })
     })
@@ -132,10 +132,10 @@ async function gitInit(workdirpath) {
         }
     })
 }
-async function gitInitBare(projName, username) {
+async function gitInitBare(branchToUpdate, projName, username) {
     return new Promise( async (resolve, reject) => {
         try {
-            await exec(`git clone --bare ${projName}/${username} bare/${projName+'.git'}`, {
+            await exec(`git clone --bare ${projName}/${branchToUpdate}/${username} bare/${projName+'.git'}`, {
                 cwd: projectspath,
                 shell: true
             }, (err, stdout, stderr) => {
@@ -173,12 +173,13 @@ async function autoCommit(workdirpath, filename, usermsg, authorname, authoremai
     })
 }
 
-async function writeFile(projName, username, filename, buffer) {
+async function writeFile(workdirpath, filename, buffer) {
     return new Promise( async (resolve, reject) => {
-        fs.writeFile(path.resolve(__dirname, '..','projects', projName, username, filename), Buffer.from(buffer), (err) => {
+        fs.writeFile(path.resolve(workdirpath, filename), Buffer.from(buffer), (err) => {
             if (err) reject(` fs write err: ${err} `);
             resolve(true);
         })
     })
 }
+
 module.exports = router;

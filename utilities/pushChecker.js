@@ -44,12 +44,6 @@ async function gitPull(workdirpath, projName, username, branchName){
                 cwd: workdirpath,
                 shell: true
             }, async (err, stdout, stderr) => {
-                // if (err) {
-                //     reject(`(pushchecker) git-pull cli err: ${err}`);
-                // }
-                // if (stderr) {
-                //     reject(`(pushchecker) git-pull cli stderr: ${stderr}`);
-                // }
                 console.log(stdout);
                 var conflict_lines_arr = stdout.split('\n');
                 var filename_arr = [];
@@ -59,6 +53,7 @@ async function gitPull(workdirpath, projName, username, branchName){
                 if (conflict_lines_arr.some((e) => elem_rgx.test(e))){
                     //conflict_lines_arr.push("CONFLICT (add/add): Merge conflict in DESC4")
                     //conflict_lines_arr.push("CONFLICT (modify/delete): Merge conflict in DESC4")
+                    
                     for (var i = 0; i < conflict_lines_arr.length; i++){
                         if (conflict_lines_arr[i].match(inbetweenbrackets_rgx) != null) {
                             // form an array of types of conflict occured.. like ['content', 'add/add', 'modify/delete', 'content' etc..]

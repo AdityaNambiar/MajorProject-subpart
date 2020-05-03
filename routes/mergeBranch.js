@@ -142,7 +142,7 @@ async function mergeFiles(workdirpath, branchName){
                             if (stderr) console.log(`unmerged file show cli stderr: ${stderr}`)
                             filename_arr = [];
                             filename_arr = stdout.trim().split('\n');
-                            console.log('filename arr: \n', filename_arr);
+                            //console.log('filename arr: \n', filename_arr);
                             for (var i = 0; i < filename_arr.length; i++) {
                                 obj[filename_arr[i]] = await readForBuffer(workdirpath, filename_arr[i]);
                             }

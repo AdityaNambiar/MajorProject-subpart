@@ -8,12 +8,11 @@ const { exec } = require('child_process');
 
 const path = require('path');
 
-module.exports = async function clone(projName, username, branchToUpdate) {
+module.exports = async function clone(workdirpath, projName, username, timestamp, branchToUpdate) {
     
-    let workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
     return new Promise( async (resolve, reject) => {
         try {
-            await exec(`git clone bare/${projName+'.git'} ${projName}/${username}`,{
+            await exec(`git clone bare/${projName+'.git'} ${projName}/${branchToUpdate}/${username+timestamp}`,{
                 cwd: path.resolve(__dirname, '..', 'projects',''),
                 shell: true
             }, async (err, stdout, stderr) => {

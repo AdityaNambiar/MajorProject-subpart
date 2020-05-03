@@ -16,15 +16,17 @@ const cloneFromBare = require('../utilities/cloneFromBare');
 const path = require('path');
 const fs = require('fs');
 
-let projectspath, barepath, workdirpath, barerepopath, projNamepath;
+let projectspath, barepath, barerepopath, 
+    projNamepath, branchNamepath, workdirpath;
 
-module.exports = async function preRouteChecks(majorHash, projName, username, branchToUpdate){
+module.exports = async function preRouteChecks(majorHash, projName, username, timestamp, branchToUpdate){
     
     projectspath = path.resolve(__dirname, '..', 'projects');
     barepath = path.resolve(__dirname, '..', 'projects', 'bare');
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     projNamepath = path.resolve(__dirname, '..', 'projects', projName);
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+    branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate);
+    workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username+timestamp);
 
     return new Promise( async (resolve, reject) => {
         await projPathCheck(projectspath)
@@ -37,8 +39,11 @@ module.exports = async function preRouteChecks(majorHash, projName, username, br
         .then( async () => {
             await projNamePathCheck(projNamepath);
         })
+        .then( async () => {
+            await branchNamePathCheck(branchNamepath);
+        })
         .then ( async () => {
-            await workdirPathCheck(workdirpath, projName, username, branchToUpdate);
+            await workdirPathCheck(workdirpath, projName, username, timestamp, branchToUpdate);
         })
         .then ( () => {
             resolve(true);
@@ -107,16 +112,30 @@ async function projNamePathCheck(projNamepath){
     })
 }
 
-async function workdirPathCheck(workdirpath, projName, username, branchToUpdate) {
+async function branchNamePathCheck(branchNamepath) {
+    return new Promise( async (resolve, reject) => {
+        if (!fs.existsSync(branchNamepath)){
+            fs.mkdir(branchNamepath, (err) => {
+                if (err) { 
+                    reject(`branchNamePathCheck err: ${err}`);
+                }
+                resolve(true);
+            })
+        }
+        resolve(true); // means projects/projName/branchName exists
+    })
+}
+
+async function workdirPathCheck(workdirpath, projName, username, timestamp, branchToUpdate) {
     return new Promise( async (resolve, reject) => {
         if (!fs.existsSync(workdirpath)) {
             try {
-                await cloneFromBare(projName,username, branchToUpdate);
+                await cloneFromBare(workdirpath, projName, username, timestamp, branchToUpdate);
                 resolve(true);      
             } catch(err) {
                 reject(`workdirPathCheck err: ${err}`);
             }
         }
-        resolve(true); // means projects/projName/username/<workdir> exists
+        resolve(true); // means projects/projName/branchName/username+timestamp exists
     })
 }

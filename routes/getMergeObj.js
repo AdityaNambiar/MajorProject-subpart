@@ -3,7 +3,6 @@
  */
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
-const pushChecker = require('../utilities/pushChecker');
 
 const { exec } = require('child_process');
 
@@ -16,31 +15,22 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-
-var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, branchName, 
-    upstream_branch, barerepopath, 
-    timestamp, url;
-
 router.post('/getMergeObj', async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-');
-    username = req.body.username.replace(/\s/g,'-');
-    curr_majorHash = req.body.majorHash;  // latest
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
-    branchName = req.body.branchName.replace(/\s/g,'-');
-    upstream_branch = 'origin/master';
-    url = `http://localhost:7005/projects/bare/${projName}.git`;
+    var projName = req.body.projName.replace(/\s/g,'-');
+    var username = req.body.username.replace(/\s/g,'-');
+    var curr_majorHash = req.body.majorHash;  // latest
+    var branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    var url = `http://localhost:7005/projects/bare/${projName}.git`;
 
-    timestamp = Date.now();
+    var timestamp = Date.now();
 
-    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate);
-    workdirpath = path.resolve(__dirname, '..', 'projects', branchToUpdate, projName, username+timestamp);
+    var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
+    var branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate);
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await getMergeArr(barerepopath, branchNamepath)
-        res.status(200).send(response);
+        let mainMergeObj = await getMergeArr(barerepopath, branchNamepath)
+        res.status(200).send({ mainMergeObj: mainMergeObj, url: url});
     }catch(e){
         res.status(400).send(`main caller err: ${e}`);
     }

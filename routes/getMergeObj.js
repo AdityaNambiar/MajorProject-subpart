@@ -36,7 +36,7 @@ router.post('/getMergeObj', async (req,res) => {
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate);
     workdirpath = path.resolve(__dirname, '..', 'projects', branchToUpdate, projName, username+timestamp);
-    
+
     try{
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
         let response = await getMergeArr(barerepopath, branchNamepath)
@@ -106,7 +106,7 @@ async function formMergeArr(dir_list, barerepopath, branchNamepath){
                 branchName = pathArr[pathArr.length - 2];
 
                 // Step 1:
-                fs.readFile(`${workdirpath}/${dir_list[i]}.json`, { encoding: 'utf-8' }, (err,data) => {
+                fs.readFile(`${workdirpath}/${dir_list[i]}.json`, { encoding: 'utf-8' }, async (err,data) => {
                     if (err) { console.log(err); reject(`(formMergeArr) readJSON err ${err.name} :- ${err.message}`); }
                     type = data.type;
                     title = data.title;

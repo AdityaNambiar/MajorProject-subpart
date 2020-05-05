@@ -101,22 +101,27 @@ credits: https://stackoverflow.com/questions/17359370/git-show-last-commit-date-
 modified for my use case:
 FILES="$(git ls-tree --name-only HEAD .)";IFS="$(printf "\n\b")";for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x28%x7c%x29%x2D%x7c%x2D%x28%x7c%x29%cr" $f)";  printf "%s-%s\n" "$f" "$str"; done
 
+
+====================================================== Modified workflow: ===========================================
+
   - projName/
     - branchName/ branchNamepath
        - username+timestamp (workdirpath)
 
 Both are same:
-scanDir - utility (same as getMergeArr)
+getMergeArr - utility
 getMergeArr - route (takes branchNamepath)
 - output:
    merge_arr = [
                     {  
-                        'mergeid': username+timestamp, (dir_list[i])
-                        'file': filename_list
+                        mergeid: username+timestamp, (dir_list[i])
+                        file: filename_list,
+                        title: ''
                     },
                     {
-                        'mergeid': username+timestamp, 
-                        'file': filename_list
+                        mergeid: username+timestamp, 
+                        file: filename_list,
+                        title: ''
                     }
                ]
 readMerge - route (takes username+timestamp i.e. in this case, workdirpath)
@@ -136,7 +141,6 @@ mergeCommit - route (don't create new username+timestamp -> the mergeid whose va
 - if conflict occurs, do not remove workdirpath and perform scanDir utility.
 - if conflict does not occur (if operation successful and removing user's operated directory), perform scanDir utility. (should be performed after route operations + IPFS)
 
-for all operations, send this below array
 merge_arr = [
                 {  
                     'mergeid': username+timestamp (dir_list[i]), 
@@ -148,40 +152,43 @@ merge_arr = [
                 }
             ]
 
+for all operations, send this below array
 {
     "normal": merge_arr,
-    "special": [
+    "special": [ // When a conflict which is not 'content' is detected, put the formed merge obj into the merge arr and pass this main obj out
                 {  
                     'mergeid': username+timestamp (dir_list[i]), 
-                    'instructions': []
+                    'instructions': [],
+                    'title':''
                 },
                 {
                     'mergeid': username+timestamp (dir_list[i]),
-                    'instructions': []
+                    'instructions': [],
+                    'title':''
                 }
             ]
 }
 
+Route flow:
 main_op
-pushChecker - fetch merge_arr:
+{} = await pushChecker - give a response object as { statusLine, ipfsHash, mergeObj}:
     try {
     - git pull
     - if (conflict present)
         - if (conflict_line) 
             - throw new Error("conflict")
-    - git push (if successful) 
-        - pushToBare
-        - scanDir - to form a path. (iterate the files obj -> extract timestamp part by slicing out username -> )
-        - statusChecker.
-        - rmWorkdir
-        - getMergeArr
+    - pushToBare
+    - removeFromIPFS(old_ipfsHash)
+    - addToIPFS
+    - statusChecker.
+    - rmWorkdir
+    - getMergeArr
     } catch(e) {
         if (e === "conflict")     
-            - scanDir - to form a path.
             - statusChecker 
             - getMergeArr 
     }
-<IPFS_work>
+res.send
 
 
 getMergeArr in pushChecker - sequence:
@@ -196,18 +203,40 @@ for mergeBranches route (don't involve pushChecker in this) (just pass the error
         -- mergeid will be the username and current timestamp value (workdirpath)
         -- filename_list of the workdirpath in which conflicts occured.
      -- git merge branchName
-    on any conflict,
+    on any content conflict,
         - create json file with the name same as the current directory. 
         - of the form: {
                 type: 'branch',
                 title: <form appropriate tile mentioning both the branch names> 
         }
+    on any special conflict, 
+        - ... same as content conflict.
+        - only keep ... type: 'special' ...
 for pushChecker's getMergeArr:
         - read the json file and fetch type and title. 
         - set the title value in merge arr object (which is in process)
         - Compare the type:
-            1. if type !== "pull":
+            1. if type === "pull" / type !== "branch":
                 perform `git merge --abort`
-                then git pull origin branch 
-            2. if type === "branch":
+                then git pull origin  
+            2. if type !== "pull" / type === "branch":
                 fetch filename_list (git diff wala command)
+            3. if type === "special":
+                set the instructions array.
+
+
+Create a new route downloadAndRemoveRepo(mergeid):
+    -- take mergeid
+    -- zip that folder.
+    -- remove the folder of this name (branchNamepath/mergeid).
+
+===========================================================================
+
+Different types of 'special' conflicts can be found on this C code:
+
+
+https://github.com/git/git/blob/master/merge-recursive.c
+
+
+Press ctrl+f and type "conflict ("
+At the time of writing this, there are around 15 to 16 conflict types (which are other than content type conflict)

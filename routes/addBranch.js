@@ -2,13 +2,8 @@
  * Add a new branch in git repo:
  */
 // Misc:
-const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
-const removeFromIPFS = require('../utilities/removeFromIPFS');
-const statusChecker = require('../utilities/statusChecker');
 const pushChecker = require('../utilities/pushChecker');
-const pushToBare = require('../utilities/pushToBare');
-const rmWorkdir = require('../utilities/rmWorkdir');
 
 const { exec } = require('child_process');
 
@@ -23,9 +18,9 @@ const router = express.Router();
 
 
 var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, branchName, files = [], 
-    upstream_branch, majorHash, barerepopath, 
-    filenamearr = [], statusLine, url;
+    username, branchToUpdate, branchName, 
+    upstream_branch, barerepopath, 
+    timestamp, url;
 
 router.post('/addBranch', async (req,res) => {
     projName = req.body.projName.replace(/\s/g,'-');
@@ -36,76 +31,56 @@ router.post('/addBranch', async (req,res) => {
     upstream_branch = 'origin/master';
     url = `http://localhost:7005/projects/bare/${projName}.git`;
 
+    timestamp = Date.now();
+
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+    workdirpath = path.resolve(__dirname, '..', 'projects', branchToUpdate, projName, username+timestamp);
 
     try{
-        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
-        .then( async () => {
-            let response = await main(projName, workdirpath, curr_majorHash)
-            return response;
-        })
-        .then ( (response) => {
-            res.status(200).send(response);
-        })
+        await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
+        let response = await main(projName, workdirpath, curr_majorHash)
+        res.status(200).send(response);
     }catch(e){
         res.status(400).send(`main caller err: ${e}`);
     }
 })
 
-async function main(projName, workdirpath, curr_majorHash){
+function main(projName, workdirpath, curr_majorHash){
     return new Promise ( async (resolve, reject) => {
         try {
-            await gitBranchAdd(workdirpath, branchName)
-            .then( async () => {
-                await setUpstream(workdirpath, upstream_branch);
-            })
-            .then( async () => {
-                // 'files' arr should be filled up.
-                files = await gitListFiles(workdirpath);
-                return files;
-            })
-            .then ( async () => {
-                statusLine = await statusChecker(projName, username);
-                return statusLine;
-            })
-            .then( async () => {
-                filenamearr = [];
-                filenamearr = await pushChecker(projName, username, branchToUpdate); 
-                console.log("pushchecker returned this: \n", filenamearr);
-            })
-            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
-                console.log(`Pushing to branch: ${branchToUpdate}`);
-                await pushToBare(projName, branchToUpdate, username)
-                .then( async () => {
-                    await rmWorkdir(projName, username);
-                })
-                .then( async () => {
-                    // Remove old state from IPFS.
-                    await removeFromIPFS(curr_majorHash);
-                })
-                .then( async () => {
-                    // Add new state to IPFS.
-                    majorHash = await addToIPFS(barerepopath);
-                    return majorHash;
-                })
-                .then( (majorHash) => {
-                    console.log("MajorHash (git addBranch): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, url: url, files: files, statusLine: statusLine});
-                })
-            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, url: url, files: files, statusLine: statusLine});
-            } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, url: url, files: files, statusLine: statusLine});
-            }
+            let newBranchNamePath = await gitBranchAdd(workdirpath, branchName)
+            await createAndMoveWorkDir(workdirpath,newBranchNamePath)
+            await setUpstream(workdirpath, upstream_branch);
+            const files = await gitListFiles(workdirpath);
+            const responseobj = await pushChecker(projName, username, branchToUpdate, curr_majorHash); 
+            console.log("pushchecker returned this: \n", responseobj);
+            resolve({
+                projName: projName, 
+                majorHash: responseobj.ipfsHash, 
+                statusLine: responseobj.statusLine, 
+                mergeArr: responseobj.mergeArr, 
+                url: url,
+                files: files
+            });
         } catch(e) {
             reject(`main err: ${e}`);
         }
     })
 }
 
-async function gitBranchAdd(workdirpath, branchName) {
+function createAndMoveWorkDir(workdirpath,newBranchNamePath) {
+    return new Promise( async (resolve, reject) => {
+        try {
+            fs.mkdir(newBranchNamePath, (err) => {
+                if (err) reject(`could not create new Branch name folder ${err}`);
+                fs.
+            })
+        }
+    })
+}
+function gitBranchAdd(workdirpath, branchName) {
     return new Promise (async (resolve, reject) => {
+        let newBranchNamePath = "";
         try {
             await git.branch({
                 dir: workdirpath,
@@ -113,14 +88,17 @@ async function gitBranchAdd(workdirpath, branchName) {
                 checkout: true
             })
             branchToUpdate = branchName;
-            resolve(true);
+            newBranchNamePath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate);
+            resolve(newBranchNamePath);
         } catch(e) {
             reject(`git-branch err: ${e}`);
         }
     })
 }
 
-async function setUpstream(workdirpath, upstream_branch) {
+
+
+function setUpstream(workdirpath, upstream_branch) {
     return new Promise(async (resolve, reject) => {
         try {
             exec(`git branch --set-upstream-to=${upstream_branch}`, {
@@ -138,7 +116,7 @@ async function setUpstream(workdirpath, upstream_branch) {
     })
 }
 
-async function gitListFiles(workdirpath) {
+function gitListFiles(workdirpath) {
     let command = `FILES="$(git ls-tree --name-only HEAD .)";IFS="$(printf "\n\b")";for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x28%x7c%x29%x2D%x7c%x2D%x28%x7c%x29%cr" $f)";  printf "%s(|)-|-(|)%s\n" "$f" "$str"; done`;
     return new Promise (async (resolve, reject) => {
         try {
@@ -172,18 +150,3 @@ async function gitListFiles(workdirpath) {
 }
 
 module.exports = router;
-/*
-async function gitBranchCheckout(workdirpath, branchName) {
-    return new Promise (async (resolve, reject) => {
-        try {
-            await git.checkout({
-                dir:  workdirpath,
-                ref: branchName,
-            });
-            resolve(true);
-        } catch(e) {
-            reject(`git-checkout-cli err: ${e}`)
-        }
-    })
-}
-*/

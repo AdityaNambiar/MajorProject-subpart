@@ -17,9 +17,9 @@ const fs = require('fs');
 const git = require('isomorphic-git');
 git.plugins.set('fs',fs); // Bring your own file system 
 
-module.exports = async function statusChecker(barerepopath, branchNamepath, username, timestamp) {
+module.exports = async function statusChecker(barerepopath, branchNamepath, username) {
     return new Promise( async (resolve, reject) => {
-        await scan(branchNamepath, username, timestamp)
+        await scan(branchNamepath, username)
         .then( async (computedpath) => {
             await gitFetch(barerepopath, computedpath)
             return computedpath;
@@ -37,13 +37,13 @@ module.exports = async function statusChecker(barerepopath, branchNamepath, user
     })
 }
 
-async function scan(branchNamepath, username, timestamp){
+async function scan(branchNamepath, username){
     var tsarr = [], filesarr = [], minOftsarr, computedpath;
     return new Promise( async (resolve, reject) => {
         try {
-            fs.readdir(branchNamepath,(err,files)=>{
+            fs.readdir(branchNamepath,(err,files)=>{ // Scanning point - branchNamepath.
                 if (err) reject(`readdir err: ${err}`)
-                filesarr = files.filter(e => !e.search(username)); // Only fetch current user's folders (username+timestamp folder).
+                filesarr = files.filter(e => !e.search(username)); // Only fetch current user's folders (username+timestamp folders).
                 for (var i = 0; i < filesarr.length; i++) {
                     var str = filesarr[i]; // username+timestamp
                     var ts = parseInt(str.split(username)[1]); // timestamp of type "number".
@@ -52,6 +52,7 @@ async function scan(branchNamepath, username, timestamp){
                 console.log(tsarr);
                 minOftsarr = tsarr.reduce( (a,b) => (a < b)? a : b);  // Fetch minimum of the timestamp arr.
                 computedpath = path.resolve(branchNamepath, username+minOftsarr);
+                resolve(computedpath);
             })
         } catch(e) {
             reject(`(scan) fs.readdir err: ${e}`)

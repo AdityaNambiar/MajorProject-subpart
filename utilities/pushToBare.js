@@ -11,7 +11,7 @@ const { exec } = require('child_process');
 
 let workdirpath, barerepopath;
 
-module.exports = function pushToBare(projName, branchName, username) {
+module.exports = async function pushToBare(projName, branchName, username) {
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);

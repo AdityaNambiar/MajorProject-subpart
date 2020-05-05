@@ -8,12 +8,12 @@
 */
 
 
-const addToIPFS = require('../utilities/addToIPFS');
-const removeFromIPFS = require('../utilities/removeFromIPFS');
-const statusChecker = require('../utilities/statusChecker');
-const pushToBare = require('../utilities/pushToBare');
-const rmWorkdir = require('../utilities/rmWorkdir');
-const getMergeArr = require('./getMergeArr');
+const pushToBare = require('./pushToBare');
+const removeFromIPFS = require('./removeFromIPFS');
+const addToIPFS = require('./addToIPFS');
+const statusChecker = require('./statusChecker');
+const rmWorkdir = require('./rmWorkdir');
+const getMergeObj = require('./getMergeObj');
 
 // Terminal execution:
 const { exec } = require('child_process');
@@ -25,52 +25,60 @@ git.plugins.set('fs',fs); // Bring your own file system
 
 const path = require('path');
 
-
-// vars used as global:
-var barerepopath, workdirpath, mainResponse = {}; 
-
-module.exports = async function pushChecker(projName, username, branchName) {
-    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
-
-    mainResponse = {
+module.exports = async function pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash) {
+    
+    var mainResponse = {
         statusLine: '',
         mergeObj: {},
         ipfsHash: ''
     }
+
     return new Promise ( async (resolve, reject) => {
         try {
-            let files = await gitPull(workdirpath, projName, username, branchName)
-            resolve(files);
+            let mainResp = await gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorHash)
+            resolve(mainResp);
         } catch(e) {
             reject(`main err: ${e}`);
         }
     })
 }
 
-function gitPull(workdirpath, projName, username, branchName, branchToUpdate){
+function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorHash){
+    // .../projects/projName/branchName/username+timestamp
+    var projName, branchName, username, pathArr;
+    pathArr = workdirpath.split('/');
+    projName = pathArr[pathArr.length - 3];
+    branchName = pathArr[pathArr.length - 2];
+    username = pathArr[pathArr.length - 1].split(timestamp)[0]; 
+    let dir_name = username+timestamp;
+    let branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchName);
 
     return new Promise( async (resolve, reject) => {
         try {
-            await exec(`git pull ${barerepopath} ${branchToUpdate}`, {
+            await exec(`git pull ${barerepopath} ${branchName}`, {
                 cwd: workdirpath,
                 shell: true
             }, async (err, stdout, stderr) => {
+                //if (err) { console.log(err); reject(`gitPull cli err ${err.name} :- ${err.message}`); }
+                //if (stderr) { console.log(stderr); reject(`gitPull cli stderr :- ${stderr} `); }
                 console.log(stdout);
                 var output = stdout.split('\n');
-                var filename_arr = [];
-                var obj = {}, arr = [];
+                var arr = [];
                 var elem_rgx = new RegExp(/CONFLICT/);
                 var inbetweenbrackets_rgx = new RegExp(/\((.*)\)/); // defines capturing group for picking up the stuff within parenthesis
                 if (output.some((e) => elem_rgx.test(e))){ // TRUE - if any output line consist of "CONFLICT" keyword in it. 
+                    
                     //output.push("CONFLICT (add/add): Merge conflict in DESC4")
                     //output.push("CONFLICT (modify/delete): Merge conflict in DESC4")
-                    fs.writeFile(path.join(workdirpath, `${dir_name}.json`),{
-                        type: "pull",
-                        title: `Merge conflict raised pulling ${branchToUpdate} branch`
-                    }, (err) => {
-                        if (err) reject(`(pushChecker) gitPull-jsonWrite err: ${err}`)
-                    })
+                    try {
+                        fs.writeFileSync(path.join(workdirpath, `${dir_name}.json`),{
+                            type: 'pull',
+                            title: `Merge conflict raised pulling ${branchName} branch`
+                        })
+                    } catch(err) {
+                        console.log(err);
+                        reject(`(pushChecker) gitPull-jsonWriteForPull err ${err.name} :- ${err.message}`)
+                    }
 
                     for (var i = 0; i < output.length; i++){
                         if (output[i].match(inbetweenbrackets_rgx) != null) {
@@ -79,35 +87,37 @@ function gitPull(workdirpath, projName, username, branchName, branchToUpdate){
                         }
                     }
                     if (!arr.every((e) => e === "content")){ // If the array contains anything else than "content" type conflicts. Throw the error with instructions.
-                        fs.writeFile(path.join(workdirpath, `${dir_name}.json`), {
-                            type: "special",
-                            title: `Merge conflict raised pulling ${branchToUpdate} branch`
-                        }, (err) => {
-                            if (err) reject(`(pushChecker) gitPull-jsonWrite err: ${err}`)
-                        })
+                        try{
+                            fs.writeFileSync(path.join(workdirpath, `${dir_name}.json`), {
+                                type: 'special',
+                                title: `Merge conflict raised pulling ${branchName} branch`
+                            })
+                        } catch(err) {
+                            console.log(err);
+                            reject(`(pushChecker) gitPull-jsonWriteForSpecial err ${err.name} :- ${err.message}`)
+                        }
                     }
                     throw new Error("conflict");
                 } else { // if merge was successful in `git pull`
-                    await pushToBare(projName, branchToUpdate, username)
+                    await pushToBare(projName, branchName, username)
                     await removeFromIPFS(curr_majorHash);
                     mainResponse.ipfsHash = await addToIPFS(barerepopath);
-                    mainResponse.statusLine = await statusChecker();
-                    await rmWorkdir();
-                    mainResponse.mergeObj = await getMergeArr();
+                    mainResponse.statusLine = await statusChecker(barerepopath, branchNamepath, username);
+                    await rmWorkdir(workdirpath);
+                    mainResponse.mergeObj = await getMergeObj(barerepopath, branchNamepath);
                     resolve(mainResponse);
                 }
             })
-        } catch(e) {
-            if (e.message === "conflict") {
+        } catch(err) {
+            if (err.message === "conflict") {
                 await removeFromIPFS(curr_majorHash);
                 mainResponse.ipfsHash = await addToIPFS(barerepopath);
-                await statusLine()
-                mainResponse.statusLine = statLine
-                let mainMergeObj = await getMergeArr()
-                mainResponse.mergeObj = await getMergeArr();
-                resolve({mainMergeObj, mainResponse});
+                mainResponse.statusLine = await statusChecker(barerepopath, branchNamepath, username);
+                mainResponse.mergeObj = await getMergeObj(barerepopath, branchNamepath);
+                resolve(mainResponse);
             }
-            reject(`(pushchecker) git-pull err: ${e}`)
+            console.log(err);
+            reject(`(pushChecker) git-pull err ${err.name} :- ${err.message}`)
         }
     })
 }

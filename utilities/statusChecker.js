@@ -19,30 +19,24 @@ git.plugins.set('fs',fs); // Bring your own file system
 
 module.exports = async function statusChecker(barerepopath, branchNamepath, username) {
     return new Promise( async (resolve, reject) => {
-        await scan(branchNamepath, username)
-        .then( async (computedpath) => {
+        try {
+            var computedpath = await scan(branchNamepath, username)
             await gitFetch(barerepopath, computedpath)
-            return computedpath;
-        })
-        .then( async (computedpath) => {
-            let statusLine = await gitStatus(computedpath)
-            return statusLine;
-        })
-        .then( (statusLine) => {
+            var statusLine = await gitStatus(computedpath)
             resolve(statusLine);
-        })
-        .catch((e) => {
-            reject(`main err: ${e}`);
-        })
+        } catch(e) {
+            reject(`statusChecker err: ${e}`);
+        }
     })
 }
 
-async function scan(branchNamepath, username){
+function scan(branchNamepath, username){
     var tsarr = [], filesarr = [], minOftsarr, computedpath;
-    return new Promise( async (resolve, reject) => {
+    return new Promise( (resolve, reject) => {
         try {
-            fs.readdir(branchNamepath,(err,files)=>{ // Scanning point - branchNamepath.
+            fs.readdir(branchNamepath, (err,files)=>{ // Scanning point - branchNamepath.
                 if (err) reject(`readdir err: ${err}`)
+                
                 filesarr = files.filter(e => !e.search(username)); // Only fetch current user's folders (username+timestamp folders).
                 for (var i = 0; i < filesarr.length; i++) {
                     var str = filesarr[i]; // username+timestamp
@@ -60,11 +54,11 @@ async function scan(branchNamepath, username){
     })
 }
 
-async function gitFetch(barerepopath, workdirpath) {
-    return new Promise (async (resolve, reject) => {
+function gitFetch(barerepopath, computedpath) {
+    return new Promise ((resolve, reject) => {
         try {
             exec(`git fetch ${barerepopath} master`, {
-                cwd: workdirpath,
+                cwd: computedpath,
                 shell: true
             }, (err, stdout, stderr) => {
                 if (err) { 
@@ -81,11 +75,11 @@ async function gitFetch(barerepopath, workdirpath) {
     })
 }
 
-async function gitStatus(workdirpath) {
-    return new Promise (async (resolve, reject) => {
+function gitStatus(computedpath) {
+    return new Promise ((resolve, reject) => {
         try {
             exec(`git status`, {
-                cwd: workdirpath,
+                cwd: computedpath,
                 shell: true
             }, (err, stdout, stderr) => {
                 if (err) { 

@@ -1,20 +1,52 @@
 /**
- * Utility to fetchulist of folders in branchNamepath.
-*/
+ * Add a new branch in git repo:
+ */
+// Misc:
+const preRouteChecks = require('../utilities/preRouteChecks');
+const pushChecker = require('../utilities/pushChecker');
 
-// Terminal execution:
 const { exec } = require('child_process');
 
 // isomorphic-git related imports and setup
-const fs = require('fs');
+const fs = require('fs-extra');
 const git = require('isomorphic-git');
 git.plugins.set('fs',fs); // Bring your own file system 
 
 const path = require('path');
+const express = require('express');
+const router = express.Router();
 
 
+var projName, workdirpath, curr_majorHash, 
+    username, branchToUpdate, branchName, 
+    upstream_branch, barerepopath, 
+    timestamp, url;
 
-module.exports = async function getMergeArr(barerepopath, branchNamepath) {
+router.post('/getMergeObj', async (req,res) => {
+    projName = req.body.projName.replace(/\s/g,'-');
+    username = req.body.username.replace(/\s/g,'-');
+    curr_majorHash = req.body.majorHash;  // latest
+    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    branchName = req.body.branchName.replace(/\s/g,'-');
+    upstream_branch = 'origin/master';
+    url = `http://localhost:7005/projects/bare/${projName}.git`;
+
+    timestamp = Date.now();
+
+    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
+    branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate);
+    workdirpath = path.resolve(__dirname, '..', 'projects', branchToUpdate, projName, username+timestamp);
+    
+    try{
+        await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
+        let response = await getMergeArr(barerepopath, branchNamepath)
+        res.status(200).send(response);
+    }catch(e){
+        res.status(400).send(`main caller err: ${e}`);
+    }
+})
+
+async function getMergeArr(barerepopath, branchNamepath) {
 
     return new Promise ( async (resolve, reject) => {
         try {
@@ -58,7 +90,7 @@ async function formMergeArr(dir_list, barerepopath, branchNamepath){
         normal: normalMergeArr,
         special: specialMergeArr
     };
-    return new Promise( (resolve, reject) => {
+    return new Promise( async (resolve, reject) => {
         try {
             for (var i = 0; i < dir_list.length; i++) {
                 /**
@@ -74,11 +106,10 @@ async function formMergeArr(dir_list, barerepopath, branchNamepath){
                 branchName = pathArr[pathArr.length - 2];
 
                 // Step 1:
-                fs.readFile(`${workdirpath}/${dir_list[i]}.json`, { encoding: 'utf-8' }, async (err, data) => {
+                fs.readFile(`${workdirpath}/${dir_list[i]}.json`, { encoding: 'utf-8' }, (err,data) => {
                     if (err) { console.log(err); reject(`(formMergeArr) readJSON err ${err.name} :- ${err.message}`); }
                     type = data.type;
                     title = data.title;
-
                     if (type === "pull"){ // For folders where conflicts occured due to pull.
                         let resp = await gitMAbortAndPull(dir_list[i], barerepopath, workdirpath,  projName, branchName); // Returns an array. It could be a filenamelist or instruction array.
                         if (resp[0] === "Please solve this merge conflict via CLI"){
@@ -247,3 +278,6 @@ function checkUnmergedFiles(workdirpath) {
         }
     })
 }
+
+
+module.exports = router

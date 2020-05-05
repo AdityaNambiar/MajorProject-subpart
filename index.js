@@ -5,7 +5,6 @@ const path = require('path');
 const Server = require('node-git-server');
 const axios = require('axios');
 
-const pushToBare = require('./utilities/pushToBare');
 const addToIPFS = require('./utilities/addToIPFS');
 
 const cors = require('cors');
@@ -40,7 +39,7 @@ const getBranches = require('./routes/getBranches');
 const deleteBranch = require('./routes/deleteBranch');
 const branchCommitHistory = require('./routes/branchCommitHistory');
 
-const pushChecker = require('./routes/pushChecker');
+const getMergeObj = require('./routes/getMergeObj');
 const checkoutBranch = require('./routes/checkoutBranch');
 
 
@@ -73,7 +72,7 @@ app.post('/getBranches', getBranches);
 app.post('/deleteBranch', deleteBranch);
 app.post('/branchCommitHistory', branchCommitHistory);
 
-app.post('/pushChecker', pushChecker);
+app.post('/getMergeObj', getMergeObj);
 app.post('/checkoutBranch', checkoutBranch);
 
 repos.on('push', async (push) => {

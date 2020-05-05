@@ -100,7 +100,7 @@ async function mergeFiles(workdirpath, username, timestamp, branchName, branchTo
                         type: 'branch',
                         title: `Merge conflict raised when merging ${branchName} into ${branchToUpdate}`
                     }, (err) => {
-                        if (err) reject(`(mergeBranch) gitMerge-jsonWrite err: ${err}`)
+                        if (err) reject(`(mergeBranch) gitMerge-jsonWriteForBranch err: ${err}`)
                     })
 
                     for (var i = 0; i < output.length; i++){
@@ -114,7 +114,7 @@ async function mergeFiles(workdirpath, username, timestamp, branchName, branchTo
                             type: 'special',
                             title: `Merge conflict raised when merging ${branchName} into ${branchToUpdate}`
                         }, (err) => {
-                            if (err) reject(`(mergeBranch) gitMerge-jsonWrite err: ${err}`)
+                            if (err) reject(`(mergeBranch) gitMerge-jsonWriteForSpecial err: ${err}`)
                         })
                     }
                     throw new Error('Conflict occured while merging branch!');

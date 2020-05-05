@@ -20,11 +20,6 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-var projName, workdirpath, barerepopath, projectspath,
-    majorHash, authoremail, authorname, buffer, 
-    username, filename, usermsg, branchToUpdate, 
-    barepath, branchNamepath;
-
 router.post('/initProj', async (req,res) => {
     var projName = req.body.projName.replace(/\s/g,'-'); 
     var username = req.body.username.replace(/\s/g,'-');
@@ -48,7 +43,8 @@ router.post('/initProj', async (req,res) => {
     try {
         await barePathCheck(barepath)
         await branchNamePathCheck(branchNamepath)
-        let response = await main()
+        let response = await main(projName, projectspath, barerepopath, majorHash, workdirpath, filename, buffer,
+            usermsg, authorname, authoremail, branchToUpdate, username, timestamp)
         res.status(200).send(response);
     } catch (err) {
         console.log(err);
@@ -56,7 +52,7 @@ router.post('/initProj', async (req,res) => {
     }
 })
 
-function main(projName, barerepopath, majorHash, workdirpath, filename, buffer,
+function main(projName, projectspath, barerepopath, majorHash, workdirpath, filename, buffer,
         usermsg, authorname, authoremail, branchToUpdate, username, timestamp) 
 { 
     return new Promise ( async (resolve, reject) => {
@@ -64,7 +60,7 @@ function main(projName, barerepopath, majorHash, workdirpath, filename, buffer,
             await gitInit(workdirpath)
             await writeFile(workdirpath, filename, buffer);
             await autoCommit(workdirpath,filename, usermsg, authorname, authoremail);
-            await gitInitBare(branchToUpdate, projName, username+timestamp)
+            await gitInitBare(projectspath, branchToUpdate, projName, username+timestamp)
             await rmWorkdir(workdirpath)   
             majorHash = await addToIPFS(barerepopath);
             console.log("MajorHash (git init): ", majorHash);
@@ -108,7 +104,7 @@ function gitInit(workdirpath) {
     return new Promise( async (resolve, reject) => {
         try {
             await git.init({
-                fs,
+                fs: fs,
                 dir: workdirpath
             });
             resolve(true)
@@ -117,7 +113,7 @@ function gitInit(workdirpath) {
         }
     })
 }
-function gitInitBare(branchToUpdate, projName, username) {
+function gitInitBare(projectspath, branchToUpdate, projName, username) {
     return new Promise( async (resolve, reject) => {
         try {
             await exec(`git clone --bare ${projName}/${branchToUpdate}/${username} bare/${projName+'.git'}`, {
@@ -138,11 +134,12 @@ function autoCommit(workdirpath, filename, usermsg, authorname, authoremail){
     return new Promise( async (resolve, reject) => {
         try {
             await git.add({
+                fs: fs,
                 dir:  workdirpath,
                 filepath: filename
             })
             let sha = await git.commit({
-                    fs,
+                    fs: fs,
                     dir:  workdirpath,
                     message: usermsg,
                     author: {

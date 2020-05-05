@@ -28,7 +28,7 @@ router.post('/addBranch', async (req,res) => {
     var timestamp = Date.now();
 
     var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    var workdirpath = path.resolve(__dirname, '..', 'projects', branchToUpdate, projName, username+timestamp);
+    var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username+timestamp);
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)

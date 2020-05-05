@@ -8,7 +8,7 @@ const { exec } = require('child_process');
 
 const path = require('path');
 
-module.exports = async function clone(workdirpath, projName, username, timestamp, branchToUpdate) {
+module.exports = function clone(workdirpath, projName, username, timestamp, branchToUpdate) {
     
     return new Promise( async (resolve, reject) => {
         try {
@@ -16,7 +16,7 @@ module.exports = async function clone(workdirpath, projName, username, timestamp
                 cwd: path.resolve(__dirname, '..', 'projects',''),
                 shell: true
             }, async (err, stdout, stderr) => {
-                if (err) { console.log('clone cli err: ',err); reject(err) }
+                if (err) { console.log(err); reject(`clone cli err ${err.name} :- ${err.message}`); }
                 //if (stderr) { console.log('clone cli stderr: ',stderr); reject(stderr) }
                 await exec(`git checkout ${branchToUpdate}`, {
                     cwd: workdirpath,
@@ -26,8 +26,10 @@ module.exports = async function clone(workdirpath, projName, username, timestamp
                     resolve(true)
                 }) 
             })
-        } catch(e) {
-            reject(e);
+        } catch(err) {
+            console.log(err); 
+            reject(`git clone err ${err.name} :- ${err.message}`);
+                
         }
     })
 }

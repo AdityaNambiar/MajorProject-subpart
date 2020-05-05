@@ -19,7 +19,7 @@ module.exports = function removeFromIPFS(majorHash){
         try{
             // IPFS.pin.rm() projectLeader's folder:
             await ipfs.pin.rm(majorHash, (err,res) => {
-                if (err) console.log("IPFS PIN RM Err: ", err);
+                if (err) { console.log(err); reject(`IPFS PIN RM Err ${err.name} :- ${err.message}`); }
                 console.log("majorHash removed: ",res);
                 execSync('ipfs repo gc', {
                     cwd: projectsPath,
@@ -27,8 +27,9 @@ module.exports = function removeFromIPFS(majorHash){
                 });
                 resolve(true);
             })
-        }catch(e){
-            reject("ipfs unpin & repo gc err"+e);
+        }catch(err){
+            console.log(err); 
+            reject(`ipfs unpin & repo gc err ${err.name} :- ${err.message}`);
         }
     })
 }

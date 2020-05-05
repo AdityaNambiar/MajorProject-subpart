@@ -230,6 +230,15 @@ Create a new route downloadAndRemoveRepo(mergeid):
     -- zip that folder.
     -- remove the folder of this name (branchNamepath/mergeid).
 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ISSUES IN ROUTES CURRENTLY:
+- addBranch:
+    -- isomorphic-git's add branch operation is not throwing error as it does on web UI. 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
 ===========================================================================
 
 Different types of 'special' conflicts can be found on this C code:

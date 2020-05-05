@@ -35,15 +35,15 @@ router.post('/addBranch', async (req,res) => {
         res.status(200).send(response);
     }catch(err){
         console.log(err);
-        res.status(400).send(`main caller err ${err.name}: ${err.message}`);
+        res.status(400).send(`addBranch err ${err.name}: ${err.message}`);
     }
 })
 
 function main(projName, timestamp, barerepopath, workdirpath, curr_majorHash, branchName, branchToUpdate, upstream_branch, url){
     return new Promise ( async (resolve, reject) => {
         try {
-            const newBranchNamePath = await gitBranchAdd(workdirpath, branchName, branchToUpdate, projName)
-            await branchNamePathCheck(newBranchNamePath)  // Prepares the branchNamePath for new branch name.
+            const newBranchNamePath = await branchNamePathCheck(branchName, projName)  // Prepares the branchNamePath for new branch name.
+            await gitBranchAdd(workdirpath, branchName, branchToUpdate, projName)
             const newWorkDirPath = await moveWorkDir(timestamp, workdirpath, newBranchNamePath) // Moves workdir to new branch name path to proceed with rest ops.
             await setUpstream(newWorkDirPath, upstream_branch);
             const files = await gitListFiles(newWorkDirPath);
@@ -53,30 +53,33 @@ function main(projName, timestamp, barerepopath, workdirpath, curr_majorHash, br
                 projName: projName, 
                 majorHash: responseobj.ipfsHash, 
                 statusLine: responseobj.statusLine, 
-                mergeArr: responseobj.mergeArr, 
+                mergeArr: responseobj.mergeObj, 
                 url: url,
                 files: files
             });
         } catch(err) {
             console.log(err);
-            reject(`main err ${err.name} :- ${err.message}`);
+            reject();
+            throw new Error(`(addBranch) main err ${err.name} :- ${err.message}`);
         }
     })
 }
 
 
-function branchNamePathCheck(branchNamepath) {
+function branchNamePathCheck(branchName, projName) {
+    let newBranchNamePath = path.resolve(__dirname, '..', 'projects', projName, branchName);
     return new Promise( (resolve, reject) => {
-        if (!fs.existsSync(branchNamepath)){
-            fs.mkdir(branchNamepath, (err) => {
+        if (!fs.existsSync(newBranchNamePath)){
+            fs.mkdir(newBranchNamePath, (err) => {
                 if (err) { 
                     console.log(err);
-                    reject(`branchNamePathCheck err ${err.name} :- ${err.message}`);
+                    throw new Error(`branchNamePathCheck err ${err.name} :- ${err.message}`);
                 }
-                resolve(true);
+                resolve(newBranchNamePath);
             })
+        } else {
+            throw new Error(`GitError [RefExistsError]: Failed to create branch "${branchName}" because branch "${branchName}" already exists.`); 
         }
-        resolve(true); // means projects/projName/branchName exists
     })
 }
 
@@ -91,32 +94,29 @@ function moveWorkDir(timestamp, workdirpath, newBranchNamePath) {
         let newWorkDirPath = path.join(newBranchNamePath, dir_name);
         try {
             fs.move(workdirpath, newWorkDirPath, (err) => {
-                if (err) { console.log(err); reject(`fs.move err ${err.name} :- ${err.message}`); }
+                if (err) { console.log(err); throw new Error(`fs.move err ${err.name} :- ${err.message}`); }
                 resolve(newWorkDirPath);
             })
         } catch(err) {
             console.log(err);
-            reject(`moveWorkDir err ${err.name} :- ${err.message}`);
+            throw new Error(`moveWorkDir err ${err.name} :- ${err.message}`);
         }
     })
 }
 
-function gitBranchAdd(workdirpath, branchName, branchToUpdate, projName) {
-    console.log("workdir: ",workdirpath);
+function gitBranchAdd(workdirpath, branchName) {
     return new Promise (async (resolve, reject) => {
         try {
-            let newBranchNamePath = "";
             await git.branch({
+                fs: fs,
                 dir: workdirpath,
                 ref: branchName,
                 checkout: true
             })
-            branchToUpdate = branchName;
-            newBranchNamePath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate);
-            resolve(newBranchNamePath);
+            resolve(true);
         } catch(err) {
             console.log(err); 
-            reject(`git-branch err ${err.name} :- ${err.message}`);
+            throw new Error(`git-branch err ${err.name} :- ${err.message}`);
         }
     })
 }
@@ -128,14 +128,14 @@ function setUpstream(workdirpath, upstream_branch) {
                 cwd: workdirpath,
                 shell: true
             }, (err, stdout, stderr) => {
-                if (err) { console.log(err); reject(`git-setupstream err ${err.name} :- ${err.message}`); }
-                if (stderr) { console.log(stderr); reject(`git-setupstream stderr: ${stderr}`); }
+                if (err) { console.log(err); throw new Error(`git-setupstream err ${err.name} :- ${err.message}`); }
+                if (stderr) { console.log(stderr); throw new Error(`git-setupstream stderr: ${stderr}`); }
                 console.log(stdout);
             })
             resolve(true);
         } catch(err) {
             console.log(err);
-            reject(`git-branch-setUpstream err ${err.name} :- ${err.message}`);
+            throw new Error(`git-branch-setUpstream err ${err.name} :- ${err.message}`);
         } 
     })
 }
@@ -168,7 +168,7 @@ function gitListFiles(workdirpath) {
             })
         }catch(err){
             console.log(err);
-            reject(`git-ls-tree err ${err.name} :- ${err.message}`);
+            throw new Error(`git-ls-tree err ${err.name} :- ${err.message}`);
         }
     })
 }

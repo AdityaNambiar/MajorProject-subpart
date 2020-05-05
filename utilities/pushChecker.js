@@ -25,7 +25,7 @@ git.plugins.set('fs',fs); // Bring your own file system
 
 const path = require('path');
 
-module.exports = async function pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash) {
+module.exports = function pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash) {
     
     var mainResponse = {
         statusLine: '',
@@ -99,7 +99,7 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
                     }
                     throw new Error("conflict");
                 } else { // if merge was successful in `git pull`
-                    await pushToBare(projName, branchName, username)
+                    await pushToBare(barerepopath, workdirpath, branchName)
                     await removeFromIPFS(curr_majorHash);
                     mainResponse.ipfsHash = await addToIPFS(barerepopath);
                     mainResponse.statusLine = await statusChecker(barerepopath, branchNamepath, username);

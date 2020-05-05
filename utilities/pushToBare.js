@@ -5,16 +5,9 @@
  * 2. repos.on('push', < perform a pushToBare() >)
  */
 
-const path = require('path');
-
 const { exec } = require('child_process');
 
-let workdirpath, barerepopath;
-
-module.exports = async function pushToBare(projName, branchName, username) {
-
-    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+module.exports = function pushToBare(barerepopath, workdirpath, branchName) {
 
     return new Promise( async (resolve, reject) => {
         await exec(`git push ${barerepopath} ${branchName} `, {
@@ -27,7 +20,7 @@ module.exports = async function pushToBare(projName, branchName, username) {
                 if (err_arr.some( (e) => e == `fatal: ${branchName} cannot be resolved to branch`)) 
                     resolve(true)
                 else  
-                    reject(`git push cli err: ${err}`);
+                    reject(`git push cli err ${err.name}: ${err.message}`);
             }
             //if (stderr) reject(`git push cli stderr: ${stderr}`) 
             console.log('git push cli stdout: ',stdout)

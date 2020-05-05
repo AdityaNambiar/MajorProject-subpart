@@ -32,7 +32,7 @@ router.post('/addBranch', async (req,res) => {
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(barerepopath, workdirpath, curr_majorHash, branchName, upstream_branch, url)
+        let response = await main(projName, timestamp, barerepopath, workdirpath, curr_majorHash, branchName, branchToUpdate, upstream_branch, url)
         res.status(200).send(response);
     }catch(err){
         console.log(err);
@@ -40,15 +40,15 @@ router.post('/addBranch', async (req,res) => {
     }
 })
 
-function main(barerepopath, workdirpath, curr_majorHash, branchName, upstream_branch, url){
+function main(projName, timestamp, barerepopath, workdirpath, curr_majorHash, branchName, branchToUpdate, upstream_branch, url){
     return new Promise ( async (resolve, reject) => {
         try {
-            const newBranchNamePath = await gitBranchAdd(workdirpath, branchName)
+            const newBranchNamePath = await gitBranchAdd(workdirpath, branchName, branchToUpdate, projName)
             await branchNamePathCheck(newBranchNamePath)  // Prepares the branchNamePath for new branch name.
-            await moveWorkDir(workdirpath, newBranchNamePath) // Moves workdir to new branch name path to proceed with rest ops.
-            await setUpstream(workdirpath, upstream_branch);
-            const files = await gitListFiles(workdirpath);
-            const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash); 
+            const newWorkDirPath = await moveWorkDir(timestamp, workdirpath, newBranchNamePath) // Moves workdir to new branch name path to proceed with rest ops.
+            await setUpstream(newWorkDirPath, upstream_branch);
+            const files = await gitListFiles(newWorkDirPath);
+            const responseobj = await pushChecker(barerepopath, newWorkDirPath, timestamp, curr_majorHash); 
             console.log("pushchecker returned this: \n", responseobj);
             resolve({
                 projName: projName, 
@@ -81,12 +81,19 @@ function branchNamePathCheck(branchNamepath) {
     })
 }
 
-function moveWorkDir(workdirpath,newBranchNamePath) {
+function moveWorkDir(timestamp, workdirpath, newBranchNamePath) {
+    // .../projects/projName/branchName/username+timestamp
+    var username, timestamp, pathArr;
+    pathArr = workdirpath.split('/');
+    username = pathArr[pathArr.length - 1].split(timestamp)[0]; 
+    let dir_name = username+timestamp;
+
     return new Promise( (resolve, reject) => {
+        let newWorkDirPath = path.join(newBranchNamePath, dir_name);
         try {
-            fs.move(workdirpath, newBranchNamePath, (err) => {
+            fs.move(workdirpath, newWorkDirPath, (err) => {
                 if (err) { console.log(err); reject(`fs.move err ${err.name} :- ${err.message}`); }
-                resolve(true);
+                resolve(newWorkDirPath);
             })
         } catch(err) {
             console.log(err);
@@ -95,10 +102,11 @@ function moveWorkDir(workdirpath,newBranchNamePath) {
     })
 }
 
-function gitBranchAdd(workdirpath, branchName) {
+function gitBranchAdd(workdirpath, branchName, branchToUpdate, projName) {
+    console.log("workdir: ",workdirpath);
     return new Promise (async (resolve, reject) => {
-        let newBranchNamePath = "";
         try {
+            let newBranchNamePath = "";
             await git.branch({
                 dir: workdirpath,
                 ref: branchName,

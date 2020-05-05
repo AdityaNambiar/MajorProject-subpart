@@ -5,7 +5,7 @@
 const fs = require('fs');
 
 
-module.exports = async function rmWorkdir(workdirpath) {
+module.exports = function rmWorkdir(workdirpath) {
     return new Promise( (resolve, reject) => {
         fs.rmdir(workdirpath, { 
             recursive: true

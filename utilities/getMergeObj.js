@@ -14,7 +14,7 @@ const path = require('path');
 
 
 
-module.exports = async function getMergeArr(barerepopath, branchNamepath) {
+module.exports = function getMergeArr(barerepopath, branchNamepath) {
 
     return new Promise ( async (resolve, reject) => {
         try {

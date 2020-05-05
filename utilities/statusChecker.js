@@ -17,7 +17,9 @@ const fs = require('fs');
 const git = require('isomorphic-git');
 git.plugins.set('fs',fs); // Bring your own file system 
 
-module.exports = async function statusChecker(barerepopath, branchNamepath, username) {
+const path = require('path');
+
+module.exports = function statusChecker(barerepopath, branchNamepath, username) {
     return new Promise( async (resolve, reject) => {
         try {
             var computedpath = await scan(branchNamepath, username)

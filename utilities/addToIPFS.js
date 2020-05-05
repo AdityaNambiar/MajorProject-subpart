@@ -10,7 +10,7 @@ const ipfsClient = require('ipfs-http-client');
 const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'});
 var majorHash = '';
 
-module.exports = async function addToIPFS(barerepopath){
+module.exports = function addToIPFS(barerepopath){
     return new Promise( async (resolve, reject) => {
         try{
             // IPFS.add() bare repo :

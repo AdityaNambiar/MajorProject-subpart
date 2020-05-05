@@ -12,10 +12,9 @@ const path = require('path');
 const ipfsClient = require('ipfs-http-client');
 const ipfs = ipfsClient({host: '127.0.0.1', port: '5001'});
 
-var projectsPath;
-module.exports = async function removeFromIPFS(majorHash){
+module.exports = function removeFromIPFS(majorHash){
 
-    projectsPath = path.resolve(__dirname, '..', 'projects'); 
+    var projectsPath = path.resolve(__dirname, '..', 'projects'); 
     return new Promise( async (resolve, reject) => {
         try{
             // IPFS.pin.rm() projectLeader's folder:

@@ -26,70 +26,56 @@ var projName, workdirpath, barerepopath, projectspath,
     barepath, branchNamepath;
 
 router.post('/initProj', async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-'); 
-    username = req.body.username.replace(/\s/g,'-');
-    majorHash = '';
-    branchToUpdate = 'master';
-    timestamp = Date.now();
+    var projName = req.body.projName.replace(/\s/g,'-'); 
+    var username = req.body.username.replace(/\s/g,'-');
+    var majorHash = '';
+    var branchToUpdate = 'master';
+    var timestamp = Date.now();
 
     // Git work:
-    authoremail = req.body.authoremail;
-    authorname = req.body.authorname;
-    buffer = req.body.filebuff;
-    filename = req.body.filename || "README.md";
-    usermsg = req.body.usermsg || "Initial Commit";
+    var authoremail = req.body.authoremail;
+    var authorname = req.body.authorname;
+    var buffer = req.body.filebuff;
+    var filename = req.body.filename || "README.md";
+    var usermsg = req.body.usermsg || "Initial Commit";
 
-    projectspath = path.resolve(__dirname, '..', 'projects');
-    barepath = path.resolve(__dirname, '..', 'projects', 'bare');
-    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate);
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username+timestamp);
+    var projectspath = path.resolve(__dirname, '..', 'projects');
+    var barepath = path.resolve(__dirname, '..', 'projects', 'bare');
+    var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
+    var branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate);
+    var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username+timestamp);
 
     try {
         await barePathCheck(barepath)
-        .then( async () => {
-            await branchNamePathCheck(branchNamepath)
-        })
-        .then( async () => {
-            let response = await main()
-            return response;
-        })
-        .then( (response) => {
-            res.status(200).send(response);
-        })
+        await branchNamePathCheck(branchNamepath)
+        let response = await main()
+        res.status(200).send(response);
     } catch (err) {
-        res.status(400).send("git init main err: "+err);
+        console.log(err);
+        res.status(400).send(`main err ${err.name} :- ${err.message}`);
     }
 })
 
-async function main() { 
+function main(projName, barerepopath, majorHash, workdirpath, filename, buffer,
+        usermsg, authorname, authoremail, branchToUpdate, username, timestamp) 
+{ 
     return new Promise ( async (resolve, reject) => {
-        gitInit(workdirpath)
-        .then( async () => {
+        try {
+            await gitInit(workdirpath)
             await writeFile(workdirpath, filename, buffer);
-        })
-        .then( async () => {
             await autoCommit(workdirpath,filename, usermsg, authorname, authoremail);
-        })
-        .then( async () => {
             await gitInitBare(branchToUpdate, projName, username+timestamp)
-        })
-        .then ( async () => {
             await rmWorkdir(workdirpath)   
-        })
-        .then( async () => {
             majorHash = await addToIPFS(barerepopath);
-        })
-        .then( () => {
             console.log("MajorHash (git init): ", majorHash);
             resolve({projName: projName, majorHash: majorHash});
-        })
-        .catch( (e) => {
-            reject(`main err: ${e}`);
-        })
+        } catch (err) {
+            console.log(err);
+            reject(`main err ${err.name}: ${err.message}`);
+        }
     })
 }
-async function barePathCheck(barepath){
+function barePathCheck(barepath){
     return new Promise( (resolve, reject) => {
         if (!fs.existsSync(barepath)){
             fs.mkdir(barepath, (err) => {
@@ -103,7 +89,7 @@ async function barePathCheck(barepath){
     })
 }
 
-async function branchNamePathCheck(branchNamepath) {
+function branchNamePathCheck(branchNamepath) {
     return new Promise( async (resolve, reject) => {
         if (!fs.existsSync(branchNamepath)){
             fs.mkdir(branchNamepath, (err) => {
@@ -118,7 +104,7 @@ async function branchNamePathCheck(branchNamepath) {
 }
 
 
-async function gitInit(workdirpath) {
+function gitInit(workdirpath) {
     return new Promise( async (resolve, reject) => {
         try {
             await git.init({
@@ -131,7 +117,7 @@ async function gitInit(workdirpath) {
         }
     })
 }
-async function gitInitBare(branchToUpdate, projName, username) {
+function gitInitBare(branchToUpdate, projName, username) {
     return new Promise( async (resolve, reject) => {
         try {
             await exec(`git clone --bare ${projName}/${branchToUpdate}/${username} bare/${projName+'.git'}`, {
@@ -148,7 +134,7 @@ async function gitInitBare(branchToUpdate, projName, username) {
     })
 }
 
-async function autoCommit(workdirpath, filename, usermsg, authorname, authoremail){
+function autoCommit(workdirpath, filename, usermsg, authorname, authoremail){
     return new Promise( async (resolve, reject) => {
         try {
             await git.add({
@@ -172,7 +158,7 @@ async function autoCommit(workdirpath, filename, usermsg, authorname, authoremai
     })
 }
 
-async function writeFile(workdirpath, filename, buffer) {
+function writeFile(workdirpath, filename, buffer) {
     return new Promise( async (resolve, reject) => {
         fs.writeFile(path.resolve(workdirpath, filename), Buffer.from(buffer), (err) => {
             if (err) reject(` fs write err: ${err} `);

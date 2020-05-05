@@ -10,7 +10,6 @@ const { exec } = require('child_process');
 // isomorphic-git related imports and setup
 const fs = require('fs-extra');
 const git = require('isomorphic-git');
-git.plugins.set('fs',fs); // Bring your own file system 
 
 const path = require('path');
 const express = require('express');

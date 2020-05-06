@@ -12,7 +12,7 @@ const pushChecker = require('../utilities/pushChecker');
 const { exec } = require('child_process');
 
 // isomorphic-git related imports and setup
-const fs = require('fs');
+const fs = require('fs-extra');
 const git = require('isomorphic-git'); 
 
 const path = require('path');
@@ -20,22 +20,21 @@ const express = require('express');
 const router = express.Router();
 
 router.post('/getFiles', async (req,res) => {
-    var projName = req.body.projName.replace(/\s/g,'-');
-    var username = req.body.username.replace(/\s/g,'-');
+    var projName = req.body.projName;
+    var username = req.body.username;
     var curr_majorHash = req.body.majorHash;  // latest
-    var branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    var branchToUpdate = req.body.branchToUpdate;
     var upstream_branch = 'origin/master';
     var url = `http://localhost:7005/projects/bare/${projName}.git`;
 
     var timestamp = Date.now();
 
     var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    var branchNamePath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate);
     var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username+timestamp);
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(projName, timestamp, branchNamePath, barerepopath, workdirpath, curr_majorHash, upstream_branch, url)
+        let response = await main(projName, timestamp, barerepopath, workdirpath, branchToUpdate, curr_majorHash, upstream_branch, url)
         res.status(200).send(response);
     }catch(err){
         console.log(err);
@@ -43,66 +42,30 @@ router.post('/getFiles', async (req,res) => {
     }
 })
 
-async function main(projName, timestamp, branchNamePath, barerepopath, workdirpath, curr_majorHash, upstream_branch, url){
-    return new Promise ( async (resolve, reject) => {
-        try {
-            await branchNamePathCheck(branchNamePath)  // Prepares the branchNamePath for new branch name.
-            const newWorkDirPath = await moveWorkDir(timestamp, workdirpath, branchNamePath) // Moves workdir to new branch name path to proceed with rest ops.
-            await gitCheckout(newWorkDirPath, branchToUpdate)
-            await setUpstream(newWorkDirPath, upstream_branch)
-            const files = await gitListFiles(newWorkDirPath)
-            const responseobj = await pushChecker(barerepopath, newWorkDirPath, timestamp, curr_majorHash)
-            console.log("pushchecker returned this: \n", responseobj);
-            resolve({
-                projName: projName, 
-                majorHash: responseobj.ipfsHash, 
-                statusLine: responseobj.statusLine, 
-                mergeArr: responseobj.mergeObj, 
-                url: url,
-                files: files
-            });
-        } catch(err) {
-            console.log(err);
-            reject(`(getFiles) main err ${err.name} :- ${err.message}`);
-        }
-    })
-}
-
-function branchNamePathCheck(branchNamepath) {
-    // This assumes that the supplied branch exists in the bare git repo.
-    return new Promise((resolve, reject) => {
-        if (!fs.existsSync(branchNamepath)){
-            fs.mkdir(branchNamepath, (err) => {
-                if (err) { 
-                    console.log(err);
-                    reject(new Error(`branchNamePathCheck err ${err.name} :- ${err.message}`));
-                }
-                resolve(true);
-            })
-        }
-        resolve(true); // means projects/projName/branchName exists
-    })
-}
-
-function moveWorkDir(timestamp, workdirpath, newBranchNamePath) {
-    // .../projects/projName/branchName/username+timestamp
-    var username, timestamp, pathArr;
-    pathArr = workdirpath.split('/');
-    username = pathArr[pathArr.length - 1].split(timestamp)[0]; 
-    let dir_name = username+timestamp;
-
-    return new Promise( (resolve, reject) => {
-        let newWorkDirPath = path.join(newBranchNamePath, dir_name);
-        try {
-            fs.move(workdirpath, newWorkDirPath, (err) => {
-                if (err) { console.log(err); reject(new Error(`fs.move err ${err.name} :- ${err.message}`)); }
-                resolve(newWorkDirPath);
-            })
-        } catch(err) {
-            console.log(err);
-            reject(new Error(`moveWorkDir err ${err.name} :- ${err.message}`));
-        }
-    })
+async function main(projName, timestamp, barerepopath, workdirpath, branchToUpdate, curr_majorHash, upstream_branch, url){
+    try {
+        await gitCheckout(workdirpath, branchToUpdate)
+        await setUpstream(workdirpath, upstream_branch)
+        const files = await gitListFiles(workdirpath)
+        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash)
+                            // .catch( async (err) => { // If ever you want to perform a cleanUp for removeFromIPFS error, refine this catch block so that it can actually catch that error and remove the current workDir.
+                            //     console.log(err);
+                            //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
+                            //     reject(new Error(`(pushChecker) err ${err.name} :- ${err.message}`)); 
+                            // });
+        console.log("pushchecker returned this: \n", responseobj);
+        return ({
+            projName: projName, 
+            majorHash: responseobj.ipfsHash, 
+            statusLine: responseobj.statusLine, 
+            mergeArr: responseobj.mergeObj, 
+            url: url,
+            files: files
+        });
+    } catch(err) {
+        console.log(err);
+        throw new Error(`(getFiles) main err ${err.name} :- ${err.message}`);
+    }
 }
 
 function gitCheckout(workdirpath, branchToUpdate) {

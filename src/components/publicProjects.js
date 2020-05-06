@@ -2,6 +2,7 @@
 import React, { Component } from "react";
 import NavBar from "./navbar";
 import FadeIn from "react-fade-in";
+import Barloader from "../loaders/barLoader";
 
 class PublicProjects extends Component {
   constructor(props) {
@@ -30,7 +31,7 @@ class PublicProjects extends Component {
           }
           this.setState({ projects: publicProjects, loadingModal: false });
         });
-    }, 5000);
+    }, 3000);
   }
 
   handleProject = (e) => {
@@ -154,14 +155,7 @@ class PublicProjects extends Component {
         <NavBar />
         <h4 className="bg bg-warning text-center">Public Projects</h4>
         {this.state.loadingModal ? (
-          <lottie-player
-            src="https://assets3.lottiefiles.com/packages/lf20_rWaqBk.json"
-            background="transparent"
-            speed="1"
-            style={{ width: "1340px", height: "12px" }}
-            loop
-            autoplay
-          ></lottie-player>
+          <Barloader height={"12px"} width={"1110px"} />
         ) : (
           <FadeIn>
             <div className="container">

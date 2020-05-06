@@ -2,9 +2,9 @@ import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
 import Modal from "../Utils/modal";
 import Spinner from ".././Utils/spinner";
-import NavBar from "./navbar";
+import ClientNavBar from "./clientNavbar";
 
-class Login extends Component {
+class ClientLogin extends Component {
   state = {
     loading: false,
     id: "cardUpload",
@@ -31,24 +31,21 @@ class Login extends Component {
       this.setState({ loading: true });
       setTimeout(() => {
         this.setState({ loading: false });
-        this.props.history.replace("./dashboard");
+        this.props.history.replace("./clientDashboard");
       }, 3000);
     }
   };
 
-  handleloginRegister = () => {
-    this.props.history.push("./register");
-  };
   render() {
     return (
       <div>
-        <NavBar />
+        <ClientNavBar />
         <div className="container mt-4 pt-5 mb-5 pb-5">
           <div className="row justify-content-center">
             <div className="col-md-8">
               <div className="card">
                 <div className="card-header bg bg-dark text-light font-weight-bold">
-                  Employee Login
+                  Client Login
                 </div>
                 <div className="card-body">
                   <form className="text-center">
@@ -104,19 +101,10 @@ class Login extends Component {
               </div>
             </div>
           </div>
-          <div className="text-center mt-4 ">
-            Yet to Register?{" "}
-            <button
-              className="btn btn-danger"
-              onClick={this.handleloginRegister}
-            >
-              <small>Register</small>
-            </button>
-          </div>
         </div>
       </div>
     );
   }
 }
 
-export default withRouter(Login);
+export default withRouter(ClientLogin);

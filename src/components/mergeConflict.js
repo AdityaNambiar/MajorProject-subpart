@@ -4,6 +4,7 @@ import NavBar from "./navbar";
 import FadeIn from "react-fade-in";
 import Spinner from "./../Utils/spinner";
 import Difference from "./difference";
+import Barloader from "../loaders/barLoader";
 
 class MergeConflict extends Component {
   constructor(props) {
@@ -68,14 +69,7 @@ class MergeConflict extends Component {
         <NavBar />
         <div className="container">
           {this.state.loadingModal ? (
-            <lottie-player
-              src="https://assets3.lottiefiles.com/packages/lf20_rWaqBk.json"
-              background="transparent"
-              speed="1"
-              style={{ width: "1111px", height: "12px" }}
-              loop
-              autoplay
-            ></lottie-player>
+            <Barloader height={"12px"} width={"1110px"} />
           ) : (
             <FadeIn>
               <div className="text-right">

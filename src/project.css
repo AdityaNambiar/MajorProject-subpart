@@ -57,7 +57,7 @@
 
 #main {
   margin: auto;
-  width: 682px;
+  width: 1111px;
   position: fixed;
   bottom: 0;
   margin-left: 0;
@@ -65,24 +65,23 @@
 }
 
 #sendprojectmessagetextdiv {
-  width: 580px;
+  width: 1000px;
   max-height: 50px;
   float: left;
 }
 #sendprojectmessagetextarea {
-  width: 595px;
+  width: 1000px;
   max-height: 50px;
-  margin-left: -16px;
 }
 
 #sendprojectmessagebtndiv {
-  width: 85px;
+  width: 105px;
   min-height: 30px;
-  float: left;
+  float: right;
 }
 
 #sendprojectmessagebtn {
-  width: 100px;
+  width: 105px;
   min-height: 50px;
 }
 
@@ -97,7 +96,7 @@
   left: 9px;
   position: fixed;
 } */
-.rdw-editor-toolbar.toolbarClassName {
+/* .rdw-editor-toolbar.toolbarClassName {
   width: 620px;
   background-color: slategrey;
   margin-bottom: 0px;
@@ -111,4 +110,4 @@
   width: 620px;
   background-color: #363636;
   color: white;
-}
+} */

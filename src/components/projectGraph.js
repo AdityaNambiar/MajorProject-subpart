@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import NavBar from "./navbar";
 import { withRouter } from "react-router-dom";
 import FadeIn from "react-fade-in";
+import Barloader from "../loaders/barLoader";
 
 class ProjectGraph extends Component {
   constructor(props) {
@@ -30,14 +31,7 @@ class ProjectGraph extends Component {
             Project Name: {pname}
           </h5>
           {this.state.loadingModal ? (
-            <lottie-player
-              src="https://assets3.lottiefiles.com/packages/lf20_rWaqBk.json"
-              background="transparent"
-              speed="1"
-              style={{ width: "1111px", height: "12px" }}
-              loop
-              autoplay
-            ></lottie-player>
+            <Barloader height={"12px"} width={"1110px"} />
           ) : (
             <FadeIn>
               <div className="text-center bg bg-dark text-light">

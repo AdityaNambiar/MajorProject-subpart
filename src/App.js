@@ -11,6 +11,12 @@ import MergeConflict from "./components/mergeConflict";
 import CommitDifference from "./components/commitDifference";
 import ProjectGraph from "./components/projectGraph";
 import ResolveConflicts from "./components/resolveConflicts";
+import Discussions from "./components/discussions";
+import Home from "./components/home";
+import ClientLogin from "./components/clientLogin";
+import ClientDashboard from "./components/clientDashboard";
+import Pulls from "./components/pulls";
+import Rough from "./components/rough";
 
 class App extends Component {
   render() {
@@ -24,6 +30,9 @@ class App extends Component {
                 <Login {...props} handleToken={this.handleToken} />
               )}
             />
+            <Route path="/rough" component={Rough} />
+            <Route path="/pulls" component={Pulls} />
+            <Route path="/discussions" component={Discussions} />
             <Route path="/resolveConflicts" component={ResolveConflicts} />
             <Route path="/projectGraph" component={ProjectGraph} />
             <Route path="/commitDifference" component={CommitDifference} />
@@ -32,8 +41,11 @@ class App extends Component {
             <Route path="/publicProjects" component={PublicProjects} />
             <Route path="/project" component={Project} />
             <Route path="/dashboard" component={Dashboard} />
+            <Route path="/clientDashboard" component={ClientDashboard} />
             <Route path="/register" component={Register} />
-            <Redirect from="/" to="/login" />
+            <Route path="/clientLogin" component={ClientLogin} />
+            <Route path="/home" component={Home} />
+            <Redirect from="/" to="/home" />
             <Redirect to="/not-found" />
           </Switch>
         </div>

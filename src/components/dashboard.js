@@ -5,6 +5,7 @@ import { withRouter } from "react-router-dom";
 import Spinner from "./../Utils/spinner";
 import FadeIn from "react-fade-in";
 import "./../Loading.css";
+import Barloader from "../loaders/barLoader";
 
 class Dashboard extends Component {
   constructor(props) {
@@ -33,6 +34,7 @@ class Dashboard extends Component {
     this.handleProject = this.handleProject.bind(this);
     this.handleCollaboratorButton = this.handleCollaboratorButton.bind(this);
     this.handleAddCollabSaveBtn = this.handleAddCollabSaveBtn.bind(this);
+    this.handleClientChat = this.handleClientChat.bind(this);
   }
   onChange(e) {
     this.setState({ [e.target.name]: e.target.value });
@@ -94,7 +96,7 @@ class Dashboard extends Component {
         .then((projects) =>
           this.setState({ projects: projects, loadingModal: false })
         );
-    }, 3000);
+    }, 1000);
   }
 
   handleAdd = (e) => {
@@ -183,7 +185,10 @@ class Dashboard extends Component {
     let employeeId = e.target.name;
     console.log(employeeId);
   };
-
+  handleClientChat = (e) => {
+    e.preventDefault();
+    this.props.history.push("./clientDashboard");
+  };
   render() {
     const collaborators = this.state.members.map((member, index) => (
       <div className="input-group mb-3">
@@ -450,19 +455,19 @@ class Dashboard extends Component {
           <NavBar />
         </div>
         {this.state.loadingModal ? (
-          <lottie-player
-            src="https://assets3.lottiefiles.com/packages/lf20_rWaqBk.json"
-            background="transparent"
-            speed="1"
-            style={{ width: "1340px", height: "12px" }}
-            loop
-            autoplay
-          ></lottie-player>
+          <Barloader height={"12px"} width={"1110px"} />
         ) : (
           <FadeIn>
             <div className="container">
               <div>
-                {/* Button trigger modal */}
+                {/* -------------------------Button redirecting  to client dashboard----------------------------- */}
+                <button
+                  className="btn btn-warning btn-sm mr-2 mt-2 float-right"
+                  onClick={this.handleClientChat}
+                >
+                  Client Chat
+                </button>
+                {/* -------------------------Button trigger create project modal---------------------------------- */}
                 <button
                   type="button"
                   className="btn btn-primary btn-sm m-2 float-right"
@@ -596,7 +601,7 @@ class Dashboard extends Component {
                   </div>
                 </div>
               </div>
-              <div className="table-responsive-sm m-4">
+              <div className="table-responsive-sm m-2">
                 <table className="table">
                   <thead>
                     <tr>

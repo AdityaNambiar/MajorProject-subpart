@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import { Link, NavLink } from "react-router-dom";
-class NavBar extends Component {
+
+class ClientNavbar extends Component {
+  state = {};
   render() {
     return (
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -21,23 +23,18 @@ class NavBar extends Component {
         <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
           <ul className="navbar-nav mr-auto">
             <li className="nav-item nav-link ml-2 ">
-              <NavLink className="text-warning" to="/login">
-                Login
+              <NavLink className="text-warning" to="/home">
+                Home
               </NavLink>
             </li>
             <li className="nav-item nav-link ml-2">
-              <NavLink className="text-warning" to="/register">
+              <NavLink className="text-warning" to="/clientRegister">
                 Register
               </NavLink>
             </li>
             <li className="nav-item nav-link ml-2">
-              <NavLink className="text-warning" to="/dashboard">
+              <NavLink className="text-warning" to="/clientDashboard">
                 Dashboard
-              </NavLink>
-            </li>
-            <li className="nav-item nav-link ml-2">
-              <NavLink className="text-warning" to="/publicProjects">
-                Public Projects
               </NavLink>
             </li>
             <li className="nav-item nav-link ml-2 ">
@@ -57,4 +54,4 @@ class NavBar extends Component {
   }
 }
 
-export default NavBar;
+export default ClientNavbar;

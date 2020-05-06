@@ -6,6 +6,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import FadeIn from "react-fade-in";
 import Spinner from "./../Utils/spinner";
+import Barloader from "../loaders/barLoader";
 
 class ResolveConflicts extends Component {
   constructor(props) {
@@ -80,14 +81,7 @@ class ResolveConflicts extends Component {
       <div>
         <NavBar />
         {this.state.loadingModal ? (
-          <lottie-player
-            src="https://assets3.lottiefiles.com/packages/lf20_rWaqBk.json"
-            background="transparent"
-            speed="1"
-            style={{ width: "1340px", height: "12px" }}
-            loop
-            autoplay
-          ></lottie-player>
+          <Barloader height={"12px"} width={"1340px"} />
         ) : (
           <FadeIn>
             <div className="row m-2">

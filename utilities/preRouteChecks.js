@@ -31,7 +31,7 @@ module.exports = function preRouteChecks(majorHash, projName, username, timestam
             await barePathCheck(barepath);
             await bareRepoPathCheck(barerepopath, majorHash, projName);
             await projNamePathCheck(projNamepath);
-            await branchNamePathCheck(branchNamepath);
+            await branchNamePathCheck(branchToUpdate, branchNamepath);
             await workdirPathCheck(workdirpath, projName, username, timestamp, branchToUpdate);
             resolve(true);
         } catch(err) {
@@ -100,18 +100,23 @@ function projNamePathCheck(projNamepath){
         resolve(true); // means projects/projName/ exists
     })
 }
-function branchNamePathCheck(branchNamepath) {
+function branchNamePathCheck(branchName, branchNamepath) {
     return new Promise((resolve, reject) => {
-        if (!fs.existsSync(branchNamepath)){
-            fs.mkdir(branchNamepath, (err) => {
-                if (err) { 
-                    console.log(err);
-                    reject(new Error(`branchNamePathCheck err ${err.name} :- ${err.message}`));
-                }
-                resolve(true);
-            })
+        if ((/\s/).test(branchName)){  // If branchName has spaces, don't allow further.
+            reject(new Error("(branchNamePathCheck) Invalid Branch Name (has spaces in it) :- "+branchName));
+        } else {
+            if (!fs.existsSync(branchNamepath)){
+                fs.mkdir(branchNamepath, (err) => {
+                    if (err) { 
+                        console.log(err);
+                        reject(new Error(`branchNamePathCheck err ${err.name} :- ${err.message}`));
+                    }
+                    resolve(true);
+                })
+            } else {
+                resolve(true); // means projects/projName/branchName exists
+            }
         }
-        resolve(true); // means projects/projName/branchName exists
     })
 }
 

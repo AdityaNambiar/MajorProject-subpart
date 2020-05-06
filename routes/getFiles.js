@@ -7,6 +7,7 @@
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
 const pushChecker = require('../utilities/pushChecker');
+const rmWorkdir = require('../utilities/rmWorkdir');
 
 // Terminal execution import
 const { exec } = require('child_process');
@@ -25,7 +26,7 @@ router.post('/getFiles', async (req,res) => {
     var curr_majorHash = req.body.majorHash;  // latest
     var branchToUpdate = req.body.branchToUpdate;
     var upstream_branch = 'origin/master';
-    var url = `http://localhost:7005/projects/bare/${projName}.git`;
+    var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
 
     var timestamp = Date.now();
 

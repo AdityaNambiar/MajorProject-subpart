@@ -1,7 +1,7 @@
 - Final 2nd test results:
     - initProj, yes.
     - commitFile, .
-    - addBranch, .
+    - addBranch, yes.
     - getBranches, .
     - getFiles, .
     - deleteBranch, 
@@ -234,7 +234,8 @@ Create a new route downloadAndRemoveRepo(mergeid):
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ISSUES IN ROUTES CURRENTLY:
 - addBranch:
-    -- isomorphic-git's add branch operation is not throwing error as it does on web UI. 
+    -- isomorphic-git's add branch operation is not throwing error as it does on web UI.
+     --- Fixed that, had to manually throw an error when creating branchName folder.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

@@ -20,131 +20,111 @@ const fs = require('fs');
 const { exec } = require('child_process');
 
 // isomorphic-git related imports and setup
-const git = require('isomorphic-git'); 
+const git = require('isomorphic-git');
 
 const express = require('express');
 const router = express.Router();
 
-var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, filename, 
-    majorHash, barerepopath, filepath, 
-    filenamearr = [], statusLine, usermsg,
-    authorname, authoremail;
-
-
 router.post('/deleteFile', async (req, res) => {
-    projName = req.body.projName.replace(/\s/g,'-');
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
-    username = req.body.username.replace(/\s/g,'-');
-    curr_majorHash = req.body.majorHash; // latest
-    filename = req.body.filename;
-    
-    authorname = req.body.authorname;
-    authoremail = req.body.authoremail;
-    usermsg = req.body.usermsg || `My Commit #${Math.random()}`;
-    filename = req.body.filename.replace(/\s/g,'-');
+    var projName = req.body.projName;
+    var username = req.body.username;
+    var branchToUpdate = req.body.branchToUpdate;
+    var curr_majorHash = req.body.majorHash; // latest
+    var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
 
-    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
-    filepath = path.resolve(workdirpath,filename)
+    var authorname = req.body.authorname;
+    var authoremail = req.body.authoremail;
+    var usermsg = req.body.usermsg;
+    var filename = req.body.filename;
 
-    try{
-        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
-        .then( async () => {
-            let response = await main(projName, curr_majorHash)
-            return response;
-        })
-        .then ( (response) => {
-            res.status(200).send(response);
-        })
-    }catch(e){
-        res.status(400).send(`main caller err: ${e}`);
+    var timestamp = Date.now();
+
+    var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName + '.git');
+    var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username + timestamp);
+
+    var filepath = path.resolve(workdirpath, filename)
+    try {
+        await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
+        let response = await main(projName, timestamp, barerepopath,
+            workdirpath, curr_majorHash, url, filepath,
+            filename, usermsg, authorname, authoremail)
+        res.status(200).send(response);
+    } catch (err) {
+        console.log(err);
+        res.status(400).send(`(deleteFile) err ${err.name} :- ${err.message}`);
     }
 })
 
-async function main(projName, curr_majorHash) {
-    return new Promise ( async (resolve, reject) => {
+async function main(projName, timestamp, barerepopath,
+    workdirpath, curr_majorHash, url, filepath,
+    filename, usermsg, authorname, authoremail) {
+    try {
+        await deleteFile(filepath)
+        await autoCommit(workdirpath, filename, usermsg, authorname, authoremail)
+        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash)
+        // .catch( async (err) => { // If ever you want to perform a cleanUp for removeFromIPFS error, refine this catch block so that it can actually catch that error and remove the current workDir.
+        //     console.log(err);
+        //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
+        //     reject(new Error(`(pushChecker) err ${err.name} :- ${err.message}`)); 
+        // });
+        console.log("pushchecker returned this: \n", responseobj);
+        return ({
+            projName: projName,
+            majorHash: responseobj.ipfsHash,
+            statusLine: responseobj.statusLine,
+            mergeArr: responseobj.mergeObj,
+            url: url
+        });
+    } catch (err) {
+        console.log(err);
+        throw new Error(`(deleteFile) main err ${err.name} :- ${err.message}`);
+    }
+}
+
+function deleteFile(filepath) {
+    console.log(filepath);
+    return new Promise((resolve, reject) => {
         try {
-            await deleteFile(filepath)
-            .then( async () => {
-                await autoCommit(workdirpath,filename, usermsg, authorname, authoremail);
+            fs.unlink(filepath, (err) => {
+                if (err) {
+                    console.log(err);
+                    reject(new Error(`(deleteFile) fs.unlink err ${err.name} :- ${err.message} `));
+                }
+                resolve(true);
             })
-            .then ( async () => {
-                statusLine = await statusChecker(projName, username);
-                return statusLine;
-            })
-            .then( async () => {
-                filenamearr = [];
-                filenamearr = await pushChecker(projName, username, branchToUpdate); 
-                console.log("pushchecker returned this: \n", filenamearr);
-            })
-            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
-                console.log(`Pushing to branch: ${branchToUpdate}`);
-                await pushToBare(projName, branchToUpdate, username)
-                .then( async () => {
-                    await rmWorkdir(projName, username);
-                })
-                .then( async () => {
-                    // Remove old state from IPFS.
-                    await removeFromIPFS(curr_majorHash);
-                })
-                .then( async () => {
-                    // Add new state to IPFS.
-                    majorHash = await addToIPFS(barerepopath);
-                    return majorHash;
-                })
-                .then( (majorHash) => {
-                    console.log("MajorHash (git deleteFile): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
-                })
-            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
-            } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, statusLine: statusLine});
-            }
-        } catch(e) {
-            reject(`main err: ${e}`);
+        } catch (err) {
+            console.log(err);
+            reject(new Error(`(deleteFile) delete-file err ${err.name} :- ${err.message} `));
         }
     })
 }
 
-async function deleteFile(filepath){
-    return new Promise( async (resolve, reject) =>{
-        console.log(filepath);
-        fs.unlink(filepath,(err) => {
-            if (err) {
-                reject('fs deletefile err: '+err);
-            }
-            resolve(true);
-        })
-    })
-}
-
-
-async function autoCommit(workdirpath, filename, usermsg, authorname, authoremail){
-    return new Promise( async (resolve, reject) => {
+function autoCommit(workdirpath, filename, usermsg, authorname, authoremail) {
+    return new Promise((resolve, reject) => {
         try {
-            await exec(`git add .`, {
+            exec(`git add ${filename}`, {
                 cwd: workdirpath,
                 shell: true
             }, async (err, stdout, stderr) => {
-                if (err) reject(` git-add cli err: ${err}`);
-                if (stderr) reject(` git-add cli stderr: ${err}`);
+                if (err) { console.log(err); reject(new Error(`(deleteFile) git-add cli err ${err.name} :- ${err.message}`)); }
+                if (stderr) { console.log(err); reject(new Error(` (deleteFile) git-add cli stderr: ${stderr}`)); }
                 let sha = await git.commit({
-                    fs,
-                    dir:  workdirpath,
+                    fs: fs,
+                    dir: workdirpath,
                     message: usermsg,
                     author: {
                         name: authorname,
                         email: authoremail
                     }
                 })
-                console.log("commit hash: \n",sha);
+                console.log("commit hash: \n", sha);
                 resolve(true);
             })
-        } catch(e) {
-            reject(`git-commit err: ${e}`);
+        } catch (err) {
+            console.log(err);
+            reject(new Error(`(deleteFile) git-commit err ${err.name} :- ${err.message}`));
         }
     })
 }
+
 module.exports = router;

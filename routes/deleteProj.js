@@ -98,23 +98,7 @@ async function barePathCheck(barepath){
     })
 }
 
-// exclusive for deleteProj: if the barerepo of the project is not there, then its ok.
-/* async function bareRepoPathCheck(barerepopath, majorHash, projName) {
-    return new Promise( async (resolve, reject) => {
-        if (!fs.existsSync(barerepopath)) {
-            try {
-                //console.log("reached barerepopathcheck");
-                await getFromIPFS(majorHash, projName);
-                resolve(true);
-            } catch(e) {
-                reject(`bareRepoPathCheck err: ${e}`);
-            }
-        }
-        resolve(true); // means projects/bare/projName.git exists.
-    })
-}*/
-
-async function projNamePathCheck(projNamepath){
+function projNamePathCheck(projNamepath){
     return new Promise( (resolve,reject) => {
         if (!fs.existsSync(projNamepath)){
             fs.mkdir(projNamepath, (err) => {
@@ -128,8 +112,8 @@ async function projNamePathCheck(projNamepath){
     })
 }
 
-async function deleteProj(){
-    return new Promise( async (resolve, reject) => {
+function deleteProj(projNamepath, barerepopath){
+    return new Promise( (resolve, reject) => {
         try {
             // Delete projects/projName folder:
             fs.rmdir(projNamepath, { 
@@ -145,7 +129,7 @@ async function deleteProj(){
                 })
             })
         } catch(e) {
-            reject(`deleteProj error: ${e}`);
+            reject(`(deleteProj) error: ${e}`);
         }  
     }) 
 }

@@ -26,7 +26,7 @@ router.post('/addBranch', async (req,res) => {
     var branchToUpdate = req.body.branchToUpdate;
     var branchName = req.body.branchName;
     var upstream_branch = 'origin/master';
-    var url = `http://localhost:7005/projects/bare/${projName}.git`;
+    var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
 
     var timestamp = Date.now();
 
@@ -51,11 +51,11 @@ async function main(projName, timestamp, barerepopath, workdirpath, curr_majorHa
             await setUpstream(newWorkDirPath, upstream_branch);
             const files = await gitListFiles(newWorkDirPath);
             const responseobj = await pushChecker(barerepopath, newWorkDirPath, timestamp, curr_majorHash)
-                                .catch( async (err) => {
-                                    console.log(err);
-                                    await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
-                                    reject(new Error(`(pushChecker) err ${err.name} :- ${err.message}`)); 
-                                }); 
+                                // .catch( async (err) => {
+                                //     console.log(err);
+                                //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
+                                //     reject(new Error(`(pushChecker) err ${err.name} :- ${err.message}`)); 
+                                // }); 
             console.log("pushchecker returned this: \n", responseobj);
             return ({
                 projName: projName, 
@@ -67,7 +67,7 @@ async function main(projName, timestamp, barerepopath, workdirpath, curr_majorHa
             });
         } catch(err) {
             console.log(err);
-            await rmWorkdir(workdirpath);
+            //await rmWorkdir(workdirpath);
             throw new Error(`(addBranch) main err ${err.name} :- ${err.message}`);
         }
 }

@@ -47,6 +47,7 @@ function scan(branchNamepath, username){
                 }    
                 console.log(tsarr);
                 minOftsarr = tsarr.reduce( (a,b) => (a < b)? a : b);  // Fetch minimum of the timestamp arr.
+                console.log(minOftsarr)
                 computedpath = path.resolve(branchNamepath, username+minOftsarr);
                 resolve(computedpath);
             })

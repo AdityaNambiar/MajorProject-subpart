@@ -3,7 +3,7 @@
  * `git log -s --pretty=raw ${filename}`
  */
 
- 
+
 // Misc:
 const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
@@ -17,97 +17,75 @@ const rmWorkdir = require('../utilities/rmWorkdir');
 const { exec } = require('child_process');
 // isomorphic-git related imports and setup
 const fs = require('fs');
-const git = require('isomorphic-git'); 
+const git = require('isomorphic-git');
 
 const path = require('path');
 const express = require('express');
 const router = express.Router();
 
+router.post('/fileCommitHistory', async (req, res) => {
+    var projName = req.body.projName;
+    var username = req.body.username;
+    var branchToUpdate = req.body.branchToUpdate;
+    var curr_majorHash = req.body.majorHash; // latest
+    var filename = req.body.filename;
+    var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
 
-var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, majorHash, 
-    barerepopath, filenamearr, statusLine,
-    commitsObj, filename;
+    var timestamp = Date.now();
 
-router.post('/fileCommitHistory', async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-');
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
-    username = req.body.username.replace(/\s/g,'-');
-    curr_majorHash = req.body.majorHash; // latest
-    filename = req.body.filename;
-    
-    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+    // Git work:
+    var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName + '.git');
+    var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username + timestamp);
 
-    try{
-        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
-        .then( async () => {
-            let response = await main(projName, workdirpath, curr_majorHash, filename)
-            return response;
-        })
-        .then ( (response) => {
-            res.status(200).send(response);
-        })
-    }catch(e){
-        res.status(400).send(`main caller err: ${e}`);
+    try {
+        await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
+        let response = await main(projName, timestamp, barerepopath, filename,
+                                  workdirpath, curr_majorHash, url)
+        res.status(200).send(response);
+    } catch (err) {
+        console.log(err);
+        res.status(400).send(`(fCH) err ${err.name} :- ${err.message}`);
     }
 });
 
-async function main(projName, workdirpath, curr_majorHash, filename) {
-    return new Promise ( async (resolve, reject) => {
-        try {
-            await fileCommitHistory(workdirpath, filename)
-            .then ( async (cObj) => {
-                commitsObj = cObj;
-                statusLine = await statusChecker(projName, username);
-                return statusLine;
-            })
-            .then( async () => {
-                filenamearr = [];
-                filenamearr = await pushChecker(projName, username, branchToUpdate); 
-                console.log("pushchecker returned this: \n", filenamearr);
-            })
-            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
-                console.log(`Pushing to branch: ${branchToUpdate}`);
-                await pushToBare(projName, branchToUpdate, username)
-                .then( async () => {
-                    await rmWorkdir(projName, username);
-                })
-                .then( async () => {
-                    // Remove old state from IPFS.
-                    await removeFromIPFS(curr_majorHash);
-                })
-                .then( async () => {
-                    // Add new state to IPFS.
-                    majorHash = await addToIPFS(barerepopath);
-                    return majorHash;
-                })
-                .then( (majorHash) => {
-                    console.log("MajorHash (git fileCommitHistory): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, commitsObj:commitsObj, statusLine: statusLine});
-                })
-            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, commitsObj:commitsObj, statusLine: statusLine});
-            } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, commitsObj:commitsObj, statusLine: statusLine});
-            }
-        } catch (e) {
-            reject(`main err: ${e}`);
-        }
-    })
+async function main(projName, timestamp, barerepopath, filename,
+                    workdirpath, curr_majorHash, url) {
+    try {
+        let cObj = await fileCommitHistory(workdirpath, filename)
+        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash)
+        // .catch( async (err) => { // If ever you want to perform a cleanUp for removeFromIPFS error, refine this catch block so that it can actually catch that error and remove the current workDir.
+        //     console.log(err);
+        //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
+        //     reject(new Error(`(pushChecker) err ${err.name} :- ${err.message}`)); 
+        // });
+        console.log("pushchecker returned this: \n", responseobj);
+        return ({
+            projName: projName,
+            majorHash: responseobj.ipfsHash,
+            statusLine: responseobj.statusLine,
+            mergeArr: responseobj.mergeObj,
+            commitObj: cObj,
+            url: url
+        });
+    } catch (err) {
+        console.log(err);
+        throw new Error(`(fCH) main err ${err.name} :- ${err.message}`);
+    }
 }
 
-async function fileCommitHistory(workdirpath, filename) {
-    return new Promise( async (resolve, reject) => {
+function fileCommitHistory(workdirpath, filename) {
+    return new Promise((resolve, reject) => {
         try {
-            await exec(`git log --pretty=raw ${filename}`, {
+            exec(`git log --pretty=raw ${filename}`, {
                 cwd: workdirpath,
                 shell: true
             }, (err, stdout, stderr) => {
-                if (err) reject(`git-log err: ${err}`);
-                if (stderr) reject(`git-log stderr: ${stderr}`);
+                if (err) { console.log(err); reject(new Error(`git-log err ${err.name} :- ${err.message}`)); }
+                if (stderr) { console.log(stderr); reject(new Error(`git-log stderr: ${stderr}`));}
+                //console.log(stdout);
                 
-                let a = stdout.split("commit ");
+                stdout = "\n" + stdout;
+                let a = stdout.split(/\ncommit /);
                 for (let i = 1; i < a.length; i++) {
                     a[i] = "commit " + a[i];
                 }
@@ -117,46 +95,39 @@ async function fileCommitHistory(workdirpath, filename) {
                 for (var i = 0; i < a.length; i++) {
                     b = a[i].trim().split('\n');
                     var commitobj = {
-                        commitHash: '', 
-                        parentHashArr: [], 
+                        commitHash: '',
+                        parentHashArr: [],
                         author_name: '',
                         author_timestamp: '',
                         committer_name: '',
                         committer_timestamp: '',
                         commit_msg: ''
                     }
-                    b.forEach( (e,i) => {
-                        switch(e.split(' ')[0]){
-                        case "commit": commitobj.commitHash = e.split(' ')[1]; break;
-                        case "parent": commitobj.parentHashArr.push(e.split(' ')[1]); break;
-                        case "author": 
-                            commitobj.author_name = e.split(' ')[1];
-                            commitobj.author_timestamp = new Date(e.split(' ')[3]*1000).toLocaleString('en-US', { hour12: false });;
-                            break;
+                    b.forEach((e, i) => {
+                        switch (e.split(' ')[0]) {
+                            case "commit": commitobj.commitHash = e.split(' ')[1]; break;
+                            case "parent": commitobj.parentHashArr.push(e.split(' ')[1]); break;
+                            case "author":
+                                commitobj.author_name = e.split(' ')[1];
+                                commitobj.author_timestamp = new Date(e.split(' ')[3] * 1000).toLocaleString('en-US', { hour12: false });;
+                                break;
 
-                        case "committer": 
-                            commitobj.committer_name = e.split(' ')[1];
-                            commitobj.committer_timestamp = new Date(e.split(' ')[3]*1000).toLocaleString('en-US', { hour12: false });;
-                            break;
+                            case "committer":
+                                commitobj.committer_name = e.split(' ')[1];
+                                commitobj.committer_timestamp = new Date(e.split(' ')[3] * 1000).toLocaleString('en-US', { hour12: false });;
+                                break;
                         }
                         if (i == b.length - 1) {
-                        commitobj.commit_msg = e.trim();
+                            commitobj.commit_msg = e.trim();
                         }
                     })
                     a[i] = commitobj;
                 }
-                // let diffPatch = stdout.split("diff --git");
-                // for (let i = 1; i < diffPatch.length; i++) {
-                //     diffPatch[i] = "diff --git" + diffPatch[i];
-                // }
-                // diffPatch.shift();
-                // commitsNDiffObj = [a,diffPatch];
-                // console.log(commitsNDiffObj);
-                
                 resolve(a);
             })
-        } catch(e) {
-            reject(e);
+        } catch (err) {
+            console.log(err);
+            reject(new Error(`(fCH) git-log err ${err.name} :- ${err.message}`));
         }
     })
 }

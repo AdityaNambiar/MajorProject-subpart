@@ -3,137 +3,108 @@
  */
 
 // Misc:
-const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
-const removeFromIPFS = require('../utilities/removeFromIPFS');
-const statusChecker = require('../utilities/statusChecker');
 const pushChecker = require('../utilities/pushChecker');
-const pushToBare = require('../utilities/pushToBare');
-const rmWorkdir = require('../utilities/rmWorkdir');
 
 const { exec } = require('child_process');
 
 // isomorphic-git related imports and setup
-const fs = require('fs');
+const fs = require('fs-extra');
 const git = require('isomorphic-git'); 
 
 const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-var projName, curr_majorHash, username,
-    branchName;
-// vars used as global:
-var branchToUpdate, barerepopath, 
-    workdirpath, filenamearr;
-
-
-var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, majorHash, 
-    barerepopath, filenamearr = [], statusLine,
-    branchName;
-
 router.post('/deleteBranch', async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-');
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
-    curr_majorHash = req.body.majorHash; // latest
-    username = req.body.username.replace(/\s/g,'-');
-    branchName = req.body.branchName.replace(/\s/g,'-');
+    var projName = req.body.projName;
+    var username = req.body.username;
+    var curr_majorHash = req.body.majorHash;  // latest
+    var branchToUpdate = req.body.branchToUpdate;
+    var branchName = req.body.branchName;
+    var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
 
-    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+    var timestamp = Date.now();
+
+    var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git');
+    var branchPathToRemove = path.resolve(__dirname, '..', 'projects', projName, branchName); 
+    var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username+timestamp);
 
     try{
-        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
-        .then( async () => {
-            let response = await main()
-            return response;
-        })
-        .then ( (response) => {
-            res.status(200).send(response); 
-        })
-    }catch(e){
-        res.status(400).send(`main caller err: ${e}`);
+        await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
+        let response = await main(projName, timestamp, barerepopath, workdirpath, branchPathToRemove, curr_majorHash, branchName, url)
+        res.status(200).send(response);
+    }catch(err){
+        console.log(err);
+        res.status(400).send(`deleteBranch err ${err.name} :- ${err.message}`);
     }
 })
 
-async function main() {
-    return new Promise ( async (resolve, reject) => {
+
+async function main(projName, timestamp, barerepopath, workdirpath, branchPathToRemove, curr_majorHash, branchName, url){
+    try {
+        await gitDeleteBranch(workdirpath, branchName)
+        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash, true, branchName)
+        // .catch( async (err) => {
+        //     console.log(err);
+        //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
+        //     reject(new Error(`(pushChecker) err ${err.name} :- ${err.message}`)); 
+        // }); 
+        console.log("pushchecker returned this: \n", responseobj);
+        await removeBranchPath(branchPathToRemove) // removes branchName dir of the old branch name
+        return ({
+            projName: projName, 
+            majorHash: responseobj.ipfsHash, 
+            statusLine: responseobj.statusLine, 
+            mergeArr: responseobj.mergeObj, 
+            url: url
+        });
+    } catch(err) {
+        console.log(err);
+        //await rmWorkdir(workdirpath);
+        throw new Error(`(deleteBranch) main err ${err.name} :- ${err.message}`);
+    }
+}
+
+function removeBranchPath(branchPathToRemove) {
+    return new Promise((resolve, reject) => {
         try {
-            await gitDeleteBranch(workdirpath, branchName)
-            .then ( async () => {
-                statusLine = await statusChecker(projName, username);
-                return statusLine;
+            fs.remove(branchPathToRemove, (err) => {
+                if (err) { 
+                    console.log(err);
+                    reject(new Error(`(deleteBranch) fs.remove err ${err.name} :- ${err.message}`));
+                }
+                resolve(true)
             })
-            .then( async () => {
-                filenamearr = [];
-                filenamearr = await pushChecker(projName, username, branchToUpdate); 
-                console.log("pushchecker returned this: \n", filenamearr);
-            })
-            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
-                console.log(`Push (with --delete) to branch: ${branchName}`);
-                await deleteBranchAtBare(branchName)
-                // Essentially does a git push but with `--delete` to remove the remote tracking branch from bare.
-                // Exclusive to this route only.
-                .then( async () => {
-                    await rmWorkdir(projName, username);
-                })
-                .then( async () => {
-                    // Remove old state from IPFS.
-                    await removeFromIPFS(curr_majorHash);
-                })
-                .then( async () => {
-                    // Add new state to IPFS.
-                    majorHash = await addToIPFS(barerepopath);
-                    return majorHash;
-                })
-                .then( (majorHash) => {
-                    console.log("MajorHash (git deleteBranch): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
-                })
-            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, statusLine: statusLine});
-            } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, statusLine: statusLine});
-            }
-        } catch (e) {
-            reject(`main err: ${e}`);
+        } catch (err) {
+            console.log(err);
+            reject(new Error(`(deleteBranch) removeBranchPath err ${err.name} :- ${err.message}`));
         }
     })
 }
-
 async function gitDeleteBranch(workdirpath, branchName){
-    console.log("branch name to delete: ", branchName);
-    return new Promise( async (resolve, reject) => {
-        try {
-            await git.deleteBranch({
-                dir:  workdirpath,
-                ref: branchName,
-            })
-            resolve(true);
-        }catch(e){
-            if (e.name == "RefNotExistsError"){
-                resolve(true);
-            } else {
-                reject("deleteBranch git ERR: "+e)
-            }
+    try {
+        await git.deleteBranch({
+            fs: fs,
+            dir:  workdirpath,
+            ref: branchName,
+        })
+        return(true);
+    }catch(err){
+        if (err.name == "NotFoundError"){ 
+            /**
+             * 1. We don't have two branches available at the same time. 
+             *    Even to do so, its difficult because the route has to checkout this 
+             *    'existing' branch first to make it available.
+             * 2. So isomorphic-git will give this error which can be handled by allowing 
+             *    the route to later delete the branch at remote.
+             *  
+            */ 
+           return(true);
+        } else {
+            throw new Error(`deleteBranch git err ${err.name} :- ${err.message}`)
         }
-    })
+    }
 }
 
-async function deleteBranchAtBare(branchName) {
-    console.log(`git push --delete ${barerepopath} ${branchName}`);
-    return new Promise( async (resolve, reject) => {
-        await exec(`git push --delete ${barerepopath} ${branchName} `, {
-            cwd: workdirpath,
-            shell: true
-        }, (err, stdout, stderr) => {
-            if (err) reject(`git push cli err: ${err}`) 
-            //if (stderr) reject(`git push cli stderr: ${stderr}`) 
-            console.log('git push cli stdout: ',stdout)
-            resolve(true);
-        })
-        
-    })
-}
 module.exports = router;

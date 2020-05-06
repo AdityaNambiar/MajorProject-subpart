@@ -36,7 +36,7 @@ module.exports = function preRouteChecks(majorHash, projName, username, timestam
             resolve(true);
         } catch(err) {
             console.log(err);
-            reject(`preRouteCheck err ${err.name}: \n ${err.message}`);
+            reject(new Error(`preRouteCheck err ${err.name}: \n ${err.message}`));
         }
     })
 }
@@ -47,7 +47,7 @@ function projPathCheck(projectspath){
             fs.mkdir(projectspath, (err) => {
                 if (err) {
                     console.log(err);
-                    reject(`projPathCheck err ${err.name} :- ${err.message}`);
+                    reject(new Error(`projPathCheck err ${err.name} :- ${err.message}`));
                 }
                 resolve(true);
             })
@@ -62,7 +62,7 @@ function barePathCheck(barepath){
             fs.mkdir(barepath, (err) => {
                 if (err) {
                     console.log(err); 
-                    reject(`barePathCheck err ${err.name} :- ${err.message}`);
+                    reject(new Error(`barePathCheck err ${err.name} :- ${err.message}`));
                 }
                 resolve(true);
             })
@@ -79,7 +79,7 @@ function bareRepoPathCheck(barerepopath, majorHash, projName) {
                 resolve(true);
             } catch(err) {
                 console.log(err);
-                reject(`bareRepoPathCheck err ${err.name} :- ${err.message}`);
+                reject(new Error(`bareRepoPathCheck err ${err.name} :- ${err.message}`));
             }
         }
         resolve(true); // means projects/bare/projName.git exists.
@@ -92,7 +92,7 @@ function projNamePathCheck(projNamepath){
             fs.mkdir(projNamepath, (err) => {
                 if (err) { 
                     console.log(err);
-                    reject(`projNamePathCheck err ${err.name} :- ${err.message}`);
+                    reject(new Error(`projNamePathCheck err ${err.name} :- ${err.message}`));
                 }
                 resolve(true);
             })
@@ -106,7 +106,7 @@ function branchNamePathCheck(branchNamepath) {
             fs.mkdir(branchNamepath, (err) => {
                 if (err) { 
                     console.log(err);
-                    reject(`branchNamePathCheck err ${err.name} :- ${err.message}`);
+                    reject(new Error(`branchNamePathCheck err ${err.name} :- ${err.message}`));
                 }
                 resolve(true);
             })
@@ -123,7 +123,7 @@ function workdirPathCheck(workdirpath, projName, username, timestamp, branchToUp
                 resolve(true);      
             } catch(err) {
                 console.log(err);
-                reject(`workdirPathCheck err ${err.name}: ${err.message}`);
+                reject(new Error(`workdirPathCheck err ${err.name}: ${err.message}`));
             }
         }
         resolve(true); // means projects/projName/branchName/username+timestamp exists

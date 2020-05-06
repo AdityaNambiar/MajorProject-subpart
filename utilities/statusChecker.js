@@ -25,8 +25,9 @@ module.exports = function statusChecker(barerepopath, branchNamepath, username) 
             await gitFetch(barerepopath, computedpath)
             var statusLine = await gitStatus(computedpath)
             resolve(statusLine);
-        } catch(e) {
-            reject(`statusChecker err: ${e}`);
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`(statusChecker) err ${err.name} :- ${err.message}`));
         }
     })
 }
@@ -36,7 +37,7 @@ function scan(branchNamepath, username){
     return new Promise( (resolve, reject) => {
         try {
             fs.readdir(branchNamepath, (err,files)=>{ // Scanning point - branchNamepath.
-                if (err) reject(`readdir err: ${err}`)
+                if (err) {console.log(err); reject(new Error(`(statusChecker) fs.readdir err ${err.name} :- ${err.message}`)) }
                 
                 filesarr = files.filter(e => !e.search(username)); // Only fetch current user's folders (username+timestamp folders).
                 for (var i = 0; i < filesarr.length; i++) {
@@ -49,8 +50,9 @@ function scan(branchNamepath, username){
                 computedpath = path.resolve(branchNamepath, username+minOftsarr);
                 resolve(computedpath);
             })
-        } catch(e) {
-            reject(`(scan) fs.readdir err: ${e}`)
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`(statusChecker) scan err ${err.name} :- ${err.message}`))
         }
     })
 }
@@ -58,20 +60,20 @@ function scan(branchNamepath, username){
 function gitFetch(barerepopath, computedpath) {
     return new Promise ((resolve, reject) => {
         try {
-            exec(`git fetch ${barerepopath} master`, {
+            exec(`git fetch '${barerepopath}' master`, {
                 cwd: computedpath,
                 shell: true
             }, (err, stdout, stderr) => {
                 if (err) { 
-                    reject(`git-fetch cli err: ${err}`);
+                    console.log(err);
+                    reject(new Error(`(statusChecker) git-fetch cli err ${err.name} :- ${err.message}`));
                 }
-                // if (stderr) {
-                //     reject(`git-fetch cli stderr: ${stderr}`);
-                // }
+                if (stderr) {console.log(`git-fetch cli stderr: ${stderr}`);}
                 resolve(true);
             })
-        } catch(e) {
-            reject(`get-fetch caught err: ${e}`);
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`(statusChecker) get-fetch caught err ${err.name} :- ${err.message}`));
         }
     })
 }
@@ -84,17 +86,20 @@ function gitStatus(computedpath) {
                 shell: true
             }, (err, stdout, stderr) => {
                 if (err) { 
-                    reject(`git-status cli err: ${err}`);
+                    console.log(err);
+                    reject(new Error(`git-status cli err ${err.name} :- ${err.message}`));
                 }
                 if (stderr) {
-                    reject(`git-status cli stderr: ${stderr}`);
+                    console.log(stderr);
+                    reject(new Error(`git-status cli stderr :- ${stderr}`));
                 }
                 //console.log(stdout);
                 let statusLine = stdout.trim().split('\n')[1];
                 resolve(statusLine);    
             })
-        } catch(e) {
-            reject(`get-status caught err: ${e}`);
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`git-status err ${err.name} :- ${err.message}`));
         }
     })
 }

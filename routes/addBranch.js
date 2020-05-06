@@ -1,5 +1,8 @@
 /**
  * Add a new branch in git repo:
+ * 
+ * -- Also started writing proper async/await functions with this reference: https://github.com/Microsoft/TypeScript/issues/5635
+ *      -- reason was that I wanted to bubble up errors properly and avoid UnhandledPromiseRejection warning.
  */
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
@@ -39,8 +42,7 @@ router.post('/addBranch', async (req,res) => {
     }
 })
 
-function main(projName, timestamp, barerepopath, workdirpath, curr_majorHash, branchName, branchToUpdate, upstream_branch, url){
-    return new Promise ( async (resolve, reject) => {
+async function main(projName, timestamp, barerepopath, workdirpath, curr_majorHash, branchName, branchToUpdate, upstream_branch, url){
         try {
             const newBranchNamePath = await branchNamePathCheck(branchName, projName)  // Prepares the branchNamePath for new branch name.
             await gitBranchAdd(workdirpath, branchName, branchToUpdate, projName)
@@ -49,7 +51,7 @@ function main(projName, timestamp, barerepopath, workdirpath, curr_majorHash, br
             const files = await gitListFiles(newWorkDirPath);
             const responseobj = await pushChecker(barerepopath, newWorkDirPath, timestamp, curr_majorHash); 
             console.log("pushchecker returned this: \n", responseobj);
-            resolve({
+            return ({
                 projName: projName, 
                 majorHash: responseobj.ipfsHash, 
                 statusLine: responseobj.statusLine, 
@@ -59,10 +61,8 @@ function main(projName, timestamp, barerepopath, workdirpath, curr_majorHash, br
             });
         } catch(err) {
             console.log(err);
-            reject();
             throw new Error(`(addBranch) main err ${err.name} :- ${err.message}`);
         }
-    })
 }
 
 
@@ -104,27 +104,25 @@ function moveWorkDir(timestamp, workdirpath, newBranchNamePath) {
     })
 }
 
-function gitBranchAdd(workdirpath, branchName) {
-    return new Promise (async (resolve, reject) => {
-        try {
-            await git.branch({
-                fs: fs,
-                dir: workdirpath,
-                ref: branchName,
-                checkout: true
-            })
-            resolve(true);
-        } catch(err) {
-            console.log(err); 
-            throw new Error(`git-branch err ${err.name} :- ${err.message}`);
-        }
-    })
+async function gitBranchAdd(workdirpath, branchName) {
+    try {
+        await git.branch({
+            fs: fs,
+            dir: workdirpath,
+            ref: branchName,
+            checkout: true
+        })
+        return(true);
+    } catch(err) {
+        console.log(err); 
+        throw new Error(`git-branch err ${err.name} :- ${err.message}`);
+    }
 }
 
 function setUpstream(workdirpath, upstream_branch) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         try {
-            await exec(`git branch --set-upstream-to=${upstream_branch}`, {
+            exec(`git branch --set-upstream-to=${upstream_branch}`, {
                 cwd: workdirpath,
                 shell: true
             }, (err, stdout, stderr) => {
@@ -142,9 +140,9 @@ function setUpstream(workdirpath, upstream_branch) {
 
 function gitListFiles(workdirpath) {
     let command = `FILES="$(git ls-tree --name-only HEAD .)";IFS="$(printf "\n\b")";for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x28%x7c%x29%x2D%x7c%x2D%x28%x7c%x29%cr" $f)";  printf "%s(|)-|-(|)%s\n" "$f" "$str"; done`;
-    return new Promise (async (resolve, reject) => {
+    return new Promise ((resolve, reject) => {
         try {
-            await exec(command, {
+            exec(command, {
                 cwd: workdirpath,
                 shell: true
             }, (err,stdout,stderr) => {

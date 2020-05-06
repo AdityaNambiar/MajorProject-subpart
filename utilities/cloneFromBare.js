@@ -10,15 +10,15 @@ const path = require('path');
 
 module.exports = function clone(workdirpath, projName, username, timestamp, branchToUpdate) {
     
-    return new Promise( async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         try {
-            await exec(`git clone bare/${projName+'.git'} ${projName}/${branchToUpdate}/${username+timestamp}`,{
+            exec(`git clone 'bare/${projName+'.git'}' '${projName}/${branchToUpdate}/${username+timestamp}'`,{
                 cwd: path.resolve(__dirname, '..', 'projects',''),
                 shell: true
             }, async (err, stdout, stderr) => {
-                if (err) { console.log(err); reject(`clone cli err ${err.name} :- ${err.message}`); }
+                if (err) { console.log(err); reject(new Error(`clone cli err ${err.name} :- ${err.message}`)); }
                 //if (stderr) { console.log('clone cli stderr: ',stderr); reject(stderr) }
-                await exec(`git checkout ${branchToUpdate}`, {
+                await exec(`git checkout '${branchToUpdate}'`, {
                     cwd: workdirpath,
                     shell: true
                 }, (err, stdout, stderr) => {
@@ -28,7 +28,7 @@ module.exports = function clone(workdirpath, projName, username, timestamp, bran
             })
         } catch(err) {
             console.log(err); 
-            reject(`git clone err ${err.name} :- ${err.message}`);
+            reject(new Error(`git clone err ${err.name} :- ${err.message}`));
                 
         }
     })

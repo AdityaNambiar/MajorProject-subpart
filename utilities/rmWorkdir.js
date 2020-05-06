@@ -4,14 +4,13 @@
 
 const fs = require('fs');
 
-
 module.exports = function rmWorkdir(workdirpath) {
-    return new Promise( (resolve, reject) => {
+    return new Promise((resolve,reject) => {
         fs.rmdir(workdirpath, { 
             recursive: true
         }, (err) => {
-            if (err) { console.log(err); reject(`mWorkdir err ${err.name} :- ${err.message}`); }
+            if (err) { console.log(err); reject(new Error(`rmWorkdir err ${err.name} :- ${err.message}`)); }
             resolve(true);
         })
-    }) 
+    })
 }

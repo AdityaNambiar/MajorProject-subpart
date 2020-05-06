@@ -22,7 +22,7 @@ module.exports = function getMergeArr(barerepopath, branchNamepath) {
             resolve(mainMergeObj);
         } catch(err) {
             console.log(err);
-            reject(`main err ${e.name} :- ${e.message}`);
+            reject(new Error(`main err ${err.name} :- ${err.message}`));
         }
     })
 }
@@ -31,12 +31,12 @@ function scan(branchNamepath){
     return new Promise( (resolve, reject) => {
         try {
             fs.readdir(branchNamepath,(err,files)=>{
-                if (err) { console.log(err); reject(`readdir err ${err.name} :- ${err.message}`) }
+                if (err) { console.log(err); reject(new Error(`(scan) fs.readdir err ${err.name} :- ${err.message}`)) }
                 resolve(files);
             })
         } catch(err) {
             console.log(err); 
-            reject(`(scan) fs.readdir err ${err.name} :- ${err.message}`);
+            reject(new Error(`(getMergeObj) scan err ${err.name} :- ${err.message}`));
         }
     })
 }
@@ -73,46 +73,50 @@ async function formMergeArr(dir_list, barerepopath, branchNamepath){
                 branchName = pathArr[pathArr.length - 2];
 
                 // Step 1:
-                fs.readFile(`${workdirpath}/${dir_list[i]}.json`, { encoding: 'utf-8' }, async (err, data) => {
-                    if (err) { console.log(err); reject(`(formMergeArr) readJSON err ${err.name} :- ${err.message}`); }
-                    type = data.type;
-                    title = data.title;
+                if (fs.existsSync(`${workdirpath}/${dir_list[i]}.json`)){
+                    fs.readFile(`${workdirpath}/${dir_list[i]}.json`, { encoding: 'utf-8' }, async (err, data) => {
+                        if (err) { console.log(err); reject(new Error(`(formMergeArr) readJSON err ${err.name} :- ${err.message}`)); }
+                        type = data.type;
+                        title = data.title;
 
-                    if (type === "pull"){ // For folders where conflicts occured due to pull.
-                        let resp = await gitMAbortAndPull(dir_list[i], barerepopath, workdirpath,  projName, branchName); // Returns an array. It could be a filenamelist or instruction array.
-                        if (resp[0] === "Please solve this merge conflict via CLI"){
-                            specialobj.mergeid = dir_list[i];
-                            specialobj.instructions = resp; // These instructions will be w.r.t to pull conflicts.
-                            specialobj.title = title;
-                            specialMergeArr.push(specialobj);
-                        } else {
+                        if (type === "pull"){ // For folders where conflicts occured due to pull.
+                            let resp = await gitMAbortAndPull(dir_list[i], barerepopath, workdirpath,  projName, branchName)
+                                        .catch( (err) => reject(new Error(`(formMergeArr) gitMAbortAndPull err ${err.name} :- ${err.message}`))); // Returns an array. It could be a filenamelist or instruction array.
+                            if (resp[0] === "Please solve this merge conflict via CLI"){
+                                specialobj.mergeid = dir_list[i];
+                                specialobj.instructions = resp; // These instructions will be w.r.t to pull conflicts.
+                                specialobj.title = title;
+                                specialMergeArr.push(specialobj);
+                            } else {
+                                normalobj.mergeid = dir_list[i];
+                                normalobj.filenamelist = resp;
+                                normalobj.title = title;
+                                normalMergeArr.push(normalobj);
+                            }
+                        } else if (type === "branch"){ // For folders where conflicts occured due to branch merges.
                             normalobj.mergeid = dir_list[i];
-                            normalobj.filenamelist = resp;
+                            normalobj.filenamelist = await checkUnmergedFiles(workdirpath)
+                                                    .catch( (err) => reject(new Error(`(formMergeArr) checkUnmergedFiles err ${err.name} :- ${err.message}`)));
                             normalobj.title = title;
                             normalMergeArr.push(normalobj);
+                        } else { // For folders where special conflicts occured.
+                            specialobj.mergeid = dir_list[i];
+                            specialobj.title = title;
+                            // For the branch merge conflict, hard coded titles must be like: 
+                            // `Merge conflict raised when merging ${branchName} into ${branchToUpdate}`
+                            let branchNameListFromTitle = title.split("merging ")[1].split(" into "); 
+                            let srcBranchName = branchNameListFromTitle[0];
+                            let destBranchName = branchNameListFromTitle[1];
+                            specialobj.instructions = setInstructionsArrForBranch(projName, srcBranchName, destBranchName); 
+                            specialMergeArr.push(specialobj);
                         }
-                    } else if (type === "branch"){ // For folders where conflicts occured due to branch merges.
-                        normalobj.mergeid = dir_list[i];
-                        normalobj.filenamelist = await checkUnmergedFiles(workdirpath);
-                        normalobj.title = title;
-                        normalMergeArr.push(normalobj);
-                    } else { // For folders where special conflicts occured.
-                        specialobj.mergeid = dir_list[i];
-                        specialobj.title = title;
-                        // For the branch merge conflict, hard coded titles must be like: 
-                        // `Merge conflict raised when merging ${branchName} into ${branchToUpdate}`
-                        let branchNameListFromTitle = title.split("merging ")[1].split(" into "); 
-                        let srcBranchName = branchNameListFromTitle[0];
-                        let destBranchName = branchNameListFromTitle[1];
-                        specialobj.instructions = setInstructionsArrForBranch(projName, srcBranchName, destBranchName); 
-                        specialMergeArr.push(specialobj);
-                    }
-                })
+                    })
+                }
             }
             resolve(mainMergeObj);
         } catch(err) {
             console.log(err); 
-            reject(`formMergeArr err ${err.name} :- ${err.message}`);
+            reject(new Error(`(getMergeObj) formMergeArr err ${err.name} :- ${err.message}`));
         }
     })
 }
@@ -125,38 +129,38 @@ function gitMAbortAndPull(dir_name, barerepopath, workdirpath, projName, branchN
             resolve(resp); // Returns an array. It could be a filenamelist or instruction array. 
         } catch(err){
             console.log(err);  
-            reject(`gitMAbortAndPull err ${err.name} :- ${err.message}`);
+            reject(new Error(`(getMergeObj) gitMAbortAndPull err ${err.name} :- ${err.message}`));
         }
     })
 }
 
 function gitMergeAbort(workdirpath) {
-    return new Promise( async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         try {
-            await exec(`git merge --abort`, {
+            exec(`git merge --abort`, {
                 cwd: workdirpath,
                 shell: true
-            }, async (err, stdout, stderr) => {
-                if (err) { console.log(err); reject(`gitMergeAbort cli err ${err.name} :- ${err.message}`); }
-                if (stderr) { console.log(stderr); reject(`gitMergeAbort cli stderr :- ${stderr} `); }
+            }, (err, stdout, stderr) => {
+                if (err) { console.log(err); reject(new Error(`(getMergeObj) gitMergeAbort cli err ${err.name} :- ${err.message}`)); }
+                if (stderr) { console.log(stderr); reject(new Error(`(getMergeObj) gitMergeAbort cli stderr :- ${stderr} `)); }
                 console.log(`Merge Aborted! ( ${stdout} )`);
                 resolve(true);
             })
         }catch(err) {
             console.log(err); 
-            reject(`gitMergeAbort cli err ${err.name} :- ${err.message}`);
+            reject(new Error(`(getMergeObj) gitMergeAbort cli err ${err.name} :- ${err.message}`));
         }
     })
 }
 
 function gitPull(dir_name, barerepopath, workdirpath, projName, branchName){
 
-    return new Promise( async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         try {
-            await exec(`git pull ${barerepopath} ${branchName}`, {
+            exec(`git pull '${barerepopath}' '${branchName}'`, {
                 cwd: workdirpath,
                 shell: true
-            }, async (err, stdout, stderr) => {
+            }, (err, stdout, stderr) => {
                 //if (err) { console.log(err); reject(`gitPull cli err ${err.name} :- ${err.message}`); }
                 //if (stderr) { console.log(stderr); reject(`gitPull cli stderr :- ${stderr} `); }
                 console.log(stdout);
@@ -175,7 +179,7 @@ function gitPull(dir_name, barerepopath, workdirpath, projName, branchName){
                         })
                     } catch(err) {
                         console.log(err);
-                        reject(`(getMergeObj) gitPull-jsonWriteForPull err ${err.name} :- ${err.message}`)
+                        reject(new Error(`(getMergeObj) gitPull-jsonWriteForPull err ${err.name} :- ${err.message}`))
                     }
                     for (var i = 0; i < output.length; i++){
                         if (output[i].match(inbetweenbrackets_rgx) != null) {
@@ -191,19 +195,19 @@ function gitPull(dir_name, barerepopath, workdirpath, projName, branchName){
                             })
                         } catch(err) {
                             console.log(err);
-                            reject(`(getMergeObj) gitPull-jsonWriteForSpecial err ${err.name} :- ${err.message}`)
+                            reject(new Error(`(getMergeObj) gitPull-jsonWriteForSpecial err ${err.name} :- ${err.message}`))
                         }
                         resp_arr = [];
                         resp_arr.push("Please solve this merge conflict via CLI")
                         resp_arr.push(`1. git clone http://localhost:7005/projects/bare/${projName}.git \n2. git checkout ${branchName} \n3. divcs pull origin ${branchName} \n- Fix your merge conflicts locally and commit them, then follow: \n1. divcs push origin master \n NOTE: Unless you will be pushing onto the remote repository, \nYour local commit history would not be present when you \n operate on the web interface.`)
                         resolve(resp_arr);
                     } else {
-                        await exec(`git diff --name-only --diff-filter=U`, {
+                        exec(`git diff --name-only --diff-filter=U`, {
                             cwd: workdirpath,
                             shell: true
                         }, async (err, stdout, stderr) => {
-                            if (err) { console.log(err); reject(` (getMergeObj) unmerged file show cli err ${err.name}: ${err.message}`); }
-                            if (stderr) { console.log(stderr); reject(` (getMergeObj) unmerged file show cli stderr: ${stderr}`) }
+                            if (err) { console.log(err); reject(new Error(`(getMergeObj) unmerged file show cli err ${err.name}: ${err.message}`)); }
+                            if (stderr) { console.log(stderr); reject(new Error(`(getMergeObj) unmerged file show cli stderr: ${stderr}`)) }
                             resp_arr = [];
                             resp_arr = stdout.trim().split('\n');
                             console.log('(getMergeObj) filename arr: \n', resp_arr);
@@ -214,7 +218,7 @@ function gitPull(dir_name, barerepopath, workdirpath, projName, branchName){
             })
         } catch(err) {
             console.log(err);
-            reject(`(getMergeObj) git-pull err ${err.name}:- ${err.message}`)
+            reject(new Error(`(getMergeObj) git-pull err ${err.name}:- ${err.message}`))
         }
     })
 }
@@ -227,22 +231,22 @@ function setInstructionsArrForBranch(projName, srcBranchName, destBranchName) {
 }
 
 function checkUnmergedFiles(workdirpath) {
-    return new Promise( async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         try {
             var filename_list = [];
-            await exec(`git diff --name-only --diff-filter=U`, {
+            exec(`git diff --name-only --diff-filter=U`, {
                 cwd: workdirpath,
                 shell: true
-            }, async (err, stdout, stderr) => {
-                if (err) { console.log(err); reject(`(checkUnmergedFiles) unmerged file show cli err ${err.name} :- ${err.message}`); }
-                if (stderr) { console.log(stderr); reject(`(checkUnmergedFiles) unmerged file show cli stderr: ${stderr}`); }
+            }, (err, stdout, stderr) => {
+                if (err) { console.log(err); reject(new Error(`(checkUnmergedFiles) unmerged file show cli err ${err.name} :- ${err.message}`)); }
+                if (stderr) { console.log(stderr); reject(new Error(`(checkUnmergedFiles) unmerged file show cli stderr: ${stderr}`)); }
                 filename_list = [];
                 filename_list = stdout.trim().split('\n');
                 console.log('filename list: \n', filename_list);
                 resolve(filename_list);
             })
         } catch(err) {
-            reject(`(checkUnmergedFiles) unmerged file err: ${e}`)
+            reject(new Error(`(checkUnmergedFiles) unmerged file err ${err.name} :- ${err.message}`))
         }
     })
 }

@@ -36,8 +36,9 @@ module.exports = function pushChecker(barerepopath, workdirpath, timestamp, curr
         try {
             let mainResp = await gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorHash)
             resolve(mainResp);
-        } catch(e) {
-            reject(`main err: ${e}`);
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`(gitPull) err ${err.name} :- ${err.message}`));
         }
     })
 }
@@ -54,7 +55,7 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
 
     return new Promise( async (resolve, reject) => {
         try {
-            await exec(`git pull ${barerepopath} ${branchName}`, {
+            await exec(`git pull '${barerepopath}' '${branchName}'`, {
                 cwd: workdirpath,
                 shell: true
             }, async (err, stdout, stderr) => {
@@ -98,25 +99,36 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
                     }
                     throw new Error("conflict");
                 } else { // if merge was successful in `git pull`
-                    await pushToBare(barerepopath, workdirpath, branchName)
-                    await removeFromIPFS(curr_majorHash);
-                    mainResponse.ipfsHash = await addToIPFS(barerepopath);
-                    mainResponse.statusLine = await statusChecker(barerepopath, branchNamepath, username);
-                    await rmWorkdir(workdirpath);
-                    mainResponse.mergeObj = await getMergeObj(barerepopath, branchNamepath);
-                    resolve(mainResponse);
+                    try {
+                        await pushToBare(barerepopath, workdirpath, branchName)
+                        await removeFromIPFS(curr_majorHash);
+                        mainResponse.ipfsHash = await addToIPFS(barerepopath);
+                        mainResponse.statusLine = await statusChecker(barerepopath, branchNamepath, username);
+                        await rmWorkdir(workdirpath);
+                        mainResponse.mergeObj = await getMergeObj(barerepopath, branchNamepath);
+                        resolve(mainResponse);
+                    } catch(err) {
+                        console.log(err);
+                        reject(new Error(`(pushChecker) git-pull-onNoConf err ${err.name} :- ${err.message}`));
+                    }
                 }
             })
         } catch(err) {
             if (err.message === "conflict") {
-                await removeFromIPFS(curr_majorHash);
-                mainResponse.ipfsHash = await addToIPFS(barerepopath);
-                mainResponse.statusLine = await statusChecker(barerepopath, branchNamepath, username);
-                mainResponse.mergeObj = await getMergeObj(barerepopath, branchNamepath);
-                resolve(mainResponse);
+                try {
+                    await removeFromIPFS(curr_majorHash);
+                    mainResponse.ipfsHash = await addToIPFS(barerepopath);
+                    mainResponse.statusLine = await statusChecker(barerepopath, branchNamepath, username);
+                    mainResponse.mergeObj = await getMergeObj(barerepopath, branchNamepath);
+                    resolve(mainResponse);
+                } catch(err){
+                    console.log(err);
+                    reject(new Error(`(pushChecker) git-pull-catch-onConf err ${err.name} :- ${err.message}`))
+                }
+            } else {
+                console.log(err);
+                reject(new Error(`(pushChecker) git-pull-catch-onNoConf err ${err.name} :- ${err.message}`))
             }
-            console.log(err);
-            reject(`(pushChecker) git-pull err ${err.name} :- ${err.message}`)
         }
     })
 }

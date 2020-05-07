@@ -30,7 +30,6 @@ const commitFile = require('./routes/commitFile');
 const diffFiles = require('./routes/diffFiles');
 const diffForCommit = require('./routes/diffForCommit');
 const mergeBranch = require('./routes/mergeBranch');
-const fixConsistency = require('./routes/fixConsistency');
 const fileCommitHistory = require('./routes/fileCommitHistory');
 const readFile = require('./routes/readFile');
 
@@ -63,7 +62,6 @@ app.post('/commitFile',commitFile);
 app.post('/diffFiles', diffFiles);
 app.post('/diffForCommit', diffForCommit);
 app.post('/mergeBranch', mergeBranch); 
-app.post('/fixConsistency', fixConsistency);
 app.post('/fileCommitHistory', fileCommitHistory);
 app.post('/readFile',readFile);
 

@@ -17,21 +17,16 @@ const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 
-var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, buffer, 
-    filename, majorHash, barerepopath,
-    filepath, filenamearr = [], statusLine;
-
 router.post('/readMerge', async (req, res) => {
-    filename = req.body.filename;
-    projName = req.body.projName.replace(/\s/g,'-');
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
-    curr_majorHash = req.body.majorHash; // latest
-    username = req.body.username.replace(/\s/g,'-');
+    var filename = req.body.filename;
+    var projName = req.body.projName.replace(/\s/g,'-');
+    var branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    var curr_majorHash = req.body.majorHash; // latest
+    var username = req.body.username.replace(/\s/g,'-');
     
-    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
-    filepath = path.resolve(workdirpath,filename)
+    var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
+    var workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
+    var filepath = path.resolve(workdirpath,filename)
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)

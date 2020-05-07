@@ -3,71 +3,49 @@
  */
 
  // Misc:
-const addToIPFS = require('../utilities/addToIPFS');
-const preRouteChecks = require('../utilities/preRouteChecks');
-const removeFromIPFS = require('../utilities/removeFromIPFS');
-const statusChecker = require('../utilities/statusChecker');
-const pushChecker = require('../utilities/pushChecker');
-const pushToBare = require('../utilities/pushToBare');
-const rmWorkdir = require('../utilities/rmWorkdir');
+ const removeFromIPFS = require('../utilities/removeFromIPFS');
 
-const getFromIPFS = require('../utilities/getFromIPFS');
 
 // isomorphic-git related imports and setup
-const fs = require('fs');
+const fs = require('fs-extra');
 
 const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-var projName, curr_majorHash, projectspath,
-    barepath, barerepopath, projNamepath;
-
 router.post('/deleteProj', async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-');
-    curr_majorHash = req.body.majorHash;  // latest
+    var projName = req.body.projName;
+    var curr_majorHash = req.body.majorHash;  // latest
 
-    projectspath = path.resolve(__dirname, '..', 'projects');
-    barepath = path.resolve(__dirname, '..', 'projects', 'bare');
-    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    projNamepath = path.resolve(__dirname, '..', 'projects', projName);
+    var projectspath = path.resolve(__dirname, '..', 'projects');
+    var barepath = path.resolve(__dirname, '..', 'projects', 'bare');
+     // paths to be deleted:
+    var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
+    var projNamepath = path.resolve(__dirname, '..', 'projects', projName);
 
     try{
         await projPathCheck(projectspath)
-        .then ( async () => {
-            await barePathCheck(barepath);
-        })
-        .then( async () => {
-            //console.log("Out of barerepopathcheck");
-            await projNamePathCheck(projNamepath);
-        })
-        .then( async () => {
-            let response = await main()
-            return response;
-        })
-        .then ( (response) => {
-            res.status(200).send(response);
-        })
-    }catch(e){
-        res.status(400).send(`main caller err: ${e}`);
+        await barePathCheck(barepath);
+        let response = await main(projName, projNamepath, barerepopath, curr_majorHash)
+        res.status(200).send(response);
+    }catch(err){
+        console.log(err);
+        res.status(400).send(`(deleteProj) err ${err.name} :- ${err.message}`);
     }
 })
 
-async function main(){
-    return new Promise ( async (resolve, reject) => {
-        await deleteProj()
-        .then( async () => {
-            // Remove old state from IPFS.
-            await removeFromIPFS(curr_majorHash);
-        })
-        .then( () => {
-            console.log("MajorHash (git deleteProj) (same that was passed to this route): ", curr_majorHash);
-            resolve({projName: projName});
-        })
-        .catch ((e) => {
-            reject(`main err: ${e}`);
-        })
-    })
+async function main(projName, projNamepath, barerepopath, curr_majorHash){
+    try {
+        await deleteProj(projNamepath, barerepopath)
+        await removeFromIPFS(curr_majorHash);
+        console.log("MajorHash (deleteProj) (same that was passed to this route): ", curr_majorHash);
+        return({
+            projName: projName
+        });
+    } catch (err) {
+        console.log(err);
+        throw new Error(`(deleteProj) main err ${err.name} :- ${err.message}`);
+    }
 }
 async function projPathCheck(projectspath){
     return new Promise( (resolve, reject) => {
@@ -83,7 +61,6 @@ async function projPathCheck(projectspath){
     })
 }
 
-
 async function barePathCheck(barepath){
     return new Promise( (resolve, reject) => {
         if (!fs.existsSync(barepath)){
@@ -98,38 +75,27 @@ async function barePathCheck(barepath){
     })
 }
 
-function projNamePathCheck(projNamepath){
-    return new Promise( (resolve,reject) => {
-        if (!fs.existsSync(projNamepath)){
-            fs.mkdir(projNamepath, (err) => {
-                if (err) { 
-                    reject(`projNamePathCheck err: ${err}`);
-                }
-                resolve(true);
-            })
-        }
-        resolve(true); // means projects/projName/ exists
-    })
-}
-
 function deleteProj(projNamepath, barerepopath){
     return new Promise( (resolve, reject) => {
         try {
             // Delete projects/projName folder:
-            fs.rmdir(projNamepath, { 
-                recursive: true
-            }, (err) => {
-                if (err) reject('(deleteProj) projName folder err:'+err);
-                // Delete bare repo:
-                fs.rmdir(barerepopath, { 
-                    recursive: true
-                }, (err) => {
-                    if (err) reject('(deleteProj) barerepodelete err:'+err);
+            fs.remove(projNamepath, (err) => {
+                if (err) {
+                    console.log(err);
+                    reject(new Error(`(deleteProj) remove-projNamepath err ${err.name} :-  ${err.message} `));
+                }
+                // Delete bare/projName.git repo:
+                fs.remove(barerepopath, (err) => {
+                    if (err) { 
+                        console.log(err);
+                        reject(new Error(`(deleteProj) remove-barerepopath ${err.name} :- ${err.message}`));
+                    }
                     resolve(true);
                 })
             })
-        } catch(e) {
-            reject(`(deleteProj) error: ${e}`);
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`(deleteProj) remove err ${err.name} :- ${err.message}`));
         }  
     }) 
 }

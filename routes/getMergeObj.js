@@ -44,7 +44,7 @@ function getMergeArr(barerepopath, branchNamepath) {
             resolve(mainMergeObj);
         } catch(err) {
             console.log(err);
-            reject(new Error(`main err ${err.name} :- ${err.message}`));
+            reject(new Error(`(getMergeArr) err ${err.name} :- ${err.message}`));
         }
     })
 }
@@ -63,7 +63,7 @@ function scan(branchNamepath){
     })
 }
 
-async function formMergeArr(dir_list, barerepopath, branchNamepath){
+function formMergeArr(dir_list, barerepopath, branchNamepath){
     var normalMergeArr = [], specialMergeArr = [], type = '', title = '';
     var normalobj = { 
         mergeid:'',

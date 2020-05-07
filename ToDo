@@ -230,8 +230,8 @@ Create a new route downloadAndRemoveRepo(mergeid):
     -- zip that folder.
     -- remove the folder of this name (branchNamepath/mergeid).
 
-==============================================================================
-
+=========================CLIENT DOCUMENT ROUTES=========================
+ - DONE.
 IPFS create:
     - get fileArr
     - return majorHash

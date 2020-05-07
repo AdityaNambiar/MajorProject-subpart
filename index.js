@@ -20,8 +20,6 @@ const port2 = process.env.PORT || 7005;
 // route imports:
 const initProj = require('./routes/initProj');
 const gitGraph = require('./routes/gitGraph');
-const downloadRepo = require('./routes/downloadRepo');
-//const downloadBareRepo = require('./routes/downloadBareRepo');
 const deleteProj = require('./routes/deleteProj');
 
 const getFiles = require('./routes/getFiles');
@@ -39,9 +37,16 @@ const deleteBranch = require('./routes/deleteBranch');
 const branchCommitHistory = require('./routes/branchCommitHistory');
 
 const getMergeObj = require('./routes/getMergeObj');
+const mergeCommit = require('./routes/mergeCommit');
+const readMerge = require('./routes/readMerge');
 const checkoutBranch = require('./routes/checkoutBranch');
+const downloadRepo = require('./routes/downloadRepo');
+const downloadAndRemoveRepo = require('./routes/downloadAndRemoveRepo');
 
-
+// Client Document operation routes:
+const createDocument = require('./ipfsRoutes/createDocument');
+const readDocument = require('./ipfsRoutes/readDocument');
+const downloadDocument = require('./ipfsRoutes/downloadDocument');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -71,7 +76,14 @@ app.post('/deleteBranch', deleteBranch);
 app.post('/branchCommitHistory', branchCommitHistory);
 
 app.post('/getMergeObj', getMergeObj);
+app.post('/mergeCommit', mergeCommit);
+app.post('/readMerge', readMerge);
 app.post('/checkoutBranch', checkoutBranch);
+app.post('/downloadAndRemoveRepo', downloadAndRemoveRepo);
+
+app.post('/createDocument', createDocument);
+app.post('/readDocument', readDocument);
+app.post('/downloadDocument', downloadDocument);
 
 repos.on('push', async (push) => {
     push.accept();

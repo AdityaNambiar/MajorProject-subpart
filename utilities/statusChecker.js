@@ -45,9 +45,9 @@ function scan(branchNamepath, username){
                     var ts = parseInt(str.split(username)[1]); // timestamp of type "number".
                     tsarr.push(ts);
                 }    
-                console.log(tsarr);
+                //console.log(tsarr);
                 minOftsarr = tsarr.reduce( (a,b) => (a < b)? a : b);  // Fetch minimum of the timestamp arr.
-                console.log(minOftsarr)
+                //console.log(minOftsarr)
                 computedpath = path.resolve(branchNamepath, username+minOftsarr);
                 resolve(computedpath);
             })
@@ -69,7 +69,7 @@ function gitFetch(barerepopath, computedpath) {
                     console.log(err);
                     reject(new Error(`(statusChecker) git-fetch cli err ${err.name} :- ${err.message}`));
                 }
-                if (stderr) {console.log(`git-fetch cli stderr: ${stderr}`);}
+                if (stderr) {console.log(`(statusChecker) git-fetch cli stderr: ${stderr}`);} 
                 resolve(true);
             })
         } catch(err) {

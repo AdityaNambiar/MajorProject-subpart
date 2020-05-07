@@ -24,6 +24,7 @@ router.post('/readFile', async (req, res) => {
     var curr_majorHash = req.body.majorHash; // latest
     var username = req.body.username;
     var filename = req.body.filename;
+    var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
     
     var timestamp = Date.now();
 
@@ -68,7 +69,7 @@ function readForBuffer(filepath) {
     return new Promise((resolve, reject) => {
         try {
             console.log(filepath);
-            fs.readFile(filepath,'utf8',(err, data) => {
+            fs.readFile(filepath,(err, data) => {
                 if (err) {
                     console.log(err);
                     reject(new Error(`(readFile) fs readfile err ${err.name} :- ${err.message}`));

@@ -59,9 +59,9 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
                 cwd: workdirpath,
                 shell: true
             }, async (err, stdout, stderr) => {
-                //if (err) { console.log(err); reject(`gitPull cli err ${err.name} :- ${err.message}`); }
-                //if (stderr) { console.log(stderr); reject(`gitPull cli stderr :- ${stderr} `); }
-                console.log(stdout);
+                if (err) { console.log(err); reject(new Error(`(gitPull) cli err ${err.name} :- ${err.message}`)); }
+                if (stderr) { console.log(stderr); }
+                console.log(`git pull stdout: \n`,stdout);
                 var output = stdout.split('\n');
                 var arr = [];
                 var elem_rgx = new RegExp(/CONFLICT/);

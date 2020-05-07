@@ -1,8 +1,6 @@
 /**
- * A utility that just implement `git push path(projects/projName.git) master` - bare repo path.
+ * A utility that just implement `git push path(projects/bare/projName.git) master` - bare repo path.
  * 
- * 1. implement node-git-server for listening to push cli event (placed in index.js so that the node-git-server starts with normal IPFS server)
- * 2. repos.on('push', < perform a pushToBare() >)
  */
 
 const { exec } = require('child_process');
@@ -20,9 +18,9 @@ module.exports = function pushToBare(barerepopath, workdirpath, branchName) {
                 resolve(true)
                 else  */
                 console.log(err);
-                reject(new Error(`git push cli err ${err.name}: ${err.message}`));
+                reject(new Error(`git push cli err ${err.name} :- ${err.message}`));
             }
-            //if (stderr) reject(`git push cli stderr: ${stderr}`) 
+            if (stderr) console.log(`git push cli stderr: ${stderr}`); 
             console.log('git push cli stdout: ',stdout)
             resolve(true);
         })

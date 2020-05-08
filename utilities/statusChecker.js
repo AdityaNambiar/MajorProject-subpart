@@ -49,6 +49,7 @@ function scan(branchNamepath, username){
                 minOftsarr = tsarr.reduce( (a,b) => (a < b)? a : b);  // Fetch minimum of the timestamp arr.
                 //console.log(minOftsarr)
                 computedpath = path.resolve(branchNamepath, username+minOftsarr);
+                //console.log(computedpath);
                 resolve(computedpath);
             })
         } catch(err) {
@@ -61,7 +62,7 @@ function scan(branchNamepath, username){
 function gitFetch(barerepopath, computedpath) {
     return new Promise ((resolve, reject) => {
         try {
-            exec(`git fetch '${barerepopath}' master`, {
+            exec(`git fetch origin master`, {
                 cwd: computedpath,
                 shell: true
             }, (err, stdout, stderr) => {
@@ -94,6 +95,7 @@ function gitStatus(computedpath) {
                     console.log(stderr);
                     reject(new Error(`git-status cli stderr :- ${stderr}`));
                 }
+                //console.log(computedpath);
                 //console.log(stdout);
                 let statusLine = stdout.trim().split('\n')[1];
                 resolve(statusLine);    

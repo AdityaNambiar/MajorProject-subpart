@@ -47,10 +47,11 @@ async function main(projName, timestamp, barerepopath, workdirpath, curr_majorHa
         try {
             const newBranchNamePath = await branchNamePathCheck(branchName, projName) // Prepares the branchNamePath for new branch name. Adding this before gitBranchAdd() because it has to throw the "refexisterror" before creating a branch.
             await gitBranchAdd(workdirpath, branchName, branchToUpdate, projName)
+            var oldBranchName = branchToUpdate;
             const newWorkDirPath = await moveWorkDir(timestamp, workdirpath, newBranchNamePath) // Moves workdir to new branch name path to proceed with rest ops.
             await setUpstream(newWorkDirPath, upstream_branch);
             const files = await gitListFiles(newWorkDirPath);
-            const responseobj = await pushChecker(barerepopath, newWorkDirPath, timestamp, curr_majorHash)
+            const responseobj = await pushChecker(barerepopath, newWorkDirPath, timestamp, curr_majorHash, oldBranchName)
                                 // .catch( async (err) => {
                                 //     console.log(err);
                                 //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
@@ -61,7 +62,7 @@ async function main(projName, timestamp, barerepopath, workdirpath, curr_majorHa
                 projName: projName, 
                 majorHash: responseobj.ipfsHash, 
                 statusLine: responseobj.statusLine, 
-                mergeArr: responseobj.mergeObj, 
+                mergeObj: responseobj.mergeObj, 
                 url: url,
                 files: files
             });

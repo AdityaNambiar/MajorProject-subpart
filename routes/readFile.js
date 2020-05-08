@@ -54,7 +54,7 @@ async function main(projName, timestamp, barerepopath, filepath,
             projName: projName,
             majorHash: responseobj.ipfsHash,
             statusLine: responseobj.statusLine,
-            mergeArr: responseobj.mergeObj,
+            mergeObj: responseobj.mergeObj,
             buffer: buffer,
             url: url
         });

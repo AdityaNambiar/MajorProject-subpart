@@ -15,10 +15,10 @@ const express = require('express');
 const router = express.Router();
 
 router.post('/getMergeObj', async (req,res) => {
-    var projName = req.body.projName.replace(/\s/g,'-');
-    var username = req.body.username.replace(/\s/g,'-');
+    var projName = req.body.projName ;
+    var username = req.body.username ;
     var curr_majorHash = req.body.majorHash;  // latest
-    var branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    var branchToUpdate = req.body.branchToUpdate ;
     var url = `http://localhost:7005/projects/bare/${projName}.git`;
 
     var timestamp = Date.now();
@@ -103,7 +103,10 @@ function formMergeArr(dir_list, barerepopath, branchNamepath){
 
                         if (type === "pull"){ // For folders where conflicts occured due to pull.
                             let resp = await gitMAbortAndPull(dir_list[i], barerepopath, workdirpath,  projName, branchName)
-                                        .catch( (err) => reject(new Error(`(formMergeArr) gitMAbortAndPull err ${err.name} :- ${err.message}`))); // Returns an array. It could be a filenamelist or instruction array.
+                                        .catch( (err) => {
+                                            console.log(err);
+                                            reject(new Error(`(formMergeArr) gitMAbortAndPull err ${err.name} :- ${err.message}`));
+                                        }) // Returns an array. It could be a filenamelist or instruction array.
                             if (resp[0] === "Please solve this merge conflict via CLI"){
                                 specialobj.mergeid = dir_list[i];
                                 specialobj.instructions = resp; // These instructions will be w.r.t to pull conflicts.
@@ -118,7 +121,10 @@ function formMergeArr(dir_list, barerepopath, branchNamepath){
                         } else if (type === "branch"){ // For folders where conflicts occured due to branch merges.
                             normalobj.mergeid = dir_list[i];
                             normalobj.filenamelist = await checkUnmergedFiles(workdirpath)
-                                                    .catch( (err) => reject(new Error(`(formMergeArr) checkUnmergedFiles err ${err.name} :- ${err.message}`)));
+                                                    .catch( (err) => {
+                                                        console.log(err);
+                                                        reject(new Error(`(formMergeArr) checkUnmergedFiles err ${err.name} :- ${err.message}`));
+                                                    })
                             normalobj.title = title;
                             normalMergeArr.push(normalobj);
                         } else { // For folders where special conflicts occured.

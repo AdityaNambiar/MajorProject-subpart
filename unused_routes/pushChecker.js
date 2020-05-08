@@ -31,11 +31,11 @@ var projName, workdirpath, curr_majorHash,
 
 
 router.post('/pushChecker', async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-');
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    projName = req.body.projName ;
+    branchToUpdate = req.body.branchToUpdate ;
     curr_majorHash = req.body.majorHash; // latest
-    username = req.body.username.replace(/\s/g,'-');
-    branchName = req.body.branchName.replace(/\s/g,'-');
+    username = req.body.username ;
+    branchName = req.body.branchName ;
     url = `http://localhost:7005/projects/bare/${projName}.git`
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
@@ -128,12 +128,13 @@ async function gitPull(workdirpath){
     })
 }
 
-async function readForBuffer(workdirpath, filename){
-    return new Promise( async (resolve, reject) =>{
+function readForBuffer(workdirpath, filename){
+    return new Promise( (resolve, reject) =>{
         // Specify this as 2nd parameter: {encoding: 'utf-8'} - to prevent getting a buffer.
         fs.readFile(path.resolve(workdirpath, filename),(err, data) => {
             if (err) {
-                reject('(pushchecker) fs readfile err: '+err);
+                console.log(err);
+                reject(new Error(`(pushchecker) fs readfile err ${err.name} :- ${err.message}`));
             }
             resolve(data);
         })

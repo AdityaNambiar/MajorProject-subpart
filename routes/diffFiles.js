@@ -3,112 +3,80 @@
  * Pass the file / file buffer of both files.
  */
 
- 
+
 // Misc:
-const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
-const removeFromIPFS = require('../utilities/removeFromIPFS');
-const statusChecker = require('../utilities/statusChecker');
 const pushChecker = require('../utilities/pushChecker');
-const pushToBare = require('../utilities/pushToBare');
-const rmWorkdir = require('../utilities/rmWorkdir');
 
 const { exec } = require('child_process');
 // isomorphic-git related imports and setup
 const fs = require('fs');
-const git = require('isomorphic-git'); 
+const git = require('isomorphic-git');
 
 const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, majorHash, 
-    barerepopath, filenamearr = [], statusLine, 
-    ref1, ref2, diffOutput;
+router.post('/diffFiles', async (req, res) => {
+    var projName = req.body.projName;
+    var username = req.body.username;
+    var curr_majorHash = req.body.majorHash;  // latest
+    var branchToUpdate = req.body.branchToUpdate;
+    var ref1 = req.body.ref1;
+    var ref2 = "origin/"+req.body.ref2;
+    var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
 
+    var timestamp = Date.now();
 
-router.post('/diffFiles', async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-');
-    username = req.body.username.replace(/\s/g,'-');
-    curr_majorHash = req.body.majorHash;  // latest
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
-    ref1 = req.body.ref1.replace(/\s/g,'-');
-    ref2 = req.body.ref2.replace(/\s/g,'-');
+    var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName + '.git');
+    var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username + timestamp);
 
-
-    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', projName, username);
-
-    try{
-        await preRouteChecks(curr_majorHash, projName, username, branchToUpdate)
-        .then( async () => {
-            let response = await main(projName, workdirpath, curr_majorHash)
-            return response;
-        })
-        .then ( (response) => {
-            fs.writeFileSync('diffOp', response.diffOutput);
-            res.status(200).send(response);
-        })
-    }catch(e){
-        res.status(400).send(`main caller err: ${e}`);
+    try {
+        await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
+        let response = await main(projName, ref1, ref2, timestamp, barerepopath, workdirpath, curr_majorHash, url)
+        res.status(200).send(response);
+    } catch (err) {
+        console.log(err);
+        res.status(400).send(`(diffFiles) err ${err.name} :- ${err.message}`);
     }
-});
+})
 
-async function main(projName, workdirpath, curr_majorHash){
-    return new Promise ( async (resolve, reject) => {
-        try {
-            await gitDiffRefs(workdirpath)
-            .then ( async (diffOp) => {
-                diffOutput = diffOp;
-                statusLine = await statusChecker(projName, username);
-                return statusLine;
-            })
-            .then( async () => {
-                filenamearr = [];
-                filenamearr = await pushChecker(projName, username, branchToUpdate); 
-                console.log("pushchecker returned this: \n", filenamearr);
-            })
-            if (filenamearr.length == 0) {  // if no conflicts only then proceed with cleaning up.
-                console.log(`Pushing to branch: ${branchToUpdate}`);
-                await pushToBare(projName, branchToUpdate, username)
-                .then( async () => {
-                    await rmWorkdir(projName, username);
-                })
-                .then( async () => {
-                    // Remove old state from IPFS.
-                    await removeFromIPFS(curr_majorHash);
-                })
-                .then( async () => {
-                    // Add new state to IPFS.
-                    majorHash = await addToIPFS(barerepopath);
-                    return majorHash;
-                })
-                .then( (majorHash) => {
-                    console.log("MajorHash (git diffFiles): ", majorHash);
-                    resolve({projName: projName, majorHash: majorHash, filenamearr: filenamearr, diffOutput: Buffer.from(diffOutput), statusLine: statusLine, });
-                })
-            } else if (filenamearr[0] != "Please solve this merge conflict via CLI"){
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, diffOutput: Buffer.from(diffOutput), statusLine: statusLine, });
-            } else {
-                resolve({projName: projName, majorHash: curr_majorHash, filenamearr: filenamearr, diffOutput: Buffer.from(diffOutput), statusLine: statusLine, });
-            } 
-        } catch (e) {
-            reject(`main err: ${e}`);
-        }
-    })
+async function main(projName, ref1, ref2, timestamp, barerepopath, workdirpath, curr_majorHash, url) {
+    try {
+        let diffOutput = await gitDiffRefs(ref1, ref2, workdirpath)
+        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash)
+
+        console.log("pushchecker returned this: \n", responseobj);
+        return ({
+            projName: projName,
+            majorHash: responseobj.ipfsHash,
+            statusLine: responseobj.statusLine,
+            mergeObj: responseobj.mergeObj,
+            diffOutput: Buffer.from(diffOutput),
+            url: url
+        });
+    } catch (err) {
+        console.log(err);
+        throw new Error(`(diffFiles) main err ${err.name} :- ${err.message}`);
+    }
 }
 
-async function gitDiffRefs(workdirpath) {
-    return new Promise(async (resolve, reject) => {
+
+function gitDiffRefs(ref1, ref2, workdirpath) {
+    return new Promise((resolve, reject) => {
         try {
-            await exec(`git log -p --pretty="raw" ${ref1}...${ref2}`, {
+            exec(`git log -p --pretty="raw" ${ref1}...${ref2}`, {
                 cwd: workdirpath,
                 shell: true
             }, (err, stdout, stderr) => {
-                if (err) reject(`git-setupstream err: ${err}`);
-                if (stderr) reject(`git-setupstream stderr: ${stderr}`);
-                
+                if (err) {
+                    console.log(err);
+                    reject(new Error(`(gitDiffRefs) git-log err ${err.name} :- ${err.message}`));
+                }
+                if (stderr) {
+                    console.log(stderr);
+                    reject(new Error(`(gitDiffRefs) git-log stderr: ${stderr}`));
+                }
                 let a = stdout.split("diff --git");
                 for (let i = 1; i < a.length; i++) {
                     a[i] = "diff --git" + a[i];
@@ -116,9 +84,10 @@ async function gitDiffRefs(workdirpath) {
                 a.shift();
                 resolve(a.join('\n'))
             })
-        } catch(e) {
-            reject(`git-branch-setUpstream err: ${e}`)
-        } 
+        } catch (err) {
+            console.log(err);
+            reject(new Error(`(gitDiffRefs) git-log err ${err.name} :- ${err.message}`));
+        }
     })
 }
 

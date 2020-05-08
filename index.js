@@ -38,7 +38,7 @@ const branchCommitHistory = require('./routes/branchCommitHistory');
 
 const getMergeObj = require('./routes/getMergeObj');
 const mergeCommit = require('./routes/mergeCommit');
-const readMerge = require('./routes/readMerge');
+const readMergeFiles = require('./routes/readMergeFiles');
 const checkoutBranch = require('./routes/checkoutBranch');
 const downloadRepo = require('./routes/downloadRepo');
 const downloadForCLI = require('./routes/downloadForCLI');
@@ -77,7 +77,7 @@ app.post('/branchCommitHistory', branchCommitHistory);
 
 app.post('/getMergeObj', getMergeObj);
 app.post('/mergeCommit', mergeCommit);
-app.post('/readMerge', readMerge);
+app.post('/readMergeFiles', readMergeFiles);
 app.post('/checkoutBranch', checkoutBranch);
 app.post('/downloadForCLI', downloadForCLI);
 

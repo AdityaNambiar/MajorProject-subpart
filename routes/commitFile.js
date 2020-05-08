@@ -24,7 +24,7 @@ router.post('/commitFile', async (req,res) => {
     var authorname = req.body.authorname;
     var authoremail = req.body.authoremail;
     var usermsg = req.body.usermsg;
-    var filename = req.body.filename; // Maybe you dont need ".replace(/\s/g,'-')" here. Means it should allow having spaces in filenames.
+    var filename = req.body.filename; // it should allow having spaces in filenames.
     var buffer = req.body.filebuff;
     
     var timestamp = Date.now();
@@ -62,7 +62,7 @@ async function main(projName, timestamp, barerepopath, buffer,
             projName: projName, 
             majorHash: responseobj.ipfsHash, 
             statusLine: responseobj.statusLine, 
-            mergeArr: responseobj.mergeObj, 
+            mergeObj: responseobj.mergeObj, 
             url: url
         });
     } catch(err) {

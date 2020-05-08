@@ -18,49 +18,40 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
+router.post('/mergeBranch',  async (req,res) => {
+    var projName = req.body.projName ;
+    var branchToUpdate = req.body.branchToUpdate ; // Branch checkedout to (destination branch)
+    var curr_majorHash = req.body.majorHash; // latest
+    var username = req.body.username ;
+    var branchName = "origin/"+req.body.branchName ; // Source / Incoming branch
+    var url = `http://localhost:7005/projects/bare/${projName}.git`
 
-var projName, workdirpath, curr_majorHash, 
-    username, branchToUpdate, timestamp, 
-    barerepopath, merge_op, statusLine,
-    branchName, url;
+    var timestamp = Date.now();
 
-
-router.post('/mergeFiles',  async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-');
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-'); // Branch checkedout to (destination branch)
-    curr_majorHash = req.body.majorHash; // latest
-    username = req.body.username.replace(/\s/g,'-');
-    branchName = req.body.branchName.replace(/\s/g,'-'); // Source / Incoming branch 
-    url = `http://localhost:7005/projects/bare/${projName}.git`
-
-    timestamp = Date.now();
-
-    barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
-    workdirpath = path.resolve(__dirname, '..', 'projects', branchToUpdate, projName, username+timestamp);
+    var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username+timestamp);
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(projName, workdirpath, curr_majorHash)
-        if (response === "Conflict occured while merging branch!") throw new Error(response);
+        let response = await main(projName, workdirpath, username, timestamp, branchName, branchToUpdate, curr_majorHash, url)
+        if (response === "Conflict(s) occured while merging branch!") throw new Error(response);
         res.status(200).send(response);
-    }catch(e){
-        if (e.message === "Conflict occured while merging branch!")
-            res.status(400).send(e.message);
+    }catch(err){
+        if (err.message === "Conflict(s) occured while merging branch!")
+            res.status(400).send(`Error: ${err.message}`);
         else 
-            res.status(400).send(e);
+            res.status(400).send(`(mergeBranch) err ${err.name}:- ${err.message}`);
     }
 }); 
 
-async function main() {
-    return new Promise ( async (resolve, reject) => {
-        try {
-            let retval = await mergeFiles(workdirpath, username, timestamp, branchName, branchToUpdate)
-            if (retval === "Conflict occured while merging branch!")
-                resolve(retval); // Error message being sent back to main's caller.
+async function main(projName, workdirpath, username, timestamp, branchName, branchToUpdate, curr_majorHash, url) {
+    try {
+            let retval = await mergeBranch(workdirpath, username, timestamp, branchName, branchToUpdate)
+            if (retval === "Conflict(s) occured while merging branch!")
+                return(retval); // Error message being sent back to main's caller.
             else {
                 const responseobj = await pushChecker(projName, username, branchToUpdate, curr_majorHash); 
                 console.log("pushchecker returned this: \n", responseobj);    
-                resolve({
+                return({
                     projName: projName, 
                     majorHash: responseobj.ipfsHash, 
                     statusLine: responseobj.statusLine, 
@@ -68,38 +59,42 @@ async function main() {
                     url: url
                 });
             }
-        } catch (e) {
-            reject(`main err: ${e}`);
+        } catch (err) {
+            console.log(err);
+            throw new Error(`(mergeBranch) main err ${err.name} :- ${err.message}`);
         }
-    })
 }
 
-async function mergeFiles(workdirpath, username, timestamp, branchName, branchToUpdate){
-    return new Promise( async (resolve, reject) => {
+async function mergeBranch(workdirpath, username, timestamp, branchName, branchToUpdate){
+    return new Promise((resolve, reject) => {
         let dir_name = username+timestamp;
         try {
-            await exec('git merge '+branchName , {
+            exec('git merge '+branchName , {
                 cwd: workdirpath,
                 shell: true,
-            }, async (err, stdout, stderr) => {
-                // if (err) {
-                //     reject(`(mergeBranch) git-merge cli err: ${err}`);
-                // }
-                // if (stderr) {
-                //     reject(`(mergeBranch) git-merge cli stderr: ${stderr}`);
-                // }
+            }, (err, stdout, stderr) => {
+                if (err) { // when conflicts occur, it returns '$?' (exit status code) as non-zero. So this will pop up as an error from exec(). 
+                    console.log(`(mergeBranch) git-merge cli err: ${err}`);
+                }
+                if (stderr) {
+                    console.log(`(mergeBranch) git-merge cli stderr: ${stderr}`);
+                }
                 console.log(err,stdout,stderr);
                 var output = stdout.split('\n');
+                var arr = [];
                 var elem_rgx = new RegExp(/CONFLICT/);
                 var inbetweenbrackets_rgx = new RegExp(/\((.*)\)/); // defines capturing group for picking up the stuff within parenthesis
                 if (output.some((e) => elem_rgx.test(e))){ // TRUE - if any output line consist of "CONFLICT" keyword in it. 
                     //output.push("CONFLICT (add/add): Merge conflict in DESC4")
                     //output.push("CONFLICT (modify/delete): Merge conflict in DESC4")
-                    fs.writeFile(path.join(workdirpath, `${dir_name}.json`),{
+                    fs.writeFile(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
                         type: 'branch',
                         title: `Merge conflict raised when merging ${branchName} into ${branchToUpdate}`
-                    }, (err) => {
-                        if (err) reject(`(mergeBranch) gitMerge-jsonWriteForBranch err: ${err}`)
+                    }), (err) => {
+                        if (err) {
+                            console.log(err);
+                            reject(new Error(`(mergeBranch) gitMerge-jsonWriteForBranch err ${err.name} :- ${err.message}`))
+                        }
                     })
 
                     for (var i = 0; i < output.length; i++){
@@ -109,21 +104,26 @@ async function mergeFiles(workdirpath, username, timestamp, branchName, branchTo
                         }
                     }
                     if (!arr.every((e) => e == "content")){ // If the array contains anything else than "content" type conflicts. Throw the error with instructions.
-                        fs.writeFile(path.join(workdirpath, `${dir_name}.json`), {
+                        fs.writeFile(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
                             type: 'special',
                             title: `Merge conflict raised when merging ${branchName} into ${branchToUpdate}`
-                        }, (err) => {
-                            if (err) reject(`(mergeBranch) gitMerge-jsonWriteForSpecial err: ${err}`)
+                        }), (err) => {
+                            if (err) {
+                                console.log(err);
+                                reject(new Error(`(mergeBranch) gitMerge-jsonWriteForSpecial err ${err.name} :- ${err.message}`))
+                            }
                         })
                     }
-                    throw new Error('Conflict occured while merging branch!');
+                    reject(new Error('Conflict(s) occured while merging branch!'));
                 }
             })
-        } catch(e) {
-            if (e.message === "Conflict occured while merging branch!")
+        } catch(err) {
+            if (err.message === "Conflict(s) occured while merging branch!")
                 resolve(e.message)
-            else 
-                reject(`(mergeBranch) gitMerge err: ${e}`)
+            else {
+                console.log(err)
+                reject(new Error(`(mergeBranch) gitMerge err ${err.name} :- ${err.message}`))
+            }
         }
     })
 }

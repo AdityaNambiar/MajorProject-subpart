@@ -24,7 +24,7 @@ module.exports = function getFromIPFS(majorHash, projName){
                 shell: true,
             },(err,stdout,stderr) => {
                 if (err) { console.log(err); reject(new Error(`ipfs get cli err ${err.name} :- ${err.message}`)); } 
-                if (stderr) { console.log(stderr); reject(new Error('ipfs get cli stderr: '+stderr)) }
+                if (stderr) { console.log('ipfs get cli stderr: '+stderr); }
                 resolve(true);
             })
         } catch (err) {

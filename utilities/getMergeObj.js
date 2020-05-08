@@ -57,7 +57,7 @@ async function formMergeArr(dir_list, barerepopath, branchNamepath){
         normal: normalMergeArr,
         special: specialMergeArr
     };
-    return new Promise( (resolve, reject) => {
+    return new Promise( async (resolve, reject) => {
         try {
             for (var i = 0; i < dir_list.length; i++) {
                 /**
@@ -66,7 +66,8 @@ async function formMergeArr(dir_list, barerepopath, branchNamepath){
                  * 3. According to type, perform the operations (as written in ToDo)
                  * 4. Form the mergeArr
                  */
-                let workdirpath = path.join(branchNamepath, dir_list[i]);
+                var workdirpath = path.join(branchNamepath, dir_list[i]);
+                console.log("dir_list[i]: \n", dir_list[i]);
                 var projName, branchName, pathArr;
                 pathArr = workdirpath.split('/');
                 projName = pathArr[pathArr.length - 3];
@@ -74,43 +75,52 @@ async function formMergeArr(dir_list, barerepopath, branchNamepath){
 
                 // Step 1:
                 if (fs.existsSync(`${workdirpath}/${dir_list[i]}.json`)){
-                    fs.readFile(`${workdirpath}/${dir_list[i]}.json`, { encoding: 'utf-8' }, async (err, data) => {
-                        if (err) { console.log(err); reject(new Error(`(formMergeArr) readJSON err ${err.name} :- ${err.message}`)); }
-                        type = data.type;
-                        title = data.title;
+                    try {
+                        var data = fs.readFileSync(`${workdirpath}/${dir_list[i]}.json`, 'utf8')
+                        var jsondata = JSON.parse(data);
+                        type = jsondata.type;
+                        title = jsondata.title;
+                    } catch (err) {
+                        console.log(err); 
+                        reject(new Error(`(formMergeArr) readJSON err ${err.name} :- ${err.message}`)); 
+                    }
 
-                        if (type === "pull"){ // For folders where conflicts occured due to pull.
-                            let resp = await gitMAbortAndPull(dir_list[i], barerepopath, workdirpath,  projName, branchName)
-                                        .catch( (err) => reject(new Error(`(formMergeArr) gitMAbortAndPull err ${err.name} :- ${err.message}`))); // Returns an array. It could be a filenamelist or instruction array.
-                            if (resp[0] === "Please solve this merge conflict via CLI"){
-                                specialobj.mergeid = dir_list[i];
-                                specialobj.instructions = resp; // These instructions will be w.r.t to pull conflicts.
-                                specialobj.title = title;
-                                specialMergeArr.push(specialobj);
-                            } else {
-                                normalobj.mergeid = dir_list[i];
-                                normalobj.filenamelist = resp;
-                                normalobj.title = title;
-                                normalMergeArr.push(normalobj);
-                            }
-                        } else if (type === "branch"){ // For folders where conflicts occured due to branch merges.
+                    if (type === "pull"){ // For folders where conflicts occured due to pull.
+                        let resp = await gitMAbortAndPull(dir_list[i], barerepopath, workdirpath,  projName, branchName)
+                                    .catch( (err) => reject(new Error(`(formMergeArr) gitMAbortAndPull err ${err.name} :- ${err.message}`))); // Returns an array. It could be a filenamelist or instruction array.
+                        if (resp[0] === "Please solve this merge conflict via CLI"){
+                            specialobj = {}
+                            specialobj.mergeid = dir_list[i];
+                            specialobj.instructions = resp; // These instructions will be w.r.t to pull conflicts.
+                            specialobj.title = title;
+                            specialMergeArr.push(specialobj);
+                        } else {
+                            normalobj = {}
                             normalobj.mergeid = dir_list[i];
-                            normalobj.filenamelist = await checkUnmergedFiles(workdirpath)
-                                                    .catch( (err) => reject(new Error(`(formMergeArr) checkUnmergedFiles err ${err.name} :- ${err.message}`)));
+                            normalobj.filenamelist = resp;
                             normalobj.title = title;
                             normalMergeArr.push(normalobj);
-                        } else { // For folders where special conflicts occured.
-                            specialobj.mergeid = dir_list[i];
-                            specialobj.title = title;
-                            // For the branch merge conflict, hard coded titles must be like: 
-                            // `Merge conflict raised when merging ${branchName} into ${branchToUpdate}`
-                            let branchNameListFromTitle = title.split("merging ")[1].split(" into "); 
-                            let srcBranchName = branchNameListFromTitle[0];
-                            let destBranchName = branchNameListFromTitle[1];
-                            specialobj.instructions = setInstructionsArrForBranch(projName, srcBranchName, destBranchName); 
-                            specialMergeArr.push(specialobj);
                         }
-                    })
+                    } else if (type === "branch"){ // For folders where conflicts occured due to branch merges.
+                        normalobj = {};
+                        normalobj.mergeid = dir_list[i];
+                        normalobj.filenamelist = await checkUnmergedFiles(workdirpath)
+                                                .catch( (err) => reject(new Error(`(formMergeArr) checkUnmergedFiles err ${err.name} :- ${err.message}`)));
+                        normalobj.title = title;
+                        normalMergeArr.push(normalobj);
+                        console.log(normalMergeArr);
+                    } else { // For folders where special conflicts occured.
+                        specialobj = {}
+                        specialobj.mergeid = dir_list[i];
+                        specialobj.title = title;
+                        // For the branch merge conflict, hard coded titles must be like: 
+                        // `Merge conflict raised when merging ${branchName} into ${branchToUpdate}`
+                        let branchNameListFromTitle = title.split("merging ")[1].split(" into "); 
+                        let srcBranchName = branchNameListFromTitle[0];
+                        let destBranchName = branchNameListFromTitle[1];
+                        specialobj.instructions = setInstructionsArrForBranch(projName, srcBranchName, destBranchName); 
+                        specialMergeArr.push(specialobj);
+                    }
                 }
             }
             resolve(mainMergeObj);
@@ -210,7 +220,7 @@ function gitPull(dir_name, barerepopath, workdirpath, projName, branchName){
                             if (stderr) { console.log(stderr); reject(new Error(`(getMergeObj) unmerged file show cli stderr: ${stderr}`)) }
                             resp_arr = [];
                             resp_arr = stdout.trim().split('\n');
-                            console.log('(getMergeObj) filename arr: \n', resp_arr);
+                            //console.log('(getMergeObj) filename arr: \n', resp_arr);
                             resolve(resp_arr);
                         })
                     }
@@ -242,7 +252,7 @@ function checkUnmergedFiles(workdirpath) {
                 if (stderr) { console.log(stderr); reject(new Error(`(checkUnmergedFiles) unmerged file show cli stderr: ${stderr}`)); }
                 filename_list = [];
                 filename_list = stdout.trim().split('\n');
-                console.log('filename list: \n', filename_list);
+                //console.log('filename list: \n', filename_list);
                 resolve(filename_list);
             })
         } catch(err) {

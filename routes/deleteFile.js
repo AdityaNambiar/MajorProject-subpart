@@ -72,7 +72,7 @@ async function main(projName, timestamp, barerepopath,
             projName: projName,
             majorHash: responseobj.ipfsHash,
             statusLine: responseobj.statusLine,
-            mergeArr: responseobj.mergeObj,
+            mergeObj: responseobj.mergeObj,
             url: url
         });
     } catch (err) {

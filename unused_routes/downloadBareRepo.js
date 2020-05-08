@@ -26,10 +26,10 @@ var projName, workdirpath, curr_majorHash,
     filenamearr = [], statusLine;
 
 router.post('/downloadBareRepo', async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-');
-    username = req.body.username.replace(/\s/g,'-');
+    projName = req.body.projName ;
+    username = req.body.username ;
     curr_majorHash = req.body.majorHash;  // latest
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    branchToUpdate = req.body.branchToUpdate ;
     upstream_branch = 'origin/master';
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 

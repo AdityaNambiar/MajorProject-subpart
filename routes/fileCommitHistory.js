@@ -5,13 +5,8 @@
 
 
 // Misc:
-const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
-const removeFromIPFS = require('../utilities/removeFromIPFS');
-const statusChecker = require('../utilities/statusChecker');
 const pushChecker = require('../utilities/pushChecker');
-const pushToBare = require('../utilities/pushToBare');
-const rmWorkdir = require('../utilities/rmWorkdir');
 
 // Terminal execution import:
 const { exec } = require('child_process');
@@ -53,17 +48,12 @@ async function main(projName, timestamp, barerepopath, filename,
     try {
         let cObj = await fileCommitHistory(workdirpath, filename)
         const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash)
-        // .catch( async (err) => { // If ever you want to perform a cleanUp for removeFromIPFS error, refine this catch block so that it can actually catch that error and remove the current workDir.
-        //     console.log(err);
-        //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
-        //     reject(new Error(`(pushChecker) err ${err.name} :- ${err.message}`)); 
-        // });
         console.log("pushchecker returned this: \n", responseobj);
         return ({
             projName: projName,
             majorHash: responseobj.ipfsHash,
             statusLine: responseobj.statusLine,
-            mergeArr: responseobj.mergeObj,
+            mergeObj: responseobj.mergeObj,
             commitObj: cObj,
             url: url
         });
@@ -80,8 +70,14 @@ function fileCommitHistory(workdirpath, filename) {
                 cwd: workdirpath,
                 shell: true
             }, (err, stdout, stderr) => {
-                if (err) { console.log(err); reject(new Error(`git-log err ${err.name} :- ${err.message}`)); }
-                if (stderr) { console.log(stderr); reject(new Error(`git-log stderr: ${stderr}`));}
+                if (err) { 
+                    console.log(err); 
+                    reject(new Error(`git-log err ${err.name} :- ${err.message}`)); 
+                }
+                if (stderr) { 
+                    console.log(stderr); 
+                    reject(new Error(`git-log stderr: ${stderr}`));
+                }
                 //console.log(stdout);
                 
                 stdout = "\n" + stdout;

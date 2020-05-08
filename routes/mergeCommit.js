@@ -8,6 +8,7 @@
 const preRouteChecks = require('../utilities/preRouteChecks');
 const pushChecker = require('../utilities/pushChecker');
 
+const { exec } = require('child_process');
 // isomorphic-git related imports and setup
 const fs = require('fs');
 const git = require('isomorphic-git');
@@ -17,34 +18,40 @@ const express = require('express');
 const router = express.Router();
 
 router.post('/mergeCommit', async (req, res) => {
-    var projName = req.body.projName;
-    var branchToUpdate = req.body.branchToUpdate;
-    var curr_majorHash = req.body.majorHash; // latest
-    var mergeid = req.body.mergeid;
-    var filebuffobj = {};// = req.body.filebuffobj;
-    var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
-
-    var authorname = req.body.authorname;
-    var authoremail = req.body.authoremail;
-    var usermsg = req.body.usermsg;
-    var filename = req.body.filename; // Maybe you dont need ".replace(/\s/g,'-')" here. Means it should allow having spaces in filenames.
-    var buffer = req.body.filebuff;
-
-    var timestamp = Date.now();
-
-    // Git work:
-    var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName + '.git');
-    var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, mergeid);
-
     try {
-        await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(projName, filebuffobj, timestamp, barerepopath, buffer,
-            workdirpath, curr_majorHash, url,
-            filename, usermsg, authorname, authoremail)
+        var projName = req.body.projName;
+        var curr_majorHash = req.body.majorHash; // latest
+        var username = req.body.username;
+        var mergeobj = JSON.parse(req.body.mergeobj);
+        var branchToUpdate = '';
+        var filebuffobj = JSON.parse(req.body.filebuffobj);
+        var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
+        var mergeid = mergeobj.mergeid;
+        var title = mergeobj.title;
+        // Using Regex to avoid vigorously checking to make sure if its type is branch or pull because there's type special as well. 
+        var rgxForBranch = /Merge conflict raised when merging/
+        var rgxForPull = /Merge conflict raised pulling/
+        if (rgxForBranch.test(title))
+            branchToUpdate = title.split("merging ")[1].split(" into ")[1]; // Destination branch name (where it should be left out)
+        if (rgxForPull.test(title))
+            branchToUpdate = title.split("pulling ")[1].split(" branch")[0];
+
+        var authorname = req.body.authorname;
+        var authoremail = req.body.authoremail;
+        var usermsg = req.body.usermsg;
+
+        var timestamp = parseInt(mergeid.split(username)[1]); // timestamp of type "number".
+
+        // Git work:
+        var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName + '.git');
+        var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, mergeid);
+
+        let response = await main(projName, filebuffobj, timestamp, barerepopath,
+            workdirpath, curr_majorHash, url, usermsg, authorname, authoremail)
         res.status(200).send(response);
     } catch (err) {
         console.log(err);
-        res.status(400).send(`(commitFile) err ${err.name} :- ${err.message}`);
+        res.status(400).send(`(mergeCommit) err ${err.name} :- ${err.message}`);
     }
 })
 
@@ -62,12 +69,12 @@ async function main(projName, filebuffobj, timestamp, barerepopath,
             projName: projName,
             majorHash: responseobj.ipfsHash,
             statusLine: responseobj.statusLine,
-            mergeArr: responseobj.mergeObj,
+            mergeObj: responseobj.mergeObj,
             url: url
         });
     } catch (err) {
         console.log(err);
-        throw new Error(`(commitFile) main err ${err.name} :- ${err.message}`);
+        throw new Error(`(mergeCommit) main err ${err.name} :- ${err.message}`);
     }
 }
 
@@ -81,32 +88,43 @@ async function addFile(workdirpath, filename) {
         return (true);
     } catch (err) {
         console.log(err);
-        throw new Error(`(mergeCommit) git-addfile err ${err.name} :- ${err.message}`);
+        throw new Error(`(addFile) git-addfile err ${err.name} :- ${err.message}`);
     }
 }
 
-async function commit(workdirpath, usermsg, authorname, authoremail) {
-    try {
-        let sha = await git.commit({
-            fs: fs,
-            dir: workdirpath,
-            message: usermsg,
-            author: {
-                name: authorname,
-                email: authoremail
-            }
-        })
-        console.log("commit hash: \n", sha);
-        return(true);
-    } catch (err) {
-        console.log(err);
-        throw new Error(`(mergeCommit) git-commit err ${err.name} :- ${err.message}`);
-    }
+function commit(workdirpath, usermsg, authorname, authoremail) {
+    return new Promise( (resolve, reject) => {
+        try {
+            exec(`git commit -m "${usermsg}" --author="${authorname} <${authoremail}>"`,{
+                cwd: workdirpath,
+                shell: true
+            }, (err, stdout, stderr) => {
+                console.log("merge commit stdout: ",stdout);
+                if (err) {
+                    console.log(err);
+                    reject(new Error(`(commit) git-commit err ${err.name} :- ${err.message}`))
+                }
+                if (stderr) {
+                    console.log(stderr);
+                    reject(new Error(`(commit) git-commit stderr: ${stderr}`))
+                }
+                resolve(true);
+            })
+        } catch (err) {
+            console.log(err);
+            throw new Error(`(commit) git-commit err ${err.name} :- ${err.message}`);
+        }
+    })
 }
-async function writeFile(workdirpath, filename, buffer) {
-    fs.writeFile(path.resolve(workdirpath, filename), Buffer.from(buffer), (err) => {
-        if (err) { console.log(err); throw new Error(`(commitFile) fs write err ${err.name} :- ${err.message} `); }
-        return Promise.resolve(true);
+function writeFile(workdirpath, filename, buffer) {
+    return new Promise((resolve, reject) => {
+        fs.writeFile(path.resolve(workdirpath, filename), Buffer.from(buffer), (err) => {
+            if (err) {
+                console.log(err);
+                reject(new Error(`(writeFile) fs write err ${err.name} :- ${err.message} `));
+            }
+            resolve(true);
+        })
     })
 }
 

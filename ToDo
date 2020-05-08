@@ -189,7 +189,13 @@ main_op
             - getMergeArr 
     }
 res.send
-
+{
+    "mergeid": "adi nambiar1588892349773",
+    "filenamelist": [
+        "a"
+    ],
+    "title": "Merge conflict raised when merging origin/f0 into master"
+}
 
 getMergeArr in pushChecker - sequence:
 scanDir - to fetch directory listing

@@ -44,7 +44,7 @@ router.post('/deleteBranch', async (req,res) => {
 async function main(projName, timestamp, barerepopath, workdirpath, branchPathToRemove, curr_majorHash, branchName, url){
     try {
         await gitDeleteBranch(workdirpath, branchName)
-        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash, true, branchName)
+        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash, null, true, branchName)
         // .catch( async (err) => {
         //     console.log(err);
         //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
@@ -56,7 +56,7 @@ async function main(projName, timestamp, barerepopath, workdirpath, branchPathTo
             projName: projName, 
             majorHash: responseobj.ipfsHash, 
             statusLine: responseobj.statusLine, 
-            mergeArr: responseobj.mergeObj, 
+            mergeObj: responseobj.mergeObj, 
             url: url
         });
     } catch(err) {

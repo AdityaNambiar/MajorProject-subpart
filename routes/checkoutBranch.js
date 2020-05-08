@@ -43,7 +43,7 @@ router.post('/checkoutBranch', async (req,res) => {
         res.status(200).send(response);
     }catch(err){
         console.log(err);
-        res.status(400).send(` (checkoutBranch) main caller err ${err.name} :- ${err.message}`);
+        res.status(400).send(`(checkoutBranch) err ${err.name} :- ${err.message}`);
     }
 })
 
@@ -62,7 +62,7 @@ async function main(projName, timestamp, barerepopath, workdirpath, branchToUpda
             projName: projName, 
             majorHash: responseobj.ipfsHash, 
             statusLine: responseobj.statusLine, 
-            mergeArr: responseobj.mergeObj, 
+            mergeObj: responseobj.mergeObj, 
             url: url
         });
     } catch(err) {

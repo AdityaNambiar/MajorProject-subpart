@@ -57,7 +57,7 @@ async function main(projName, timestamp, barerepopath, branchToUpdate,
             projName: projName,
             majorHash: responseobj.ipfsHash,
             statusLine: responseobj.statusLine,
-            mergeArr: responseobj.mergeObj,
+            mergeObj: responseobj.mergeObj,
             commitObj: cObj,
             url: url
         });

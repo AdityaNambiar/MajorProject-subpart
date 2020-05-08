@@ -31,10 +31,10 @@ var projName, workdirpath, curr_majorHash,
 
 
 router.post('/fixConsistency',  async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-');
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    projName = req.body.projName ;
+    branchToUpdate = req.body.branchToUpdate ;
     curr_majorHash = req.body.majorHash; // latest
-    username = req.body.username.replace(/\s/g,'-');
+    username = req.body.username ;
     upstream_branch = 'origin/master';
     url = `http://localhost:7005/projects/bare/${projName}.git`
     

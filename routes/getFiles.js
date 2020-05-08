@@ -54,12 +54,12 @@ async function main(projName, timestamp, barerepopath, workdirpath, branchToUpda
                             //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
                             //     reject(new Error(`(pushChecker) err ${err.name} :- ${err.message}`)); 
                             // });
-        console.log("pushchecker returned this: \n", responseobj);
+        console.dir(responseobj, { depth: null });
         return ({
             projName: projName, 
             majorHash: responseobj.ipfsHash, 
             statusLine: responseobj.statusLine, 
-            mergeArr: responseobj.mergeObj, 
+            mergeObj: responseobj.mergeObj, 
             url: url,
             files: files
         });

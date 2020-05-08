@@ -24,7 +24,7 @@ const git = require('isomorphic-git');
 
 const path = require('path');
 
-module.exports = function pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash, onDeleteBranch = false, branchToDelete = null) {
+module.exports = function pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash, oldBranchName = null, onDeleteBranch = false, branchToDelete = null) {
 
     var mainResponse = {
         statusLine: '',
@@ -34,7 +34,7 @@ module.exports = function pushChecker(barerepopath, workdirpath, timestamp, curr
 
     return new Promise(async (resolve, reject) => {
         try {
-            let mainResp = await gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorHash, onDeleteBranch, branchToDelete)
+            let mainResp = await gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorHash, oldBranchName, onDeleteBranch, branchToDelete)
             resolve(mainResp);
         } catch (err) {
             console.log(err);
@@ -43,7 +43,7 @@ module.exports = function pushChecker(barerepopath, workdirpath, timestamp, curr
     })
 }
 
-function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorHash, onDeleteBranch, branchToDelete) {
+function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorHash, oldBranchName, onDeleteBranch, branchToDelete) {
     // .../projects/projName/branchName/username+timestamp
     var projName, branchName, username, pathArr;
     pathArr = workdirpath.split('/');
@@ -54,8 +54,13 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
     let branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchName);
 
     return new Promise(async(resolve, reject) => {
+        var command; 
+        if (oldBranchName)
+            command = `git pull '${barerepopath}' '${oldBranchName}'`
+        else
+            command = `git pull '${barerepopath}' '${branchName}'`
         try {
-            exec(`git pull '${barerepopath}' '${branchName}'`, {
+            exec(command, {
                 cwd: workdirpath,
                 shell: true
             }, async (err, stdout, stderr) => {
@@ -67,17 +72,17 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
                 var elem_rgx = new RegExp(/CONFLICT/);
                 var inbetweenbrackets_rgx = new RegExp(/\((.*)\)/); // defines capturing group for picking up the stuff within parenthesis
                 if (output.some((e) => elem_rgx.test(e))) { // TRUE - if any output line consist of "CONFLICT" keyword in it. 
-
+                
                     //output.push("CONFLICT (add/add): Merge conflict in DESC4")
-                    //output.push("CONFLICT (modify/delete): Merge conflict in DESC4")
+                    output.push("CONFLICT (modify/delete): Merge conflict in DESC4")
                     try {
-                        fs.writeFileSync(path.join(workdirpath, `${dir_name}.json`), {
+                        fs.writeFileSync(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
                             type: 'pull',
                             title: `Merge conflict raised pulling ${branchName} branch`
-                        })
+                        }))
                     } catch (err) {
                         console.log(err);
-                        reject(`(pushChecker) gitPull-jsonWriteForPull err ${err.name} :- ${err.message}`)
+                        reject(new Error(`(pushChecker) gitPull-jsonWriteForPull err ${err.name} :- ${err.message}`))
                     }
 
                     for (var i = 0; i < output.length; i++) {
@@ -88,16 +93,16 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
                     }
                     if (!arr.every((e) => e === "content")) { // If the array contains anything else than "content" type conflicts. Throw the error with instructions.
                         try {
-                            fs.writeFileSync(path.join(workdirpath, `${dir_name}.json`), {
+                            fs.writeFileSync(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
                                 type: 'special',
                                 title: `Merge conflict raised pulling ${branchName} branch`
-                            })
+                            }))
                         } catch (err) {
                             console.log(err);
-                            reject(`(pushChecker) gitPull-jsonWriteForSpecial err ${err.name} :- ${err.message}`)
+                            reject(new Error(`(pushChecker) gitPull-jsonWriteForSpecial err ${err.name} :- ${err.message}`))
                         }
                     }
-                    throw new Error("conflict");
+                    reject(new Error("conflict"));
                 } else { // if merge was successful in `git pull`
                     try {
                         if (onDeleteBranch) // If pushChecker is on deleteBranch route

@@ -36,10 +36,10 @@ var projName, workdirpath, curr_majorHash,
     branchlist=[];
 
 router.post('/scanDir', async (req,res) => {
-    projName = req.body.projName.replace(/\s/g,'-');
-    username = req.body.username.replace(/\s/g,'-');
+    projName = req.body.projName ;
+    username = req.body.username ;
     curr_majorHash = req.body.majorHash;  // latest
-    branchToUpdate = req.body.branchToUpdate.replace(/\s/g,'-');
+    branchToUpdate = req.body.branchToUpdate ;
 
     barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     

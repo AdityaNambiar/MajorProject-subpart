@@ -4,7 +4,7 @@
  */
 
 // Terminal execution import
-const { execSync } = require('child_process');
+const { exec } = require('child_process');
 
 const path = require('path');
 
@@ -17,16 +17,21 @@ module.exports = function removeFromIPFS(majorHash){
     var projectsPath = path.resolve(__dirname, '..', 'projects'); 
     return new Promise( (resolve, reject) => {
         try{
-            // IPFS.pin.rm() projectLeader's folder:
-            ipfs.pin.rm(majorHash, (err,res) => {
-                if (err) { console.log(err); reject(new Error(`(removeFromIPFS) Err ${err.name} :- ${err.message}`)); }
-                console.log("majorHash removed: ",res);
-                execSync('ipfs repo gc', {
-                    cwd: projectsPath,
-                    shell: true,
-                });
+            exec(`ipfs pin rm ${majorHash}; ipfs repo gc;`, {
+                cwd: projectsPath,
+                shell: true,
+            }, (err, stdout, stderr) => {
+                if (err){
+                    console.log(err);
+                    reject(new Error(`(removeFromIPFS) cli err ${err.name} :- ${err.message}`))
+                }
+                if (stderr){
+                    console.log(stderr);
+                    reject(new Error(`(removeFromIPFS) cli stderr :- ${err.message}`))
+                }
+                console.log(stdout);
                 resolve(true);
-            })
+            });
         }catch(err){
             console.log(err); 
             reject(new Error(`(removeFromIPFS) err ${err.name} :- ${err.message}`));

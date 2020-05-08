@@ -22,11 +22,11 @@ router.post('/deleteProj', async (req,res) => {
      // paths to be deleted:
     var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     var projNamepath = path.resolve(__dirname, '..', 'projects', projName);
-
+    var zipFilePath  = path.resolve(__dirname, '..', 'projects', `${projName}.zip`);
     try{
         await projPathCheck(projectspath)
         await barePathCheck(barepath);
-        let response = await main(projName, projNamepath, barerepopath, curr_majorHash)
+        let response = await main(projName, zipFilePath, projNamepath, barerepopath, curr_majorHash)
         res.status(200).send(response);
     }catch(err){
         console.log(err);
@@ -34,9 +34,9 @@ router.post('/deleteProj', async (req,res) => {
     }
 })
 
-async function main(projName, projNamepath, barerepopath, curr_majorHash){
+async function main(projName, zipFilePath, projNamepath, barerepopath, curr_majorHash){
     try {
-        await deleteProj(projNamepath, barerepopath)
+        await deleteProj(projNamepath, zipFilePath, barerepopath)
         await removeFromIPFS(curr_majorHash);
         console.log("MajorHash (deleteProj) (same that was passed to this route): ", curr_majorHash);
         return({
@@ -75,9 +75,15 @@ async function barePathCheck(barepath){
     })
 }
 
-function deleteProj(projNamepath, barerepopath){
+function deleteProj(projNamepath, zipFilePath, barerepopath){
     return new Promise( (resolve, reject) => {
         try {
+            fs.unlink(zipFilePath, (err) => {
+                if (err) {
+                    console.log(err);
+                    reject(new Error(`(deleteProj) delete-zip err ${err.name} :- ${err.message}`));
+                }
+            })
             // Delete projects/projName folder:
             fs.remove(projNamepath, (err) => {
                 if (err) {

@@ -67,7 +67,7 @@ async function formMergeArr(dir_list, barerepopath, branchNamepath){
                  * 4. Form the mergeArr
                  */
                 var workdirpath = path.join(branchNamepath, dir_list[i]);
-                console.log("dir_list[i]: \n", dir_list[i]);
+                //console.log("dir_list[i]: \n", dir_list[i]);
                 var projName, branchName, pathArr;
                 pathArr = workdirpath.split('/');
                 projName = pathArr[pathArr.length - 3];
@@ -108,7 +108,7 @@ async function formMergeArr(dir_list, barerepopath, branchNamepath){
                                                 .catch( (err) => reject(new Error(`(formMergeArr) checkUnmergedFiles err ${err.name} :- ${err.message}`)));
                         normalobj.title = title;
                         normalMergeArr.push(normalobj);
-                        console.log(normalMergeArr);
+                        //console.log(normalMergeArr);
                     } else { // For folders where special conflicts occured.
                         specialobj = {}
                         specialobj.mergeid = dir_list[i];

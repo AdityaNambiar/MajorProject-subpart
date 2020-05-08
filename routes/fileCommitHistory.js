@@ -104,13 +104,14 @@ function fileCommitHistory(workdirpath, filename) {
                             case "commit": commitobj.commitHash = e.split(' ')[1]; break;
                             case "parent": commitobj.parentHashArr.push(e.split(' ')[1]); break;
                             case "author":
-                                commitobj.author_name = e.split(' ')[1];
-                                commitobj.author_timestamp = new Date(e.split(' ')[3] * 1000).toLocaleString('en-US', { hour12: false });;
+                                commitobj.author_name = e.match(/author (.*)\</)[1].trim();
+                                // Check comment written about these regex on bCH.
+                                commitobj.author_timestamp = new Date(e.split(/> (.*)/)[1].split(' ')[0] * 1000).toLocaleString('en-US', { hour12: false });;
                                 break;
 
                             case "committer":
-                                commitobj.committer_name = e.split(' ')[1];
-                                commitobj.committer_timestamp = new Date(e.split(' ')[3] * 1000).toLocaleString('en-US', { hour12: false });;
+                                commitobj.committer_name = e.match(/committer (.*)\</)[1].trim();
+                                commitobj.committer_timestamp = new Date(e.split(/> (.*)/)[1].split(' ')[0] * 1000).toLocaleString('en-US', { hour12: false });;
                                 break;
                         }
                         if (i == b.length - 1) {

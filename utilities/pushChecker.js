@@ -25,7 +25,6 @@ const git = require('isomorphic-git');
 const path = require('path');
 
 module.exports = function pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash, oldBranchName = null, onDeleteBranch = false, branchToDelete = null) {
-
     var mainResponse = {
         statusLine: '',
         mergeObj: {},
@@ -51,6 +50,7 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
     branchName = pathArr[pathArr.length - 2];
     username = pathArr[pathArr.length - 1].split(timestamp)[0];
     let dir_name = username + timestamp;
+    console.log(projName, branchName, "\n"+workdirpath)
     let branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchName);
 
     return new Promise(async(resolve, reject) => {
@@ -64,8 +64,8 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
                 cwd: workdirpath,
                 shell: true
             }, async (err, stdout, stderr) => {
-                if (err) { console.log(err); reject(new Error(`(gitPull) cli err ${err.name} :- ${err.message}`)); }
-                if (stderr) { console.log(stderr); }
+                if (err) { console.log('(gitPull) cli err', err);}
+                if (stderr) { console.log('(gitPull) cli stderr', stderr); }
                 console.log(`git pull stdout: \n`,stdout);
                 var output = stdout.split('\n');
                 var arr = [];
@@ -74,7 +74,7 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
                 if (output.some((e) => elem_rgx.test(e))) { // TRUE - if any output line consist of "CONFLICT" keyword in it. 
                 
                     //output.push("CONFLICT (add/add): Merge conflict in DESC4")
-                    output.push("CONFLICT (modify/delete): Merge conflict in DESC4")
+                    //output.push("CONFLICT (modify/delete): Merge conflict in DESC4")
                     try {
                         fs.writeFileSync(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
                             type: 'pull',
@@ -105,16 +105,24 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
                     reject(new Error("conflict"));
                 } else { // if merge was successful in `git pull`
                     try {
-                        if (onDeleteBranch) // If pushChecker is on deleteBranch route
+                        if (onDeleteBranch){ // If pushChecker is on deleteBranch route
                             await deleteBranchAtBare(barerepopath, workdirpath, branchToDelete)
-                        else
+                            mainResponse.statusLine = await statusChecker(barerepopath, branchNamepath, username);
+                            mainResponse.ipfsHash = await addToIPFS(barerepopath);
+                            await removeFromIPFS(curr_majorHash)
+                            await rmWorkdir(workdirpath);
+                            mainResponse.mergeObj = await getMergeObj(barerepopath, branchNamepath);
+                            resolve(mainResponse);
+                        }
+                        else{ 
+                            mainResponse.statusLine = await statusChecker(barerepopath, branchNamepath, username);
                             await pushToBare(barerepopath, workdirpath, branchName)
-                        mainResponse.ipfsHash = await addToIPFS(barerepopath);
-                        await removeFromIPFS(curr_majorHash)
-                        mainResponse.statusLine = await statusChecker(barerepopath, branchNamepath, username);
-                        await rmWorkdir(workdirpath);
-                        mainResponse.mergeObj = await getMergeObj(barerepopath, branchNamepath);
-                        resolve(mainResponse);
+                            mainResponse.ipfsHash = await addToIPFS(barerepopath);
+                            await removeFromIPFS(curr_majorHash)
+                            await rmWorkdir(workdirpath);
+                            mainResponse.mergeObj = await getMergeObj(barerepopath, branchNamepath);
+                            resolve(mainResponse);
+                        }
                     } catch (err) {
                         console.log(err);
                         reject(new Error(`(pushChecker) git-pull-onNoConf err ${err.name} :- ${err.message}`));

@@ -22,13 +22,6 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-
-var projName, workdirpath, curr_majorHash,
-    username, branchToUpdate, majorHash,
-    barerepopath, filenamearr, statusLine,
-    graphOutput;
-
-
 router.post('/gitGraph', async (req, res) => {
     var projName = req.body.projName;
     var username = req.body.username;

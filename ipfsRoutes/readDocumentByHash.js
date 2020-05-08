@@ -15,7 +15,7 @@ router.post('/readDocumentByHash',(req,res)=>{
         res.status(200).send(fnl)
     } catch (err) {
         console.log(err);
-        res.status(400).send(`(readDocument) res err ${err.name} :- ${err.message} `)
+        res.status(400).send(`(readDocumentByHash) res err ${err.name} :- ${err.message} `)
     }
 });
 

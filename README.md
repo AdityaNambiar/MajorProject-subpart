@@ -4,4 +4,7 @@ A repository to store our Engineering Major Project
 
 Updated remotely.
 
-Updated remotely on node2
+====
+updating master while nodeserv is ahead of 37 commits.
+
+Updated on detached HEAD

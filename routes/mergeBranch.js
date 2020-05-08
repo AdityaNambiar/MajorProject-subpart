@@ -38,7 +38,7 @@ router.post('/mergeBranch',  async (req,res) => {
         res.status(200).send(response);
     }catch(err){
         if (err.message === "Conflict(s) occured while merging branch!")
-            res.status(400).send(`Error: ${err.message}`);
+            res.status(400).send(`${err.message}`);
         else 
             res.status(400).send(`(mergeBranch) err ${err.name}:- ${err.message}`);
     }

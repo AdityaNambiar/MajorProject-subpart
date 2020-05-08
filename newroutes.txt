@@ -1,0 +1,287 @@
+1. addBranch:
+- I/Ps:
+	projName
+	username
+	majorHash
+	branchToUpdate
+	branchName
+- O/Ps:
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	url
+	files
+
+2. branchCommitHistory:
+- I/Ps:
+	projName
+        username
+        majorHash
+        branchToUpdate
+- O/Ps:
+	projName
+        majorHash
+        statusLine
+	mergeObj
+	commitObj
+
+3. checkoutBranch:
+- I/Ps:
+	projName
+	username
+	majorHash
+	branchToUpdate
+- O/Ps:
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	url
+
+
+4. commitFile:
+- I/Ps:
+	projName
+	username
+	branchToUpdate
+	majorHash
+	authorname
+	authoremail
+	usermsg
+	filename
+	filebuff
+- O/Ps:
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	url
+
+5. deleteBranch:
+- I/Ps:
+	projName
+	username
+	majorHash
+	branchToUpdate
+	branchName
+- O/Ps:
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	url
+
+6. deleteFile:
+- I/Ps:
+	projName
+	username
+	majorHash
+	branchToUpdate
+	authorname
+	authoremail
+	usermsg
+	filename
+- O/Ps:
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	url
+
+
+7. deleteProj:
+- I/Ps:
+	projName
+	majorHash
+- O/Ps:
+	projName
+
+8. diffFiles:
+- I/Ps:
+	projName
+	username
+	majorHash
+	branchToUpdate
+	ref1
+	ref2
+- O/Ps:
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	diffOutput
+	url
+
+
+9. diffForCommit:
+- I/Ps:
+	projName
+	username
+	majorHash
+	branchToUpdate
+	ref1
+- O/Ps:
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	diffOutput
+	url
+
+10. downloadRepo:
+- I/Ps:
+	projName
+	username
+	branchToUpdate
+	majorHash
+- O/Ps:
+	res.download(zip file)
+
+11. fileCommitHistory
+- I/Ps:
+	projName
+	username
+	branchToUpdate
+	majorHash
+	filename
+- O/Ps:
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	commitObj
+	url
+
+12. getBranches:
+- I/Ps:
+	projName
+	username
+	majorHash
+	branchToUpdate
+- O/Ps:
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	branchlist
+	url
+
+13. getFiles:
+- I/Ps:
+	projName
+	username
+	majorHash
+	branchToUpdate
+- O/Ps:
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	url
+	files
+
+
+14. getMergeObj: *
+- I/Ps:
+	projName
+	branchToUpdate
+- O/Ps:
+	mainMergeObj
+	url
+
+15. gitGraph:
+- I/Ps:
+	projName
+	username
+	majorHash
+	branchToUpdate
+- O/Ps:
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	graphOutput
+	url
+
+16. downloadForCLI: *
+- I/Ps:
+	projName
+	mergeobj (JSON.stringify and then pass to this variable)
+- O/Ps:
+	res.download(zip folder)
+
+17. initProj:
+- I/Ps:
+	projName
+	username
+	authoremail
+	authorname
+	filebuff
+	filename
+	usermsg
+- O/Ps:
+	projName
+	majorHash
+
+18. mergeBranch: *
+- I/Ps:
+	projName
+	branchToUpdate
+	majorHash
+	username
+	branchName
+- O/Ps:
+	(if successful):
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	url
+
+	(if unsuccessful):
+	status(400) - error: "Conflict(s) occured while merging branch!"
+
+19. mergeCommit: *
+- I/Ps:
+	projName
+	majorHash
+	username
+	mergeobj (JSON.stringify before passing to this variable)
+	filebuffobj
+	authorname
+	authoremail
+	usermsg
+- O/Ps:
+	projName
+	majorHash
+	statusLine:
+	mergeObj
+	url
+
+
+20. readFile:
+- I/Ps:
+	projName
+	branchToUpdate
+	majorHash
+	username
+	filename
+- O/Ps:
+	projName
+	majorHash
+	statusLine
+	mergeObj
+	buffer
+	url
+
+21. readMergeFiles:
+- I/Ps:
+	projName
+	mergeobj (JSON.stringify before passing to this variable)
+- O/Ps:
+	projName
+	buffer
+	url
+
+

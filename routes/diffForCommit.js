@@ -67,7 +67,7 @@ async function main(projName, username, timestamp, branchToUpdate, ref1, barerep
 function gitDiffRefs(ref1, workdirpath) {
     return new Promise((resolve, reject) => {
         try {
-            exec(`git log -p --pretty="raw" ${ref1}`, {
+            exec(`git show -p --pretty="raw" ${ref1}`, {
                 cwd: workdirpath,
                 shell: true
             }, (err, stdout, stderr) => {

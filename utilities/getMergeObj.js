@@ -120,7 +120,7 @@ async function formMergeArr(dir_list, projName, branchName, barerepopath, branch
                         let srcBranchName = branchNameListFromTitle[0];
                         let destBranchName = branchNameListFromTitle[1];
                         obj.instructions = setInstructionsArrForBranch(projName, srcBranchName, destBranchName); 
-                        obj.type = "normal"
+                        obj.type = "special"
                         obj.createdBy = username;
                         obj.time = new Date(timestamp * 1000).toLocaleString('en-US', { hour12: false });
                         mainMergeArr.push(obj);

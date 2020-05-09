@@ -42,6 +42,7 @@ const readMergeFiles = require('./routes/readMergeFiles');
 const checkoutBranch = require('./routes/checkoutBranch');
 const downloadRepo = require('./routes/downloadRepo');
 const downloadForCLI = require('./routes/downloadForCLI');
+const deleteMergeRequest = require('./routes/deleteMergeRequest');
 
 // Client Document operation routes:
 const createDocument = require('./ipfsRoutes/createDocument');
@@ -80,6 +81,7 @@ app.post('/mergeCommit', mergeCommit);
 app.post('/readMergeFiles', readMergeFiles);
 app.post('/checkoutBranch', checkoutBranch);
 app.post('/downloadForCLI', downloadForCLI);
+app.post('/deleteMergeRequest', deleteMergeRequest);
 
 app.post('/createDocument', createDocument);
 app.post('/readDocument', readDocument);

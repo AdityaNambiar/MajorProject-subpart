@@ -40,13 +40,13 @@ router.post('/mergeCommit', async (req, res) => {
         var authoremail = req.body.authoremail;
         var usermsg = req.body.usermsg;
 
-        var timestamp = parseInt(mergeid.split(username)[1]); // timestamp of type "number".
+        var timestamp = parseInt(mergeid.split("(|)-|-(|)")[1]); // timestamp of type "number".
 
         // Git work:
         var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName + '.git');
         var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, mergeid);
 
-        let response = await main(projName, filebuffobj, timestamp, barerepopath,
+        let response = await main(projName, username, timestamp, branchToUpdate, filebuffobj, barerepopath,
             workdirpath, curr_majorHash, url, usermsg, authorname, authoremail)
         res.status(200).send(response);
     } catch (err) {
@@ -55,7 +55,7 @@ router.post('/mergeCommit', async (req, res) => {
     }
 })
 
-async function main(projName, filebuffobj, timestamp, barerepopath,
+async function main(projName, username, timestamp, branchToUpdate, filebuffobj, barerepopath,
     workdirpath, curr_majorHash, url, usermsg, authorname, authoremail) {
     try {
         for (let filename in filebuffobj) {
@@ -63,7 +63,7 @@ async function main(projName, filebuffobj, timestamp, barerepopath,
             await addFile(workdirpath, filename);
         }
         await commit(workdirpath, usermsg, authorname, authoremail)
-        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash)
+        const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash)
         console.log("pushchecker returned this: \n", responseobj);
         return ({
             projName: projName,

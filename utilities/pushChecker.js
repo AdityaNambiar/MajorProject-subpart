@@ -24,16 +24,16 @@ const git = require('isomorphic-git');
 
 const path = require('path');
 
-module.exports = function pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash, oldBranchName = null, onDeleteBranch = false, branchToDelete = null) {
+module.exports = function pushChecker(projName, username, timestamp, branchName, barerepopath, workdirpath, curr_majorHash, oldBranchName = null, onDeleteBranch = false, branchToDelete = null) {
     var mainResponse = {
         statusLine: '',
-        mergeObj: {},
+        mergeObj: null,
         ipfsHash: ''
     }
 
     return new Promise(async (resolve, reject) => {
         try {
-            let mainResp = await gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorHash, oldBranchName, onDeleteBranch, branchToDelete)
+            let mainResp = await gitPull(mainResponse, projName, username, timestamp, branchName, barerepopath, workdirpath, curr_majorHash, oldBranchName, onDeleteBranch, branchToDelete)
             resolve(mainResp);
         } catch (err) {
             console.log(err);
@@ -42,23 +42,17 @@ module.exports = function pushChecker(barerepopath, workdirpath, timestamp, curr
     })
 }
 
-function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorHash, oldBranchName, onDeleteBranch, branchToDelete) {
-    // .../projects/projName/branchName/username+timestamp
-    var projName, branchName, username, pathArr;
-    pathArr = workdirpath.split('/');
-    projName = pathArr[pathArr.length - 3];
-    branchName = pathArr[pathArr.length - 2];
-    username = pathArr[pathArr.length - 1].split(timestamp)[0];
-    let dir_name = username + timestamp;
-    console.log(projName, branchName, "\n"+workdirpath)
-    let branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchName);
-
+function gitPull(mainResponse, projName, username, timestamp, branchName, barerepopath, workdirpath, curr_majorHash, oldBranchName, onDeleteBranch, branchToDelete) {
+    var dir_name = username + timestamp;
+    var branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchName);
+    
     return new Promise(async(resolve, reject) => {
         var command; 
-        if (oldBranchName)
+        if (oldBranchName) {
             command = `git pull '${barerepopath}' '${oldBranchName}'`
-        else
+        } else { 
             command = `git pull '${barerepopath}' '${branchName}'`
+        }
         try {
             exec(command, {
                 cwd: workdirpath,
@@ -70,7 +64,7 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
                 var output = stdout.split('\n');
                 var arr = [];
                 var elem_rgx = new RegExp(/CONFLICT/);
-                var inbetweenbrackets_rgx = new RegExp(/\((.*)\)/); // defines capturing group for picking up the stuff within parenthesis
+                var inbetweenbrackets_rgx = new RegExp(/\((.*)\):/); // defines capturing group for picking up the stuff within parenthesis
                 if (output.some((e) => elem_rgx.test(e))) { // TRUE - if any output line consist of "CONFLICT" keyword in it. 
                 
                     //output.push("CONFLICT (add/add): Merge conflict in DESC4")
@@ -111,7 +105,7 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
                             mainResponse.ipfsHash = await addToIPFS(barerepopath);
                             await removeFromIPFS(curr_majorHash)
                             await rmWorkdir(workdirpath);
-                            mainResponse.mergeObj = await getMergeObj(barerepopath, branchNamepath);
+                            mainResponse.mergeObj = await getMergeObj(projName, branchName, barerepopath, branchNamepath);
                             resolve(mainResponse);
                         }
                         else{ 
@@ -120,7 +114,7 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
                             mainResponse.ipfsHash = await addToIPFS(barerepopath);
                             await removeFromIPFS(curr_majorHash)
                             await rmWorkdir(workdirpath);
-                            mainResponse.mergeObj = await getMergeObj(barerepopath, branchNamepath);
+                            mainResponse.mergeObj = await getMergeObj(projName, branchName, barerepopath, branchNamepath);
                             resolve(mainResponse);
                         }
                     } catch (err) {
@@ -135,7 +129,7 @@ function gitPull(mainResponse, barerepopath, workdirpath, timestamp, curr_majorH
                     mainResponse.ipfsHash = await addToIPFS(barerepopath);
                     await removeFromIPFS(curr_majorHash);
                     mainResponse.statusLine = await statusChecker(barerepopath, branchNamepath, username);
-                    mainResponse.mergeObj = await getMergeObj(barerepopath, branchNamepath);
+                    mainResponse.mergeObj = await getMergeObj(projName, branchName, barerepopath, branchNamepath);
                     resolve(mainResponse);
                 } catch (err) {
                     console.log(err);

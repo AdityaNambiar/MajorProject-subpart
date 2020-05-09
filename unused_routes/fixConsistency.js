@@ -153,7 +153,7 @@ async function mergeFiles(workdirpath){
                 var filename_arr = [];
                 var obj = {}, arr = [];
                 var elem_rgx = new RegExp(/CONFLICT/);
-                var inbetweenbrackets_rgx = new RegExp(/\((.*)\)/);
+                var inbetweenbrackets_rgx = new RegExp(/\((.*)\):/);
                 
                 if (conflict_lines_arr.some((e) => elem_rgx.test(e))){
                     //conflict_lines_arr.push("CONFLICT (add/add): Merge conflict in DESC4")

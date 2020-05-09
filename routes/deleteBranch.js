@@ -24,7 +24,7 @@ router.post('/deleteBranch', async (req,res) => {
     var branchName = req.body.branchName;
     var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
 
-    var timestamp = Date.now();
+    var timestamp = "(|)-|-(|)" + Date.now();
 
     var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git');
     var branchPathToRemove = path.resolve(__dirname, '..', 'projects', projName, branchName); 
@@ -32,7 +32,7 @@ router.post('/deleteBranch', async (req,res) => {
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(projName, timestamp, barerepopath, workdirpath, branchPathToRemove, curr_majorHash, branchName, url)
+        let response = await main(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, branchPathToRemove, curr_majorHash, branchName, url)
         res.status(200).send(response);
     }catch(err){
         console.log(err);
@@ -41,10 +41,10 @@ router.post('/deleteBranch', async (req,res) => {
 })
 
 
-async function main(projName, timestamp, barerepopath, workdirpath, branchPathToRemove, curr_majorHash, branchName, url){
+async function main(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, branchPathToRemove, curr_majorHash, branchName, url){
     try {
         await gitDeleteBranch(workdirpath, branchName)
-        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash, null, true, branchName)
+        const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash, null, true, branchName)
         // .catch( async (err) => {
         //     console.log(err);
         //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath

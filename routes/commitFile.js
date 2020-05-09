@@ -27,7 +27,7 @@ router.post('/commitFile', async (req,res) => {
     var filename = req.body.filename; // it should allow having spaces in filenames.
     var buffer = req.body.filebuff;
     
-    var timestamp = Date.now();
+    var timestamp = "(|)-|-(|)" + Date.now();
 
     // Git work:
     var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
@@ -35,8 +35,8 @@ router.post('/commitFile', async (req,res) => {
 
     try {
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(projName, timestamp, barerepopath, buffer,
-                                workdirpath, curr_majorHash, url,
+        let response = await main(projName, username, timestamp, barerepopath, buffer,
+                                workdirpath, curr_majorHash, url, branchToUpdate,
                                 filename, usermsg, authorname, authoremail)
         res.status(200).send(response);
     } catch (err) {
@@ -45,13 +45,13 @@ router.post('/commitFile', async (req,res) => {
     }
 })
 
-async function main(projName, timestamp, barerepopath, buffer,
-                    workdirpath, curr_majorHash, url,
+async function main(projName, username, timestamp, barerepopath, buffer,
+                    workdirpath, curr_majorHash, url, branchToUpdate,
                     filename, usermsg, authorname, authoremail){
     try {
         await writeFile(workdirpath, filename, buffer)
         await autoCommit(workdirpath,filename, usermsg, authorname, authoremail)
-        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash)
+        const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash)
                             // .catch( async (err) => { // If ever you want to perform a cleanUp for removeFromIPFS error, refine this catch block so that it can actually catch that error and remove the current workDir.
                             //     console.log(err);
                             //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath

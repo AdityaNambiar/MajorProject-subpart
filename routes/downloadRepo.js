@@ -26,7 +26,7 @@ router.post('/downloadRepo', async (req,res) => {
     var branchToUpdate =  req.body.branchToUpdate;
     var curr_majorHash = req.body.majorHash;  // latest
     
-    var timestamp = Date.now();
+    var timestamp = "(|)-|-(|)" + Date.now();
     var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username+timestamp);
     
     var projNamepath = path.resolve(__dirname, '..', 'projects', projName+'.zip');

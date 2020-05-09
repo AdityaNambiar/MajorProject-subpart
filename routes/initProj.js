@@ -24,7 +24,7 @@ router.post('/initProj', async (req,res) => {
     var projName = req.body.projName; 
     var username = req.body.username;
     var branchToUpdate = 'master';
-    var timestamp = Date.now();
+    var timestamp = "(|)-|-(|)" + Date.now();
 
     // Git work:
     var authoremail = req.body.authoremail;

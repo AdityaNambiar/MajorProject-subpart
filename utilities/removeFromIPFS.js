@@ -23,11 +23,11 @@ module.exports = function removeFromIPFS(majorHash){
             }, (err, stdout, stderr) => {
                 if (err){
                     console.log(err);
-                    reject(new Error(`(removeFromIPFS) cli err ${err.name} :- ${err.message}`))
+                    //reject(new Error(`(removeFromIPFS) cli err ${err.name} :- ${err.message}`))
                 }
                 if (stderr){
                     console.log(stderr);
-                    reject(new Error(`(removeFromIPFS) cli stderr :- ${err.message}`))
+                    //reject(new Error(`(removeFromIPFS) cli stderr :- ${err.message}`))
                 }
                 console.log(stdout);
                 resolve(true);

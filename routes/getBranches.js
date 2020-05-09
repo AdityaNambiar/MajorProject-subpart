@@ -23,14 +23,14 @@ router.post('/getBranches', async (req, res) => {
 
     var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
 
-    var timestamp = Date.now();
+    var timestamp = "(|)-|-(|)" + Date.now();
 
     var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName + '.git');
     var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username + timestamp);
 
     try {
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(projName, timestamp, barerepopath, workdirpath, curr_majorHash, url)
+        let response = await main(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash, url)
         res.status(200).send(response);
     } catch (err) {
         console.log(err);
@@ -38,10 +38,10 @@ router.post('/getBranches', async (req, res) => {
     }
 });
 
-async function main(projName, timestamp, barerepopath, workdirpath, curr_majorHash, url) {
+async function main(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash, url) {
     try {
         let branchlist = await gitListBranches(workdirpath)
-        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash)
+        const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash)
         // .catch( async (err) => { // If ever you want to perform a cleanUp for removeFromIPFS error, refine this catch block so that it can actually catch that error and remove the current workDir.
         //     console.log(err);
         //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath

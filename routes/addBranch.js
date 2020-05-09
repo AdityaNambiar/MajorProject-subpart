@@ -28,14 +28,14 @@ router.post('/addBranch', async (req,res) => {
     var upstream_branch = 'origin/master';
     var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
 
-    var timestamp = Date.now();
+    var timestamp = "(|)-|-(|)" + Date.now();
 
     var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
     var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username+timestamp);
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(projName, timestamp, barerepopath, workdirpath, curr_majorHash, branchName, branchToUpdate, upstream_branch, url)
+        let response = await main(projName, username, timestamp, barerepopath, workdirpath, curr_majorHash, branchName, branchToUpdate, upstream_branch, url)
         res.status(200).send(response);
     }catch(err){
         console.log(err);
@@ -43,15 +43,15 @@ router.post('/addBranch', async (req,res) => {
     }
 })
 
-async function main(projName, timestamp, barerepopath, workdirpath, curr_majorHash, branchName, branchToUpdate, upstream_branch, url){
+async function main(projName, username, timestamp, barerepopath, workdirpath, curr_majorHash, branchName, branchToUpdate, upstream_branch, url){
         try {
             const newBranchNamePath = await branchNamePathCheck(branchName, projName) // Prepares the branchNamePath for new branch name. Adding this before gitBranchAdd() because it has to throw the "refexisterror" before creating a branch.
             await gitBranchAdd(workdirpath, branchName, branchToUpdate, projName)
             var oldBranchName = branchToUpdate;
-            const newWorkDirPath = await moveWorkDir(timestamp, workdirpath, newBranchNamePath) // Moves workdir to new branch name path to proceed with rest ops.
+            const newWorkDirPath = await moveWorkDir(workdirpath, username, timestamp, newBranchNamePath) // Moves workdir to new branch name path to proceed with rest ops.
             await setUpstream(newWorkDirPath, upstream_branch);
             const files = await gitListFiles(newWorkDirPath);
-            const responseobj = await pushChecker(barerepopath, newWorkDirPath, timestamp, curr_majorHash, oldBranchName)
+            const responseobj = await pushChecker(projName, username, timestamp, branchName, barerepopath, newWorkDirPath, curr_majorHash, oldBranchName)
                                 // .catch( async (err) => {
                                 //     console.log(err);
                                 //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
@@ -94,11 +94,7 @@ function branchNamePathCheck(branchName, projName) {
     })
 }
 
-function moveWorkDir(timestamp, workdirpath, newBranchNamePath) {
-    // .../projects/projName/branchName/username+timestamp
-    var username, timestamp, pathArr;
-    pathArr = workdirpath.split('/');
-    username = pathArr[pathArr.length - 1].split(timestamp)[0]; 
+function moveWorkDir(workdirpath, username, timestamp, newBranchNamePath) {
     let dir_name = username+timestamp;
 
     return new Promise( (resolve, reject) => {

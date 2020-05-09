@@ -13,13 +13,13 @@ const path = require('path');
 
 
 
-module.exports = function getMergeArr(barerepopath, branchNamepath) {
+module.exports = function getMergeArr(projName, branchName, barerepopath, branchNamepath) {
 
     return new Promise ( async (resolve, reject) => {
         try {
             let dir_list = await scan(branchNamepath)
-            let mainMergeObj = await formMergeArr(dir_list, barerepopath, branchNamepath);
-            resolve(mainMergeObj);
+            let mainMergeArr = await formMergeArr(dir_list, projName, branchName, barerepopath, branchNamepath);
+            resolve(mainMergeArr);
         } catch(err) {
             console.log(err);
             reject(new Error(`main err ${err.name} :- ${err.message}`));
@@ -41,22 +41,8 @@ function scan(branchNamepath){
     })
 }
 
-async function formMergeArr(dir_list, barerepopath, branchNamepath){
-    var normalMergeArr = [], specialMergeArr = [], type = '', title = '';
-    var normalobj = { 
-        mergeid:'',
-        filenamelist: [],
-        title: ''
-    }
-    var specialobj = {
-        mergeid: '',
-        instructions: [],
-        title: ''
-    }
-    var mainMergeObj = {
-        normal: normalMergeArr,
-        special: specialMergeArr
-    };
+async function formMergeArr(dir_list, projName, branchName, barerepopath, branchNamepath){
+    var mainMergeArr = [];
     return new Promise( async (resolve, reject) => {
         try {
             for (var i = 0; i < dir_list.length; i++) {
@@ -68,11 +54,22 @@ async function formMergeArr(dir_list, barerepopath, branchNamepath){
                  */
                 var workdirpath = path.join(branchNamepath, dir_list[i]);
                 //console.log("dir_list[i]: \n", dir_list[i]);
-                var projName, branchName, pathArr;
-                pathArr = workdirpath.split('/');
-                projName = pathArr[pathArr.length - 3];
-                branchName = pathArr[pathArr.length - 2];
-
+                var username, timestamp;
+                usnamets = path.basename(workdirpath);
+                username = usnamets.split("(|)-|-(|)")[0];
+                timestamp = usnamets.split("(|)-|-(|)")[1];
+                
+                var type = '', title = '';
+                var obj = { 
+                    mergeid:'',   // username+timestamp
+                    type: '',       // normal or special
+                    filenamelist: [], // list of content conflict affected files
+                    instructions: [], // instructions arr for special type conflicts
+                    title: '', // title of merge conflict request
+                    createdBy: '', // user who is responsible for this conflict
+                    time: '' // the time this user generated this conflict.
+                }
+                
                 // Step 1:
                 if (fs.existsSync(`${workdirpath}/${dir_list[i]}.json`)){
                     try {
@@ -89,41 +86,48 @@ async function formMergeArr(dir_list, barerepopath, branchNamepath){
                         let resp = await gitMAbortAndPull(dir_list[i], barerepopath, workdirpath,  projName, branchName)
                                     .catch( (err) => reject(new Error(`(formMergeArr) gitMAbortAndPull err ${err.name} :- ${err.message}`))); // Returns an array. It could be a filenamelist or instruction array.
                         if (resp[0] === "Please solve this merge conflict via CLI"){
-                            specialobj = {}
-                            specialobj.mergeid = dir_list[i];
-                            specialobj.instructions = resp; // These instructions will be w.r.t to pull conflicts.
-                            specialobj.title = title;
-                            specialMergeArr.push(specialobj);
+                            obj.mergeid = dir_list[i];
+                            obj.instructions = resp; // These instructions will be w.r.t to pull conflicts.
+                            obj.title = title;
+                            obj.type = "special"
+                            obj.createdBy = username;
+                            obj.time = new Date(timestamp * 1000).toLocaleString('en-US', { hour12: false });
+                            mainMergeArr.push(obj);
                         } else {
-                            normalobj = {}
-                            normalobj.mergeid = dir_list[i];
-                            normalobj.filenamelist = resp;
-                            normalobj.title = title;
-                            normalMergeArr.push(normalobj);
+                            obj.mergeid = dir_list[i];
+                            obj.filenamelist = resp;
+                            obj.title = title;
+                            obj.type = "normal"
+                            obj.createdBy = username;
+                            obj.time = new Date(timestamp * 1000).toLocaleString('en-US', { hour12: false });
+                            mainMergeArr.push(obj);
                         }
                     } else if (type === "branch"){ // For folders where conflicts occured due to branch merges.
-                        normalobj = {};
-                        normalobj.mergeid = dir_list[i];
-                        normalobj.filenamelist = await checkUnmergedFiles(workdirpath)
+                        obj.mergeid = dir_list[i];
+                        obj.filenamelist = await checkUnmergedFiles(workdirpath)
                                                 .catch( (err) => reject(new Error(`(formMergeArr) checkUnmergedFiles err ${err.name} :- ${err.message}`)));
-                        normalobj.title = title;
-                        normalMergeArr.push(normalobj);
-                        //console.log(normalMergeArr);
+                        obj.title = title;
+                        obj.type = "normal"
+                        obj.createdBy = username;
+                        obj.time = new Date(timestamp * 1000).toLocaleString('en-US', { hour12: false });
+                        mainMergeArr.push(obj);
                     } else { // For folders where special conflicts occured.
-                        specialobj = {}
-                        specialobj.mergeid = dir_list[i];
-                        specialobj.title = title;
+                        obj.mergeid = dir_list[i];
+                        obj.title = title;
                         // For the branch merge conflict, hard coded titles must be like: 
                         // `Merge conflict raised when merging ${branchName} into ${branchToUpdate}`
                         let branchNameListFromTitle = title.split("merging ")[1].split(" into "); 
                         let srcBranchName = branchNameListFromTitle[0];
                         let destBranchName = branchNameListFromTitle[1];
-                        specialobj.instructions = setInstructionsArrForBranch(projName, srcBranchName, destBranchName); 
-                        specialMergeArr.push(specialobj);
+                        obj.instructions = setInstructionsArrForBranch(projName, srcBranchName, destBranchName); 
+                        obj.type = "normal"
+                        obj.createdBy = username;
+                        obj.time = new Date(timestamp * 1000).toLocaleString('en-US', { hour12: false });
+                        mainMergeArr.push(obj);
                     }
                 }
             }
-            resolve(mainMergeObj);
+            resolve(mainMergeArr);
         } catch(err) {
             console.log(err); 
             reject(new Error(`(getMergeObj) formMergeArr err ${err.name} :- ${err.message}`));
@@ -178,7 +182,7 @@ function gitPull(dir_name, barerepopath, workdirpath, projName, branchName){
                 var resp_arr = [];
                 var arr = [];
                 var elem_rgx = new RegExp(/CONFLICT/);
-                var inbetweenbrackets_rgx = new RegExp(/\((.*)\)/); // defines capturing group for picking up the stuff within parenthesis
+                var inbetweenbrackets_rgx = new RegExp(/\((.*)\):/); // defines capturing group for picking up the stuff within parenthesis
                 if (output.some((e) => elem_rgx.test(e))){ // TRUE - if any output line consist of "CONFLICT" keyword in it. 
                     //output.push("CONFLICT (add/add): Merge conflict in DESC4")
                     //output.push("CONFLICT (modify/delete): Merge conflict in DESC4")

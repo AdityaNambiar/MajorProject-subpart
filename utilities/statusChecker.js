@@ -42,13 +42,13 @@ function scan(branchNamepath, username){
                 filesarr = files.filter(e => !e.search(username)); // Only fetch current user's folders (username+timestamp folders).
                 for (var i = 0; i < filesarr.length; i++) {
                     var str = filesarr[i]; // username+timestamp
-                    var ts = parseInt(str.split(username)[1]); // timestamp of type "number".
+                    var ts = parseInt(str.split("(|)-|-(|)")[1]); // timestamp of type "number".
                     tsarr.push(ts);
                 }    
                 //console.log(tsarr);
                 minOftsarr = tsarr.reduce( (a,b) => (a < b)? a : b);  // Fetch minimum of the timestamp arr.
                 //console.log(minOftsarr)
-                computedpath = path.resolve(branchNamepath, username+minOftsarr);
+                computedpath = path.resolve(branchNamepath, username+"(|)-|-(|)"+minOftsarr);
                 console.log(computedpath);
                 resolve(computedpath);
             })

@@ -26,14 +26,14 @@ router.post('/mergeBranch',  async (req,res) => {
     var branchName = "origin/"+req.body.branchName ; // Source / Incoming branch
     var url = `http://localhost:7005/projects/bare/${projName}.git`
 
-    var timestamp = Date.now();
+    var timestamp = "(|)-|-(|)" + Date.now();
 
     var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName + '.git');  
     var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username+timestamp);
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(projName, barerepopath, workdirpath, username, timestamp, branchName, branchToUpdate, curr_majorHash, url)
+        let response = await main(projName, barerepopath, workdirpath,  username, timestamp, branchName, branchToUpdate, curr_majorHash, url)
         if (response === "Conflict(s) occured while merging branch!") throw new Error(response);
         res.status(200).send(response);
     }catch(err){
@@ -44,13 +44,13 @@ router.post('/mergeBranch',  async (req,res) => {
     }
 }); 
 
-async function main(projName,barerepopath, workdirpath, username, timestamp, branchName, branchToUpdate, curr_majorHash, url) {
+async function main(projName, barerepopath, workdirpath,  username, timestamp, branchName, branchToUpdate, curr_majorHash, url) {
     try {
-            let retval = await mergeBranch(workdirpath, username, timestamp, branchName, branchToUpdate)
+            let retval = await mergeBranch(workdirpath,  username, timestamp, branchName, branchToUpdate)
             if (retval === "Conflict(s) occured while merging branch!")
                 return(retval); // Error message being sent back to main's caller.
             else {
-                const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash); 
+                const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash); 
                 console.log("pushchecker returned this: \n", responseobj);    
                 return({
                     projName: projName, 
@@ -84,7 +84,7 @@ async function mergeBranch(workdirpath, username, timestamp, branchName, branchT
                 var output = stdout.split('\n');
                 var arr = [];
                 var elem_rgx = new RegExp(/CONFLICT/);
-                var inbetweenbrackets_rgx = new RegExp(/\((.*)\)/); // defines capturing group for picking up the stuff within parenthesis
+                var inbetweenbrackets_rgx = new RegExp(/\((.*)\):/); // defines capturing group for picking up the stuff within parenthesis
                 if (output.some((e) => elem_rgx.test(e))){ // TRUE - if any output line consist of "CONFLICT" keyword in it. 
                     //output.push("CONFLICT (add/add): Merge conflict in DESC4")
                     //output.push("CONFLICT (modify/delete): Merge conflict in DESC4")

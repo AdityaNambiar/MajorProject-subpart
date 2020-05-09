@@ -30,14 +30,14 @@ router.post('/diffForCommit', async (req,res) => {
     var ref1 = req.body.ref1;
     var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
 
-    var timestamp = Date.now();
+    var timestamp = "(|)-|-(|)" + Date.now();
 
     var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName + '.git');
     var workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username + timestamp);
 
     try {
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(projName, ref1, timestamp, barerepopath, workdirpath, curr_majorHash, url)
+        let response = await main(projName, username, timestamp, branchToUpdate, ref1, barerepopath, workdirpath, curr_majorHash, url)
         res.status(200).send(response);
     } catch (err) {
         console.log(err);
@@ -45,10 +45,10 @@ router.post('/diffForCommit', async (req,res) => {
     }
 })
 
-async function main(projName, ref1, timestamp, barerepopath, workdirpath, curr_majorHash, url) {
+async function main(projName, username, timestamp, branchToUpdate, ref1, barerepopath, workdirpath, curr_majorHash, url) {
     try {
         let diffOutput = await gitDiffRefs(ref1, workdirpath)
-        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash)
+        const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash)
         console.log("pushchecker returned this: \n", responseobj);
         return ({
             projName: projName,

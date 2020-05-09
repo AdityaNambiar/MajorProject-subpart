@@ -26,7 +26,7 @@ router.post('/fileCommitHistory', async (req, res) => {
     var filename = req.body.filename;
     var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
 
-    var timestamp = Date.now();
+    var timestamp = "(|)-|-(|)" + Date.now();
 
     // Git work:
     var barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName + '.git');
@@ -34,7 +34,7 @@ router.post('/fileCommitHistory', async (req, res) => {
 
     try {
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(projName, timestamp, barerepopath, filename,
+        let response = await main(projName, username, timestamp, branchToUpdate, barerepopath, filename,
                                   workdirpath, curr_majorHash, url)
         res.status(200).send(response);
     } catch (err) {
@@ -43,11 +43,11 @@ router.post('/fileCommitHistory', async (req, res) => {
     }
 });
 
-async function main(projName, timestamp, barerepopath, filename,
+async function main(projName, username, timestamp, branchToUpdate, barerepopath, filename,
                     workdirpath, curr_majorHash, url) {
     try {
         let cObj = await fileCommitHistory(workdirpath, filename)
-        const responseobj = await pushChecker(barerepopath, workdirpath, timestamp, curr_majorHash)
+        const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash)
         console.log("pushchecker returned this: \n", responseobj);
         return ({
             projName: projName,

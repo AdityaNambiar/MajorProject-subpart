@@ -54,8 +54,6 @@ async function main(projName, workdirpath, url) {
 }
 
 function checkUnmergedFiles(workdirpath) {
-    var filename_arr = [];
-    var filebuffobj = {};
     return new Promise((resolve, reject) => {
         try {
             exec(`git diff --name-only --diff-filter=U`, {
@@ -64,17 +62,20 @@ function checkUnmergedFiles(workdirpath) {
             }, async (err, stdout, stderr) => {
                 if (err) { console.log(err); reject(new Error(`(checkUnmergedFiles) unmerged file show cli err ${err.name} :- ${err.message}`)) }
                 if (stderr) { console.log(err); reject(new Error(`(checkUnmergedFiles) unmerged file show cli stderr: ${stderr}`)) }
-                filename_arr = [];
+                var filename_arr = [];
                 filename_arr = stdout.trim().split('\n');
                 console.log('filename arr: \n', filename_arr);
+                var filebuffarr = [];
                 for (var i = 0; i < filename_arr.length; i++) {
+                    let filebuffobj = {}
                     filebuffobj[filename_arr[i]] = await readForBuffer(workdirpath, filename_arr[i])
                         .catch((err) => {
                             console.log(err);
                             reject(new Error(`(checkUnmergedFiles) read-for-buff await err ${err.name} :- ${err.message}`));
                         })
+                    filebuffarr.push(filebuffobj);
                 }
-                resolve(filebuffobj);
+                resolve(filebuffarr);
             })
         } catch (err) {
             console.log(err);

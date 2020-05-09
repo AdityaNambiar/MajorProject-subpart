@@ -72,10 +72,10 @@ async function formMergeArr(dir_list, projName, branchName, barerepopath, branch
                  */
                 var workdirpath = path.join(branchNamepath, dir_list[i]);
                 //console.log("dir_list[i]: \n", dir_list[i]);
-                var username, timestamp;
+                var username, timestamp, usnamets;
                 usnamets = path.basename(workdirpath);
                 username = usnamets.split("(|)-|-(|)")[0];
-                timestamp = usnamets.split("(|)-|-(|)")[1];
+                timestamp = parseInt(usnamets.split("(|)-|-(|)")[1]);
                 
                 var type = '', title = '';
                 var obj = { 
@@ -109,7 +109,7 @@ async function formMergeArr(dir_list, projName, branchName, barerepopath, branch
                             obj.title = title;
                             obj.type = "special"
                             obj.createdBy = username;
-                            obj.time = new Date(timestamp * 1000).toLocaleString('en-US', { hour12: false });
+                            obj.time = new Date(timestamp).toLocaleString('en-US', { hour12: false });
                             mainMergeArr.push(obj);
                         } else {
                             obj.mergeid = dir_list[i];
@@ -117,7 +117,7 @@ async function formMergeArr(dir_list, projName, branchName, barerepopath, branch
                             obj.title = title;
                             obj.type = "normal"
                             obj.createdBy = username;
-                            obj.time = new Date(timestamp * 1000).toLocaleString('en-US', { hour12: false });
+                            obj.time = new Date(timestamp).toLocaleString('en-US', { hour12: false });
                             mainMergeArr.push(obj);
                         }
                     } else if (type === "branch"){ // For folders where conflicts occured due to branch merges.
@@ -127,7 +127,7 @@ async function formMergeArr(dir_list, projName, branchName, barerepopath, branch
                         obj.title = title;
                         obj.type = "normal"
                         obj.createdBy = username;
-                        obj.time = new Date(timestamp * 1000).toLocaleString('en-US', { hour12: false });
+                        obj.time = new Date(timestamp).toLocaleString('en-US', { hour12: false });
                         mainMergeArr.push(obj);
                     } else { // For folders where special conflicts occured.
                         obj.mergeid = dir_list[i];
@@ -140,7 +140,7 @@ async function formMergeArr(dir_list, projName, branchName, barerepopath, branch
                         obj.instructions = setInstructionsArrForBranch(projName, srcBranchName, destBranchName); 
                         obj.type = "special"
                         obj.createdBy = username;
-                        obj.time = new Date(timestamp * 1000).toLocaleString('en-US', { hour12: false });
+                        obj.time = new Date(timestamp).toLocaleString('en-US', { hour12: false });
                         mainMergeArr.push(obj);
                     }
                 }

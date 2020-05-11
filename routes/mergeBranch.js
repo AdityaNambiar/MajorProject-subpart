@@ -88,15 +88,7 @@ async function mergeBranch(workdirpath, username, timestamp, branchName, branchT
                 if (output.some((e) => elem_rgx.test(e))){ // TRUE - if any output line consist of "CONFLICT" keyword in it. 
                     //output.push("CONFLICT (add/add): Merge conflict in DESC4")
                     //output.push("CONFLICT (modify/delete): Merge conflict in DESC4")
-                    fs.writeFile(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
-                        type: 'branch',
-                        title: `Merge conflict raised when merging ${branchName} into ${branchToUpdate}`
-                    }), (err) => {
-                        if (err) {
-                            console.log(err);
-                            reject(new Error(`(mergeBranch) gitMerge-jsonWriteForBranch err ${err.name} :- ${err.message}`))
-                        }
-                    })
+                    
 
                     for (var i = 0; i < output.length; i++){
                         if (output[i].match(inbetweenbrackets_rgx) != null) {
@@ -108,10 +100,20 @@ async function mergeBranch(workdirpath, username, timestamp, branchName, branchT
                         fs.writeFile(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
                             type: 'special',
                             title: `Merge conflict raised when merging ${branchName} into ${branchToUpdate}`
-                        }), (err) => {
+                        }), { flag: 'w' },(err) => {
                             if (err) {
                                 console.log(err);
                                 reject(new Error(`(mergeBranch) gitMerge-jsonWriteForSpecial err ${err.name} :- ${err.message}`))
+                            }
+                        })
+                    } else {
+                        fs.writeFile(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
+                            type: 'branch',
+                            title: `Merge conflict raised when merging ${branchName} into ${branchToUpdate}`
+                        }), { flag: 'w' },(err) => {
+                            if (err) {
+                                console.log(err);
+                                reject(new Error(`(mergeBranch) gitMerge-jsonWriteForBranch err ${err.name} :- ${err.message}`))
                             }
                         })
                     }

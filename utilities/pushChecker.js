@@ -69,15 +69,6 @@ function gitPull(mainResponse, projName, username, timestamp, branchName, barere
                 
                     //output.push("CONFLICT (add/add): Merge conflict in DESC4")
                     //output.push("CONFLICT (modify/delete): Merge conflict in DESC4")
-                    try {
-                        fs.writeFileSync(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
-                            type: 'pull',
-                            title: `Merge conflict raised pulling ${branchName} branch`
-                        }))
-                    } catch (err) {
-                        console.log(err);
-                        reject(new Error(`(pushChecker) gitPull-jsonWriteForPull err ${err.name} :- ${err.message}`))
-                    }
 
                     for (var i = 0; i < output.length; i++) {
                         if (output[i].match(inbetweenbrackets_rgx) != null) {
@@ -86,15 +77,21 @@ function gitPull(mainResponse, projName, username, timestamp, branchName, barere
                         }
                     }
                     if (!arr.every((e) => e === "content")) { // If the array contains anything else than "content" type conflicts. Throw the error with instructions.
-                        try {
-                            fs.writeFileSync(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
-                                type: 'special',
-                                title: `Merge conflict raised pulling ${branchName} branch`
-                            }))
-                        } catch (err) {
+                        fs.writeFile(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
+                            type: 'special',
+                            title: `Merge conflict raised pulling ${branchName} branch`
+                        }), { flag: 'w' }, (err) => {
                             console.log(err);
-                            reject(new Error(`(pushChecker) gitPull-jsonWriteForSpecial err ${err.name} :- ${err.message}`))
-                        }
+                            reject(new Error(`(pushChecker) gitPull-jsonWriteForSpecial err ${err.name} :- ${err.message}`))    
+                        })
+                    } else {
+                        fs.writeFile(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
+                            type: 'pull',
+                            title: `Merge conflict raised pulling ${branchName} branch`
+                        }), { flag: 'w' }, (err) => {
+                            console.log(err);
+                            reject(new Error(`(pushChecker) gitPull-jsonWriteForPull err ${err.name} :- ${err.message}`))    
+                        })
                     }
                     reject(new Error("conflict"));
                 } else { // if merge was successful in `git pull`

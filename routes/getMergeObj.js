@@ -71,7 +71,7 @@ async function formMergeArr(dir_list, projName, branchName, barerepopath, branch
                  * 4. Form the mergeArr
                  */
                 var workdirpath = path.join(branchNamepath, dir_list[i]);
-                //console.log("dir_list[i]: \n", dir_list[i]);
+                console.log("dir_list[i]: \n", dir_list[i]);
                 var username, timestamp, usnamets;
                 usnamets = path.basename(workdirpath);
                 username = usnamets.split("(|)-|-(|)")[0];
@@ -204,15 +204,6 @@ function gitPull(dir_name, barerepopath, workdirpath, projName, branchName){
                 if (output.some((e) => elem_rgx.test(e))){ // TRUE - if any output line consist of "CONFLICT" keyword in it. 
                     //output.push("CONFLICT (add/add): Merge conflict in DESC4")
                     //output.push("CONFLICT (modify/delete): Merge conflict in DESC4")
-                    try {
-                        fs.writeFileSync(path.join(workdirpath, `${dir_name}.json`),{
-                            type: 'pull',
-                            title: `Merge conflict raised pulling ${branchName} branch`
-                        })
-                    } catch(err) {
-                        console.log(err);
-                        reject(new Error(`(getMergeObj) gitPull-jsonWriteForPull err ${err.name} :- ${err.message}`))
-                    }
                     for (var i = 0; i < output.length; i++){
                         if (output[i].match(inbetweenbrackets_rgx) != null) {
                             // form an array of types of conflict occured.. like ['content', 'add/add', 'modify/delete', 'content' etc..]
@@ -220,30 +211,39 @@ function gitPull(dir_name, barerepopath, workdirpath, projName, branchName){
                         }
                     }
                     if (!arr.every((e) => e == "content")){ // If the array contains anything else than "content" type conflicts. Throw the error with instructions.
-                        try{
-                            fs.writeFileSync(path.join(workdirpath, `${dir_name}.json`), {
-                                type: 'special',
-                                title: `Merge conflict raised pulling ${branchName} branch`
-                            })
-                        } catch(err) {
-                            console.log(err);
-                            reject(new Error(`(getMergeObj) gitPull-jsonWriteForSpecial err ${err.name} :- ${err.message}`))
-                        }
-                        resp_arr = [];
-                        resp_arr.push("Please solve this merge conflict via CLI")
-                        resp_arr.push(`1. git clone http://localhost:7005/projects/bare/${projName}.git \n2. git checkout ${branchName} \n3. divcs pull origin ${branchName} \n- Fix your merge conflicts locally and commit them, then follow: \n1. divcs push origin master \n NOTE: Unless you will be pushing onto the remote repository, \nYour local commit history would not be present when you \n operate on the web interface.`)
-                        resolve(resp_arr);
-                    } else {
-                        exec(`git diff --name-only --diff-filter=U`, {
-                            cwd: workdirpath,
-                            shell: true
-                        }, async (err, stdout, stderr) => {
-                            if (err) { console.log(err); reject(new Error(`(getMergeObj) unmerged file show cli err ${err.name}: ${err.message}`)); }
-                            if (stderr) { console.log(stderr); reject(new Error(`(getMergeObj) unmerged file show cli stderr: ${stderr}`)) }
+                        fs.writeFile(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
+                            type: 'special',
+                            title: `Merge conflict raised pulling ${branchName} branch`
+                        }), { flag: 'w' },(err) => {
+                            if (err){
+                                console.log(err);
+                                reject(new Error(`(getMergeObj) gitPull-jsonWriteForSpecial err ${err.name} :- ${err.message}`))    
+                            }
                             resp_arr = [];
-                            resp_arr = stdout.trim().split('\n');
-                            //console.log('(getMergeObj) filename arr: \n', resp_arr);
+                            resp_arr.push("Please solve this merge conflict via CLI")
+                            resp_arr.push(`1. git clone http://localhost:7005/projects/bare/${projName}.git \n2. git checkout ${branchName} \n3. divcs pull origin ${branchName} \n- Fix your merge conflicts locally and commit them, then follow: \n1. divcs push origin master \n NOTE: Unless you will be pushing onto the remote repository, \nYour local commit history would not be present when you \n operate on the web interface.`)
                             resolve(resp_arr);
+                        })
+                    } else {
+                        fs.writeFile(path.join(workdirpath, `${dir_name}.json`), JSON.stringify({
+                            type: 'pull',
+                            title: `Merge conflict raised pulling ${branchName} branch`
+                        }),{ flag: 'w' },(err) => {
+                            if (err) {
+                                console.log(err);
+                                reject(new Error(`(getMergeObj) gitPull-jsonWriteForPull err ${err.name} :- ${err.message}`))    
+                            }
+                            exec(`git diff --name-only --diff-filter=U`, {
+                                cwd: workdirpath,
+                                shell: true
+                            }, (err, stdout, stderr) => {
+                                if (err) { console.log(err); reject(new Error(`(getMergeObj) unmerged file show cli err ${err.name}: ${err.message}`)); }
+                                if (stderr) { console.log(stderr); reject(new Error(`(getMergeObj) unmerged file show cli stderr: ${stderr}`)) }
+                                resp_arr = [];
+                                resp_arr = stdout.trim().split('\n');
+                                //console.log('(getMergeObj) filename arr: \n', resp_arr);
+                                resolve(resp_arr);
+                            })
                         })
                     }
                 }

@@ -78,12 +78,6 @@ async function barePathCheck(barepath){
 function deleteProj(projNamepath, zipFilePath, barerepopath){
     return new Promise( (resolve, reject) => {
         try {
-            fs.unlink(zipFilePath, (err) => {
-                if (err) {
-                    console.log(err);
-                    reject(new Error(`(deleteProj) delete-zip err ${err.name} :- ${err.message}`));
-                }
-            })
             // Delete projects/projName folder:
             fs.remove(projNamepath, (err) => {
                 if (err) {

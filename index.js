@@ -89,7 +89,7 @@ app.post('/downloadDocument', downloadDocument);
 
 repos.on('push', async (push) => {
     push.accept();
-    let majorHash = '';
+    /*let majorHash = '';
     let projName = push.repo.split('bare/')[1].split('.git')[0];
     let barerepopath = path.resolve(__dirname, 'projects', 'bare', projName+'.git'); 
     await addToIPFS(barerepopath)
@@ -101,7 +101,7 @@ repos.on('push', async (push) => {
     await axios.post(url, {
         projid: projName,
         hash: majorHash
-    })
+    })*/
     console.log(`${projName} \n ${majorHash}`);
     //console.log(`push ${push.repo}/${push.commit} (${push.branch})`);
 });
@@ -112,8 +112,9 @@ repos.on('fetch', async (fetch) => {
     fetch.accept();
 });
 
-repos.on('*', (clone) => {
+repos.on('clone', (clone) => {
     console.log('clone object: ',clone);
+    clone.accept();
 })
 
 repos.listen(port2, () => {

@@ -40,6 +40,12 @@ router.post('/downloadRepo', async (req,res) => {
                 console.log(err);
                 res.status(400).send(`(downloadRepo) res-download err ${err.name} :- ${err.message}`);
             } 
+            fs.unlink(path.resolve(__dirname, '..', 'projects', `${projName}.zip`), (err) => {
+                if (err) {
+                    console.log(err);
+                    throw new Error("(downloadRepo) Can't remove zip file: "+err);
+                }
+            })
         })
     }catch(err){
         console.log(err);

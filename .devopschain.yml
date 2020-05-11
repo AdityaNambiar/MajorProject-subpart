@@ -1,0 +1,21 @@
+branch: 'master'
+stages:
+    stage1:
+        baseimage: 'baseimg1'
+        workdir: '' # Optional
+        name: 'test'
+        expose: 3000
+        commands:
+            - npm test
+    stage2:
+        baseimage: 'baseimg2'
+        workdir: '' # Optional
+        name: 'build'
+        commands:
+            - npm run build
+    stage3:
+        baseimage: 'baseimg3'
+        workdir: '' # Optional
+        name: 'deploy'
+        commands: 
+            - npm run server.js

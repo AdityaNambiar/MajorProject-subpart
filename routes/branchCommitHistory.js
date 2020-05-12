@@ -7,6 +7,7 @@
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
 const rmWorkdir = require('../utilities/rmWorkdir');
+const cleanUp = require('../utilities/cleanUp');
 
 
 // Terminal execution import:
@@ -55,6 +56,7 @@ async function main(projName, username, timestamp, barerepopath, branchToUpdate,
         });
     } catch (err) {
         console.log(err);
+        await cleanUp(workdirpath, err.message);
         throw new Error(`(bCH) main err ${err.name} :- ${err.message}`);
     }
 }

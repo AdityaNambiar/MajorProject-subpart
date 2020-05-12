@@ -7,6 +7,7 @@
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
 const rmWorkdir = require('../utilities/rmWorkdir');
+const cleanUp = require('../utilities/cleanUp');
 
 // Terminal execution import
 const { exec } = require('child_process');
@@ -53,6 +54,7 @@ async function main(projName, username, timestamp, barerepopath, workdirpath, br
         });
     } catch(err) {
         console.log(err);
+        await cleanUp(workdirpath, err.message);
         throw new Error(`(checkoutBranch) main err ${err.name} :- ${err.message}`);
     }
 }

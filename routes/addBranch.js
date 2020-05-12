@@ -7,7 +7,8 @@
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
 const pushChecker = require('../utilities/pushChecker');
-const rmWorkdir = require('../utilities/rmWorkdir')
+const rmWorkdir = require('../utilities/rmWorkdir');
+const addToIPFS = require('../utilities/addToIPFS');
 
 const { exec } = require('child_process');
 
@@ -39,24 +40,21 @@ router.post('/addBranch', async (req,res) => {
         res.status(200).send(response);
     }catch(err){
         console.log(err);
+        await cleanUp(workdirpath, err.message);
         res.status(400).send(`addBranch err ${err.name} :- ${err.message}`);
     }
 })
 
 async function main(projName, username, timestamp, barerepopath, workdirpath, curr_majorHash, branchName, branchToUpdate, upstream_branch, url){
+        var newBranchNamePath = "";
         try {
-            const newBranchNamePath = await branchNamePathCheck(branchName, projName) // Prepares the branchNamePath for new branch name. Adding this before gitBranchAdd() because it has to throw the "refexisterror" before creating a branch.
             await gitBranchAdd(workdirpath, branchName, branchToUpdate, projName)
+            newBranchNamePath = await branchNamePathCheck(branchName, projName) // Prepares the branchNamePath for new branch name. Adding this before gitBranchAdd() because it has to throw the "refexisterror" before creating a branch.
             var oldBranchName = branchToUpdate;
             const newWorkDirPath = await moveWorkDir(workdirpath, username, timestamp, newBranchNamePath) // Moves workdir to new branch name path to proceed with rest ops.
             await setUpstream(newWorkDirPath, upstream_branch);
             const files = await gitListFiles(newWorkDirPath);
             const responseobj = await pushChecker(projName, username, timestamp, branchName, barerepopath, newWorkDirPath, curr_majorHash, oldBranchName)
-                                // .catch( async (err) => {
-                                //     console.log(err);
-                                //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
-                                //     reject(new Error(`(pushChecker) err ${err.name} :- ${err.message}`)); 
-                                // }); 
             console.log("pushchecker returned this: \n", responseobj);
             return ({
                 projName: projName, 
@@ -68,9 +66,78 @@ async function main(projName, username, timestamp, barerepopath, workdirpath, cu
             });
         } catch(err) {
             console.log(err);
-            //await rmWorkdir(workdirpath);
+            let checkExistBranch = await gitListBranches(workdirpath, branchName)
+            if (/RefExistsError/.test(err) && checkExistBranch){
+                await deleteBranchAtBare(barerepopath, workdirpath, branchName);
+                await cleanNewBranchNamePath(newBranchNamePath);    
+            }
+            await addToIPFS(barerepopath)
+            await cleanUp(workdirpath, err.message);
             throw new Error(`(addBranch) main err ${err.name} :- ${err.message}`);
         }
+}
+
+async function gitListBranches(workdirpath, branchName) {
+    // I have to bring in remote branch names as well as local branch names (removing "HEAD" from this because isomorphic returns this for local)
+    try {
+        var branchlist = [];
+        let remoteBranches = await git.listBranches({
+            fs: fs,
+            dir: workdirpath,
+            remote: 'origin'
+        })
+        let localBranches = await git.listBranches({
+            fs:fs,
+            dir: workdirpath
+        })
+        branchlist = localBranches.concat(remoteBranches);
+        branchlist = branchlist.filter(branchname => branchname != "HEAD")
+        branchlist = branchlist.filter((v, i, a) => a.indexOf(v) === i); // Removing duplicates - credits - https://stackoverflow.com/a/14438954
+        if (branchlist.includes(branchName))
+            return true
+        else 
+            return false 
+    } catch (err) {
+        console.log(err);
+        throw new Error(`(gitListBranches) git-list-branch err ${err.name} :- ${err.message}`);
+    }
+}
+function cleanNewBranchNamePath(newBranchNamePath) {
+    return new Promise((resolve, reject) => {
+        try {
+            fs.rmdir(newBranchNamePath, {
+                recursive: true
+            }, (err) => {
+                if (err) { 
+                    console.log(err);
+                    reject(new Error(`branchNamePathCheck err ${err.name} :- ${err.message}`));
+                }
+                resolve(newBranchNamePath);
+            })
+        } catch(err) {
+
+        }
+    })
+}
+function deleteBranchAtBare(barerepopath, workdirpath, branchName) {
+    console.log(`Going to delete this branch at remote: ${branchName}`);
+    return new Promise((resolve, reject) => {
+        try {
+            exec(`git push --delete '${barerepopath}' '${branchName}' `, {
+                cwd: workdirpath,
+                shell: true
+            }, (err, stdout, stderr) => {
+                if (err) { console.log(err); reject(new Error(`(deleteBranchAtBare) git push cli err ${err.name} :- ${err.message}`)); } 
+                if (stderr) { console.log(`(deleteBranchAtBare) git push cli stderr: ${stderr}`); } 
+                console.log('git push cli stdout: ',stdout)
+                resolve(true);
+            })
+        } catch (err) {
+            console.log(err);
+            reject(new Error(`(deleteBranchAtBare) git-push-delete err ${err.name} :- ${err.message}`))
+        }
+        
+    })
 }
 
 

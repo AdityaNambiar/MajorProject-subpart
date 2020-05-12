@@ -49,7 +49,7 @@ router.post('/addBranch', async (req,res) => {
 async function main(projName, username, timestamp, barerepopath, workdirpath, curr_majorHash, branchName, branchToUpdate, upstream_branch, url){
         var newBranchNamePath = "";
         try {
-            await gitBranchAdd(workdirpath, branchName, branchToUpdate, projName)
+            await gitBranchAdd(workdirpath, branchName)
             newBranchNamePath = await branchNamePathCheck(branchName, projName) // Prepares the branchNamePath for new branch name. Adding this before gitBranchAdd() because it has to throw the "refexisterror" before creating a branch.
             var oldBranchName = branchToUpdate;
             const newWorkDirPath = await moveWorkDir(workdirpath, username, timestamp, newBranchNamePath) // Moves workdir to new branch name path to proceed with rest ops.

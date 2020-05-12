@@ -10,9 +10,8 @@ const app = express();
 app.use(bodyParser.json())
 app.use(cors())
 
-app.use('/cloneRepo', require('./routes/cloneRepo'));
-app.use('/integrateAndDeploy', require('./routes/integrateAndDeploy'));
-
+app.post('/cloneRepo', require('./routes/cloneRepo'));
+app.post('/integrateAndDeploy', require('./routes/integrateAndDeploy'));
 
 
 app.listen(5000, () => {

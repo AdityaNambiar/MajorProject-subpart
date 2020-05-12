@@ -1,6 +1,8 @@
 # DevOpsChain 
 ## Integration procedure
-- System will pick up the Jenkinsfile and then start a job.
+1. System will first create a XML schema for the user's job (Sample schema is available under Downloads/pipeline.xml)
+2. This will be passed to jenkins.create_job(jobName, xmlString ... );
+    - Jenkins will pick up the specified Jenkinsfile and then start a job.
 ## Deployment procedure.
 - After integration is successfully over, system will pick up the Dockerfile of given name and then follow the below steps:  
     1. Build the image (project's image):

@@ -79,7 +79,7 @@ async function main(projName, username, timestamp, barerepopath, buffer,
     }
 }
             
-function revertCommit(workdirpath) {
+function revertCommit(workdirpath, commithash) {
     return new Promise( (resolve, reject) => {
         try{ 
             exec(`git reset --hard ${commithash}`,{

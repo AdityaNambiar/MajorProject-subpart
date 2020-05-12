@@ -9,11 +9,9 @@
 //MISC:
 const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
-const removeFromIPFS = require('../utilities/removeFromIPFS');
-const statusChecker = require('../utilities/statusChecker');
 const pushChecker = require('../utilities/pushChecker');
 const pushToBare = require('../utilities/pushToBare');
-const rmWorkdir = require('../utilities/rmWorkdir');
+const cleanUp = require('../utilities/cleanUp');
 
 const path = require('path');
 const fs = require('fs');
@@ -58,9 +56,10 @@ router.post('/deleteFile', async (req, res) => {
 async function main(projName, username, timestamp, branchToUpdate, barerepopath, 
                     workdirpath, curr_majorHash, url, filepath,
                     filename, usermsg, authorname, authoremail) {
+    var sha = '';
     try {
         await deleteFile(filepath)
-        await autoCommit(workdirpath, filename, usermsg, authorname, authoremail)
+        sha = await autoCommit(workdirpath, filename, usermsg, authorname, authoremail)
         const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash)
         // .catch( async (err) => { // If ever you want to perform a cleanUp for removeFromIPFS error, refine this catch block so that it can actually catch that error and remove the current workDir.
         //     console.log(err);
@@ -77,10 +76,36 @@ async function main(projName, username, timestamp, branchToUpdate, barerepopath,
         });
     } catch (err) {
         console.log(err);
+        await revertCommit(workdirpath, sha);
+        await pushToBare(barerepopath, workdirpath, branchName);
+        await addToIPFS(barerepopath);
+        await cleanUp(workdirpath, err.message);
         throw new Error(`(deleteFile) main err ${err.name} :- ${err.message}`);
     }
 }
-
+function revertCommit(workdirpath, commithash) {
+    return new Promise( (resolve, reject) => {
+        try{ 
+            exec(`git reset --hard ${commithash}`,{
+                cwd: workdirpath,
+                shell:true
+            }, (err, stdout, stderr) =>{
+                if (err) {
+                    console.log(err);
+                    reject(new Error(`(revertCommit) cli err ${err.name} :- ${err.message}`))
+                }
+                if (stderr) {
+                    console.log(stderr);
+                    reject(new Error(`(revertCommit) stderr ${stderr}`))
+                }
+                resolve(true);
+            })
+        } catch (err) {
+            console.log(err);
+            reject(new Error(`(revertCommit) err ${err.name} :- ${err.message}`))
+        }
+    })
+}
 function deleteFile(filepath) {
     console.log(filepath);
     return new Promise((resolve, reject) => {

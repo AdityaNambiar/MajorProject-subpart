@@ -44,14 +44,8 @@ router.post('/diffFiles', async (req, res) => {
 async function main(projName, username, timestamp, branchToUpdate, ref1, ref2, barerepopath, workdirpath, curr_majorHash, url) {
     try {
         let diffOutput = await gitDiffRefs(ref1, ref2, workdirpath)
-        const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash)
-
-        console.log("pushchecker returned this: \n", responseobj);
         return ({
             projName: projName,
-            majorHash: responseobj.ipfsHash,
-            statusLine: responseobj.statusLine,
-            mergeObj: responseobj.mergeObj,
             diffOutput: Buffer.from(diffOutput),
             url: url
         });

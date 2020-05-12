@@ -48,13 +48,8 @@ async function main(projName, username, timestamp, branchToUpdate, barerepopath,
     workdirpath, curr_majorHash, url) {
     try {
         let buffer = await readForBuffer(filepath)
-        const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash);
-        console.log("pushchecker returned this: \n", responseobj);
         return ({
             projName: projName,
-            majorHash: responseobj.ipfsHash,
-            statusLine: responseobj.statusLine,
-            mergeObj: responseobj.mergeObj,
             buffer: buffer,
             url: url
         });

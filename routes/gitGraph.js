@@ -50,13 +50,8 @@ async function main(projName, username, timestamp, branchToUpdate, barerepopath,
                     workdirpath, curr_majorHash, url) {
     try {
         let graphOutput = await gitGraphFetch(workdirpath)
-        const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash)
-        console.log("pushchecker returned this: \n", responseobj);
         return ({
             projName: projName,
-            majorHash: responseobj.ipfsHash,
-            statusLine: responseobj.statusLine,
-            mergeObj: responseobj.mergeObj,
             graphOutput: graphOutput,
             url: url
         });

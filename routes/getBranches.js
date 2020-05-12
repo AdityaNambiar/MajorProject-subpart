@@ -41,18 +41,8 @@ router.post('/getBranches', async (req, res) => {
 async function main(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash, url) {
     try {
         let branchlist = await gitListBranches(workdirpath)
-        const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash)
-        // .catch( async (err) => { // If ever you want to perform a cleanUp for removeFromIPFS error, refine this catch block so that it can actually catch that error and remove the current workDir.
-        //     console.log(err);
-        //     await rmWorkdir(workdirpath); // Remove the workdir folder from old branchNamePath
-        //     reject(new Error(`(pushChecker) err ${err.name} :- ${err.message}`)); 
-        // });
-        console.log("pushchecker returned this: \n", responseobj);
         return ({
             projName: projName,
-            majorHash: responseobj.ipfsHash,
-            statusLine: responseobj.statusLine,
-            mergeObj: responseobj.mergeObj,
             branchlist: branchlist,
             url: url
         });

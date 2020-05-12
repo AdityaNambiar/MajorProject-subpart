@@ -25,6 +25,7 @@ router.post('/getFiles', async (req,res) => {
     let username = req.body.username;
     let curr_majorHash = req.body.majorHash;  // latest
     let branchToUpdate = req.body.branchToUpdate;
+    let foldername = req.body.foldername || undefined;
     let upstream_branch = 'origin/master';
     let url = `'http://localhost:7005/projects/bare/${projName}.git'`;
 
@@ -35,7 +36,7 @@ router.post('/getFiles', async (req,res) => {
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(projName, username, timestamp, barerepopath, workdirpath, branchToUpdate, curr_majorHash, upstream_branch, url)
+        let response = await main(projName, foldername, username, timestamp, barerepopath, workdirpath, branchToUpdate, curr_majorHash, upstream_branch, url)
         res.status(200).send(response);
     }catch(err){
         console.log(err);
@@ -43,13 +44,13 @@ router.post('/getFiles', async (req,res) => {
     }
 })
 
-async function main(projName, username, timestamp, barerepopath, workdirpath, branchToUpdate, curr_majorHash, upstream_branch, url){
+async function main(projName, foldername, username, timestamp, barerepopath, workdirpath, branchToUpdate, curr_majorHash, upstream_branch, url){
     try {
         await gitCheckout(workdirpath, branchToUpdate)
         await setUpstream(workdirpath, upstream_branch)
-        const files = await gitListFiles(workdirpath)
+        const files = await gitListFiles(workdirpath, foldername)
         return ({
-            projName: projName, 
+            projName: projName,
             url: url,
             files: files
         });
@@ -94,8 +95,13 @@ function setUpstream(workdirpath, upstream_branch) {
         } 
     })
 }
-function gitListFiles(workdirpath) {
-    let command = `TYPES="$(git ls-tree HEAD . | awk '{ print $2 }')"; set -- $TYPES; FILES="$(git ls-tree --name-only HEAD .)"; IFS="$(printf "\n\b")"; for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x28%x7c%x29%x2D%x7c%x2D%x28%x7c%x29%cr" $f)";  printf "%s(|)-|-(|)%s(|)-|-(|)%s\n" "$f" "$str" "$1"; shift; done`;
+function gitListFiles(workdirpath, foldername) {
+    let command = ``;
+    if (!foldername){ // If foldername remains 'undefined'
+        command = `TYPES="$(git ls-tree HEAD . | awk '{ print $2 }')"; set -- $TYPES; FILES="$(git ls-tree --name-only HEAD .)"; IFS="$(printf "\n\b")"; for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x28%x7c%x29%x2D%x7c%x2D%x28%x7c%x29%cr" $f)";  printf "%s(|)-|-(|)%s(|)-|-(|)%s\n" "$f" "$str" "$1"; shift; done`;
+    } else {
+        command = `TYPES="$(git ls-tree HEAD ${foldername} | awk '{ print $2 }')"; set -- $TYPES; FILES="$(git ls-tree --name-only HEAD ${foldername})"; IFS="$(printf "\n\b")"; for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x28%x7c%x29%x2D%x7c%x2D%x28%x7c%x29%cr" $f)";  printf "%s(|)-|-(|)%s(|)-|-(|)%s\n" "$f" "$str" "$1"; shift; done`;
+    }
     return new Promise (async (resolve, reject) => {
         try {
             exec(command, {
@@ -112,7 +118,14 @@ function gitListFiles(workdirpath) {
                  */
                 let files = [];
                 stdout.trim().split('\n').forEach( output_arr => {
-                    let file = output_arr.split('(|)-|-(|)')[0]; 
+                    let file = null;
+                    if (foldername){ // if foldername's value is not undefined 
+                        let rgx = new RegExp(`${foldername}\/(.*)`); // for values like "ipfsRoutes/createDoc.js" -> Fetch "createDoc.js"
+                        let str = output_arr.split('(|)-|-(|)')[0];
+                        file = str.match(rgx)[1];
+                    } else {
+                        file = output_arr.split('(|)-|-(|)')[0]; 
+                    }
                     let commitmsg = output_arr.split('(|)-|-(|)')[1];
                     let time = output_arr.split('(|)-|-(|)')[2];
                     let type = output_arr.split('(|)-|-(|)')[3];

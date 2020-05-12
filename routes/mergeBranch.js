@@ -5,7 +5,7 @@
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
 const pushChecker = require('../utilities/pushChecker');
-
+const cleanUp = require('../utilities/cleanUp');
 
 // Terminal execution import
 const { exec } = require('child_process');
@@ -62,6 +62,7 @@ async function main(projName, barerepopath, workdirpath,  username, timestamp, b
             }
         } catch (err) {
             console.log(err);
+            await cleanUp(workdirpath, err.message);
             throw new Error(`(mergeBranch) main err ${err.name} :- ${err.message}`);
         }
 }

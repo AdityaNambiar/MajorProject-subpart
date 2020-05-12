@@ -3,7 +3,7 @@
  */
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
-
+const cleanUp = require('../utilities/cleanUp');
 const { exec } = require('child_process');
 
 // isomorphic-git related imports and setup

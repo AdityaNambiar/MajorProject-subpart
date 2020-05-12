@@ -161,7 +161,7 @@ function branchNamePathCheck(branchName, projName) {
                 resolve(newBranchNamePath);
             })
         } else {
-            resolve(true);
+            resolve(newBranchNamePath);
         }
     })
 }

@@ -7,6 +7,7 @@
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
 const rmWorkdir = require('../utilities/rmWorkdir');
+const cleanUp = require('../utilities/cleanUp');
 
 const { exec } = require('child_process');
 // isomorphic-git related imports and setup
@@ -52,6 +53,7 @@ async function main(projName, username, timestamp, branchToUpdate, ref1, ref2, b
         });
     } catch (err) {
         console.log(err);
+        await cleanUp(workdirpath, branchName);
         throw new Error(`(diffFiles) main err ${err.name} :- ${err.message}`);
     }
 }

@@ -6,6 +6,7 @@
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
 const rmWorkdir = require('../utilities/rmWorkdir');
+const cleanUp = require('../utilities/cleanUp');
 
 // isomorphic-git related imports and setup
 const fs = require('fs');
@@ -49,6 +50,7 @@ async function main(projName, username, timestamp, branchToUpdate, barerepopath,
         });
     } catch (err) {
         console.log(err);
+        await cleanUp(workdirpath, branchName);
         throw new Error(`(getBranches) main err ${err.name} :- ${err.message}`);
     }
 }

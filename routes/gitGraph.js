@@ -5,6 +5,7 @@
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
 const rmWorkdir = require('../utilities/rmWorkdir');
+const cleanUp = require('../utilities/cleanUp');
 
 // Terminal execution import
 const { exec } = require('child_process');
@@ -53,6 +54,7 @@ async function main(projName, username, timestamp, branchToUpdate, barerepopath,
         });
     } catch (err) {
         console.log(err);
+        await cleanUp(workdirpath, branchName);
         throw new Error(`(gitGraph) main err ${err.name} :- ${err.message}`);
     }
 }

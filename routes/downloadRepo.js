@@ -6,6 +6,7 @@
 
 const preRouteChecks = require('../utilities/preRouteChecks');
 const rmWorkdir = require('../utilities/rmWorkdir');
+const cleanUp = require('../utilities/cleanUp');
 
 const { zip } = require('zip-a-folder');
 // isomorphic-git related imports and setup
@@ -49,6 +50,7 @@ router.post('/downloadRepo', async (req,res) => {
         })
     }catch(err){
         console.log(err);
+        await cleanUp(workdirpath, branchName);
         res.status(400).send(`(downloadRepo) err ${err.name} :- ${err.message}`);
     }
 })

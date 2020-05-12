@@ -9,7 +9,7 @@
 //MISC:
 const preRouteChecks = require('../utilities/preRouteChecks');
 const rmWorkdir = require('../utilities/rmWorkdir');
-
+const cleanUp = require('../utilities/cleanUp');
 const path = require('path');
 const fs = require('fs');
 
@@ -34,7 +34,7 @@ router.post('/readFile', async (req, res) => {
     try {
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
         let response = await main(projName, username, timestamp, branchToUpdate, barerepopath, filepath,
-                                    workdirpath, curr_majorHash, url)
+                                    workdirpath, url)
         res.status(200).send(response);
     } catch (err) {
         console.log(err);
@@ -44,7 +44,7 @@ router.post('/readFile', async (req, res) => {
 
 
 async function main(projName, username, timestamp, branchToUpdate, barerepopath, filepath,
-    workdirpath, curr_majorHash, url) {
+    workdirpath, url) {
     try {
         let buffer = await readForBuffer(filepath)
         await rmWorkdir(workdirpath);
@@ -55,6 +55,7 @@ async function main(projName, username, timestamp, branchToUpdate, barerepopath,
         });
     } catch (err) {
         console.log(err);
+        await cleanUp(workdirpath, err.message);
         throw new Error(`(readFile) main err ${err.name} :- ${err.message}`);
     }
 }

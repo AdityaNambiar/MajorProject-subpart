@@ -67,7 +67,7 @@ async function main(projName, username, timestamp, branchToUpdate, barerepopath,
         console.log(err);
         let checkExistBranch = await gitListBranches(workdirpath, branchName)
         if (!checkExistBranch){
-            await gitBranchAdd(barerepopath, workdirpath, branchName);
+            await gitBranchAdd(workdirpath, branchName);
             await pushToBare(barerepopath, workdirpath, branchName);    
         }
         await addToIPFS(barerepopath);

@@ -9,6 +9,7 @@ const preRouteChecks = require('../utilities/preRouteChecks');
 const pushChecker = require('../utilities/pushChecker');
 const rmWorkdir = require('../utilities/rmWorkdir');
 const addToIPFS = require('../utilities/addToIPFS');
+const cleanUp = require('../utilities/cleanUp');
 
 const { exec } = require('child_process');
 
@@ -67,7 +68,7 @@ async function main(projName, username, timestamp, barerepopath, workdirpath, cu
         } catch(err) {
             console.log(err);
             let checkExistBranch = await gitListBranches(workdirpath, branchName)
-            if (/RefExistsError/.test(err) && checkExistBranch){
+            if (!/RefExistsError/.test(err) && checkExistBranch){
                 await deleteBranchAtBare(barerepopath, workdirpath, branchName);
                 await cleanNewBranchNamePath(newBranchNamePath);    
             }
@@ -110,12 +111,15 @@ function cleanNewBranchNamePath(newBranchNamePath) {
             }, (err) => {
                 if (err) { 
                     console.log(err);
-                    reject(new Error(`branchNamePathCheck err ${err.name} :- ${err.message}`));
+                    reject(new Error(`cleanNewbranchNamePathCheck  fs rmdir err ${err.name} :- ${err.message}`));
                 }
                 resolve(newBranchNamePath);
             })
         } catch(err) {
-
+            if (err) { 
+                console.log(err);
+                reject(new Error(`cleanNewbranchNamePathCheck err ${err.name} :- ${err.message}`));
+            }
         }
     })
 }

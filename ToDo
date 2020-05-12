@@ -101,8 +101,19 @@ getFiles shell script:
 credits: https://stackoverflow.com/questions/17359370/git-show-last-commit-date-and-message-for-each-file-in-directory-like-github/17361406#17361406
 
 modified for my use case:
-FILES="$(git ls-tree --name-only HEAD .)";IFS="$(printf "\n\b")";for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x28%x7c%x29%x2D%x7c%x2D%x28%x7c%x29%cr" $f)";  printf "%s-%s\n" "$f" "$str"; done
-
+'
+    TYPES="$(git ls-tree HEAD . | awk '{ print $2 }')"
+    #echo $TYPES
+    set -- $TYPES
+    FILES="$(git ls-tree --name-only HEAD .)";
+    IFS="$(printf "\n\b")";
+    for f in $FILES; 
+    do    
+        str="$(git log -1 --pretty=format:"%s%x28%x7c%x29%x2D%x7c%x2D%x28%x7c%x29%cr" $f)";  
+        printf "%s(|)-|-(|)%s(|)-|-(|)%s\n" "$f" "$str" "$1";
+        shift 
+    done
+'
 
 ====================================================== Modified workflow: ===========================================
 

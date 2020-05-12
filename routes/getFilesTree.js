@@ -6,7 +6,6 @@
 
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
-const pushChecker = require('../utilities/pushChecker');
 const rmWorkdir = require('../utilities/rmWorkdir');
 const statusChecker = require('../utilities/statusChecker');
 // Terminal execution import
@@ -51,6 +50,7 @@ async function main(projName, foldername, username, barerepopath, branchNamepath
         await setUpstream(workdirpath, upstream_branch)
         const files = await gitListFiles(workdirpath, foldername)
         const statusLine = await statusChecker(barerepopath, branchNamepath, username);
+        await rmWorkdir(workdirpath);
         return ({
             projName: projName,
             statusLine: statusLine,

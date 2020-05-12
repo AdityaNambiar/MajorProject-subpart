@@ -6,7 +6,7 @@
 
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
-const pushChecker = require('../utilities/pushChecker');
+const rmWorkdir = require('../utilities/rmWorkdir');
 
 // Terminal execution import:
 const { exec } = require('child_process');
@@ -47,6 +47,7 @@ async function main(projName, username, timestamp, branchToUpdate, barerepopath,
                     workdirpath, curr_majorHash, url) {
     try {
         let cObj = await fileCommitHistory(workdirpath, filename)
+        await rmWorkdir(workdirpath);
         return ({
             projName: projName,
             commitObj: cObj,

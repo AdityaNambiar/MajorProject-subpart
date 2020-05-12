@@ -1,4 +1,4 @@
-/**
+ /**
  * readFile and send its Buffer.
  * 
  * 1. Get file name
@@ -8,7 +8,6 @@
 
 //MISC:
 const preRouteChecks = require('../utilities/preRouteChecks');
-const pushChecker = require('../utilities/pushChecker');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
 const path = require('path');
@@ -48,6 +47,7 @@ async function main(projName, username, timestamp, branchToUpdate, barerepopath,
     workdirpath, curr_majorHash, url) {
     try {
         let buffer = await readForBuffer(filepath)
+        await rmWorkdir(workdirpath);
         return ({
             projName: projName,
             buffer: buffer,

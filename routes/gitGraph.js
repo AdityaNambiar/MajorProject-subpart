@@ -3,12 +3,7 @@
  */
 
 // Misc:
-const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
-const removeFromIPFS = require('../utilities/removeFromIPFS');
-const statusChecker = require('../utilities/statusChecker');
-const pushChecker = require('../utilities/pushChecker');
-const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
 // Terminal execution import
@@ -50,6 +45,7 @@ async function main(projName, username, timestamp, branchToUpdate, barerepopath,
                     workdirpath, curr_majorHash, url) {
     try {
         let graphOutput = await gitGraphFetch(workdirpath)
+        await rmWorkdir(workdirpath);
         return ({
             projName: projName,
             graphOutput: graphOutput,

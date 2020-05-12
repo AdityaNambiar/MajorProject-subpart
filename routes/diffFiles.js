@@ -6,7 +6,7 @@
 
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
-const pushChecker = require('../utilities/pushChecker');
+const rmWorkdir = require('../utilities/rmWorkdir');
 
 const { exec } = require('child_process');
 // isomorphic-git related imports and setup
@@ -44,6 +44,7 @@ router.post('/diffFiles', async (req, res) => {
 async function main(projName, username, timestamp, branchToUpdate, ref1, ref2, barerepopath, workdirpath, curr_majorHash, url) {
     try {
         let diffOutput = await gitDiffRefs(ref1, ref2, workdirpath)
+        await rmWorkdir(workdirpath);
         return ({
             projName: projName,
             diffOutput: Buffer.from(diffOutput),

@@ -5,12 +5,7 @@
 
  
 // Misc:
-const addToIPFS = require('../utilities/addToIPFS');
 const preRouteChecks = require('../utilities/preRouteChecks');
-const removeFromIPFS = require('../utilities/removeFromIPFS');
-const statusChecker = require('../utilities/statusChecker');
-const pushChecker = require('../utilities/pushChecker');
-const pushToBare = require('../utilities/pushToBare');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
 const { exec } = require('child_process');
@@ -48,6 +43,7 @@ router.post('/diffForCommit', async (req,res) => {
 async function main(projName, username, timestamp, branchToUpdate, ref1, barerepopath, workdirpath, curr_majorHash, url) {
     try {
         let diffOutput = await gitDiffRefs(ref1, workdirpath)
+        await rmWorkdir(workdirpath);
         return ({
             projName: projName,
             diffOutput: Buffer.from(diffOutput),

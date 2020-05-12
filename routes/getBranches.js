@@ -5,7 +5,7 @@
 
 // Misc:
 const preRouteChecks = require('../utilities/preRouteChecks');
-const pushChecker = require('../utilities/pushChecker');
+const rmWorkdir = require('../utilities/rmWorkdir');
 
 // isomorphic-git related imports and setup
 const fs = require('fs');
@@ -41,6 +41,7 @@ router.post('/getBranches', async (req, res) => {
 async function main(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash, url) {
     try {
         let branchlist = await gitListBranches(workdirpath)
+        await rmWorkdir(workdirpath)
         return ({
             projName: projName,
             branchlist: branchlist,

@@ -53,7 +53,7 @@ async function formMergeArr(dir_list, projName, branchName, barerepopath, branch
                  * 4. Form the mergeArr
                  */
                 var workdirpath = path.join(branchNamepath, dir_list[i]);
-                console.log("dir_list[i]: \n", dir_list[i]);
+                //console.log("dir_list[i]: \n", dir_list[i]);
                 var username, timestamp, usnamets;
                 usnamets = path.basename(workdirpath);
                 username = usnamets.split("(|)-|-(|)")[0];

@@ -8,7 +8,7 @@
 const preRouteChecks = require('../utilities/preRouteChecks');
 const pushChecker = require('../utilities/pushChecker');
 const rmWorkdir = require('../utilities/rmWorkdir');
-const statusLine = require('../utilities/statusChecker');
+const statusChecker = require('../utilities/statusChecker');
 
 // Terminal execution import
 const { exec } = require('child_process');
@@ -37,7 +37,7 @@ router.post('/getFiles', async (req,res) => {
 
     try{
         await preRouteChecks(curr_majorHash, projName, username, timestamp, branchToUpdate)
-        let response = await main(projName, username, timestamp, barerepopath, workdirpath, branchToUpdate, curr_majorHash, upstream_branch, url)
+        let response = await main(projName, username, barerepopath, branchNamepath, workdirpath, branchToUpdate, upstream_branch, url)
         res.status(200).send(response);
     }catch(err){
         console.log(err);
@@ -45,7 +45,7 @@ router.post('/getFiles', async (req,res) => {
     }
 })
 
-async function main(projName, username, timestamp, barerepopath, branchNamepath, workdirpath, branchToUpdate, curr_majorHash, upstream_branch, url){
+async function main(projName, username, barerepopath, branchNamepath, workdirpath, branchToUpdate, upstream_branch, url){
     try {
         await gitCheckout(workdirpath, branchToUpdate)
         await setUpstream(workdirpath, upstream_branch)
@@ -89,7 +89,7 @@ function setUpstream(workdirpath, upstream_branch) {
             }, (err, stdout, stderr) => {
                 if (err) { console.log(err); reject(new Error(`git-setupstream err ${err.name} :- ${err.message}`)); }
                 if (stderr) { console.log(stderr); reject(new Error(`git-setupstream stderr: ${stderr}`)); }
-                console.log(stdout);
+                //console.log(stdout);
             })
             resolve(true);
         } catch(err) {

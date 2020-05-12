@@ -8,6 +8,7 @@
 const preRouteChecks = require('../utilities/preRouteChecks');
 const pushChecker = require('../utilities/pushChecker');
 const rmWorkdir = require('../utilities/rmWorkdir');
+const statusLine = require('../utilities/statusChecker');
 
 // Terminal execution import
 const { exec } = require('child_process');
@@ -31,6 +32,7 @@ router.post('/getFiles', async (req,res) => {
     let timestamp = "(|)-|-(|)" + Date.now();
 
     let barerepopath = path.resolve(__dirname, '..', 'projects', 'bare', projName+'.git'); 
+    let branchNamepath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate);
     let workdirpath = path.resolve(__dirname, '..', 'projects', projName, branchToUpdate, username+timestamp);
 
     try{
@@ -43,13 +45,15 @@ router.post('/getFiles', async (req,res) => {
     }
 })
 
-async function main(projName, username, timestamp, barerepopath, workdirpath, branchToUpdate, curr_majorHash, upstream_branch, url){
+async function main(projName, username, timestamp, barerepopath, branchNamepath, workdirpath, branchToUpdate, curr_majorHash, upstream_branch, url){
     try {
         await gitCheckout(workdirpath, branchToUpdate)
         await setUpstream(workdirpath, upstream_branch)
         const files = await gitListFiles(workdirpath)
+        const statusLine = await statusChecker(barerepopath, branchNamepath, username);
         return ({
             projName: projName, 
+            statusLine: statusLine,
             url: url,
             files: files
         });

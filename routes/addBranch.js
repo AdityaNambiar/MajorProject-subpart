@@ -151,7 +151,8 @@ function branchNamePathCheck(branchName, projName) {
     return new Promise( (resolve, reject) => {
         if ((/\s/).test(branchName)){ 
             reject(new Error("(branchNamePathCheck) Invalid Branch Name (has spaces in it) :- "+branchName));
-        } else if (!fs.existsSync(newBranchNamePath)){
+        } 
+        if (!fs.existsSync(newBranchNamePath)){
             fs.mkdir(newBranchNamePath, (err) => {
                 if (err) { 
                     console.log(err);
@@ -160,7 +161,7 @@ function branchNamePathCheck(branchName, projName) {
                 resolve(newBranchNamePath);
             })
         } else {
-            reject(new Error(`GitError [RefExistsError]: Failed to create branch "${branchName}" because branch "${branchName}" already exists.`)); 
+            resolve(true);
         }
     })
 }
@@ -184,13 +185,18 @@ function moveWorkDir(workdirpath, username, timestamp, newBranchNamePath) {
 
 async function gitBranchAdd(workdirpath, branchName) {
     try {
-        await git.branch({
-            fs: fs,
-            dir: workdirpath,
-            ref: branchName,
-            checkout: true
-        })
-        return(true);
+        let checkExistBranch = await gitListBranches(workdirpath, branchName);
+        if (!checkExistBranch){
+            await git.branch({
+                fs: fs,
+                dir: workdirpath,
+                ref: branchName,
+                checkout: true
+           })
+            return(true);
+        } else {
+            reject(new Error(`GitError [RefExistsError]: Failed to create branch "${branchName}" because branch "${branchName}" already exists.`)); 
+        }
     } catch(err) {
         console.log(err); 
         throw new Error(`git-branch err ${err.name} :- ${err.message}`);

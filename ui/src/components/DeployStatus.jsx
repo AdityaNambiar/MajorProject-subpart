@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
-  Form, Button, Container
+  Container
 } from 'react-bootstrap';
 import "react-step-progress-bar/styles.css";
 import { ProgressBar, Step } from "react-step-progress-bar";
@@ -24,7 +24,7 @@ class Integration extends Component {
     e.preventDefault();
     const { projName, jenkinsfile, jenkins_jobdesc } = this.state;
 
-    fetch('http://localhost:5003/integrateAndDeploy', {
+    fetch('http://localhost:5000/integrateAndDeploy', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -54,33 +54,8 @@ class Integration extends Component {
         width: "75%",
         margin: "7% auto"
       }}>
-        <Form onSubmit={this.startIntegration}>
-        <Form.Group>
-            <Form.Label>Enter Project name</Form.Label>
-            <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ projName: e.target.value })} type="text" placeholder="Example: React application" />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Enter Jenkinsfile name</Form.Label>
-            <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ jenkinsfile: e.target.value })} type="text" placeholder="Example: Jenkinsfile" />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Enter Job Description</Form.Label>
-            <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ jenkins_jobdesc: e.target.value })} as="textarea" rows="3" type="text" placeholder="Enter some description..." />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Enter the branch you want to build</Form.Label>
-            <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ jenkins_branch: e.target.value })} type="text" placeholder="Example (like how you'd write on Jenkins): */master" />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>How often should Jenkins poll the repository?</Form.Label>
-            <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ jenkins_branch: e.target.value })} type="text" placeholder="Example for every two minutes (like how you'd write on Jenkins): H/2 * * * * " />
-          </Form.Group>
-          <Button variant="primary" type="submit">
-            Submit
-          </Button>
-        </Form>
-
-        <Container style={{ padding: '7%', boxShadow: "1px 1px 1px 1px rgba(120,194,255,0.8)", borderRadius: '5%' }}>
+      <h4>Resp: {resp}</h4>
+        <Container style={{ padding: '20%', boxShadow: "1px 1px 1px 1px rgba(120,194,255,0.8)", borderRadius: '5%' }}>
           <ProgressBar
             percent={progressPercent}
             filledBackground="linear-gradient(to right, #fefb72, #f0bb31)"
@@ -106,8 +81,6 @@ class Integration extends Component {
               )}
             </Step>
           </ProgressBar>
-          <hr/>
-          <Container>{resp}</Container>
         </Container>
 
       </Container>

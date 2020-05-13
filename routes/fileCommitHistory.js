@@ -56,7 +56,7 @@ async function main(projName, username, timestamp, branchToUpdate, barerepopath,
         });
     } catch (err) {
         console.log(err);
-        await cleanUp(workdirpath, branchName);
+        await cleanUp(workdirpath, err.message);
         throw new Error(`(fCH) main err ${err.name} :- ${err.message}`);
     }
 }
@@ -64,7 +64,7 @@ async function main(projName, username, timestamp, branchToUpdate, barerepopath,
 function fileCommitHistory(workdirpath, filename) {
     return new Promise((resolve, reject) => {
         try {
-            exec(`git log --pretty=raw ${filename}`, {
+            exec(`git log --pretty=raw "${filename}"`, {
                 cwd: workdirpath,
                 shell: true
             }, (err, stdout, stderr) => {

@@ -64,7 +64,7 @@ async function main(projName, username, timestamp, barerepopath, branchToUpdate,
 function branchCommitHistory(workdirpath, branchToUpdate) {
     return new Promise((resolve, reject) => {
         try {
-            exec(`git log --pretty=raw ${branchToUpdate}`, {
+            exec(`git log --pretty=raw "${branchToUpdate}"`, {
                 cwd: workdirpath,
                 shell: true
             }, (err, stdout, stderr) => {

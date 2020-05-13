@@ -2,6 +2,7 @@
 /**
  * Get (Read) list of files in current branch of git repository.
  * (No changes in .git/ folder - confirmed)
+ * 
  */
 
 // Misc:

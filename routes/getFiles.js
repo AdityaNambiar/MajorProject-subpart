@@ -101,7 +101,7 @@ function setUpstream(workdirpath, upstream_branch) {
     })
 }
 function gitListFiles(workdirpath) {
-    let command = `FILES="$(git ls-tree --name-only -r HEAD --full-tree)"; IFS="$(printf "\n\b")"; for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x28%x7c%x29%x2D%x7c%x2D%x28%x7c%x29%cr" $f)";  printf "%s(|)-|-(|)%s\n" "$f" "$str"; done`;
+    let command = `FILES="$(git ls-tree --name-only -r HEAD --full-tree)"; IFS="$(printf "\n\b")"; for f in $FILES; do    str="$(git log -1 --pretty=format:"%s%x28%x7c%x29%x2D%x7c%x2D%x28%x7c%x29%ct" $f)";  printf "%s(|)-|-(|)%s\n" "$f" "$str"; done`;
     return new Promise (async (resolve, reject) => {
         try {
             exec(command, {
@@ -120,7 +120,7 @@ function gitListFiles(workdirpath) {
                 stdout.trim().split('\n').forEach( output_arr => {
                     let file = output_arr.split('(|)-|-(|)')[0]; 
                     let commitmsg = output_arr.split('(|)-|-(|)')[1];
-                    let time = output_arr.split('(|)-|-(|)')[2];
+                    let time = parseInt(output_arr.split('(|)-|-(|)')[2]);
                     let obj = { key: file, size: commitmsg, modified: time}
                     //console.log(obj);
                     files.push(obj);

@@ -110,13 +110,13 @@ process.on('uncaughtException', (err) => {
     
 })
 repos.on('fetch', async (fetch) => {
-    console.log('fetch object: ',fetch);
+    //console.log('fetch object: ',fetch);
     console.log(`fetch ${fetch.repo}/${fetch.commit} (${fetch.branch})`);
     fetch.accept();
 });
 
 repos.on('clone', (clone) => {
-    console.log('clone object: ',clone);
+    //console.log('clone object: ',clone);
     clone.accept();
 })
 

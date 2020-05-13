@@ -10,7 +10,7 @@ router.post('/deploy', async (req, res) => {
         let projName = req.body.projName;
         console.log(projName);
         
-            res.status(200).json({data: data});
+        res.status(200).json({data: projName});
     } catch (err) {
         console.log(err);
         res.status(400).send(`(deploy) main err ${err.name} :- ${err.message}`);

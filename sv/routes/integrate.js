@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs-extra');
 const jenkinsapi = require('jenkins-api');
-const jenkinsbuildstatusapi = require('jenkins'); // name defines the only purpoe of importing this package here.
+const jenkinsbuildstatusapi = require('jenkins')({ baseUrl: 'http://admin:11917eb8415f1013d725ed47be3eb2c869@localhost:8080', crumbIssuer: true }); // name defines the only purpoe of importing this package here.
 const xmljsconv = require('xml-js')
 const { exec } = require('child_process');
 
@@ -38,7 +38,7 @@ router.post('/integrate', async (req, res) => {
             if (isCompleted){
                 res.status(200).json({data: projName});
             } else {
-                res.status(400).json("Build Failed - Check logs!");                
+                res.status(400).json({data:"Build Failed - Check logs!"});                
             }
         } else {
             console.log("job does not exists - creating it now");
@@ -47,7 +47,7 @@ router.post('/integrate', async (req, res) => {
             if (isCompleted){
                 res.status(200).json({data: projName});
             } else {
-                res.status(400).json("Build Failed - Check logs!");                
+                res.status(400).json({data:"Build Failed - Check logs!"});                
             }
         }
     } catch (err) {
@@ -56,21 +56,26 @@ router.post('/integrate', async (req, res) => {
     }
 })
 
-function checkJobStatus(jenkins, projName){
+function checkJobStatus(jenkins,jenkinsbuildstatusapi, projName){
     return new Promise((resolve, reject) => {
         try {
-            jenkins.last_
-            jenkins.build.get('example', 1, function(err, data) {
-              if (err) {
-                console.log(err);
-                reject(new Error(`jenkins-build-get err ${err.name} :- ${err.message}`))
-              }
-              if (data.color == "blue"){
-                resolve(true);
-              } else {
-                resolve(false);
-              }
-            });
+            jenkins.last_build_info(projName, (err, data) =>{
+                if (err) {
+                    console.log(err);
+                    reject(new Error(`(checkJobStatus) last-build-info err ${err.name} :- ${err.message}`))
+                }
+                jenkinsbuildstatusapi.build.get(projName, data.number, function(err, data) {
+                  if (err) {
+                    console.log(err);
+                    reject(new Error(`(checkJobStatus) jenkins-build-get err ${err.name} :- ${err.message}`))
+                  }
+                  if (data.color == "blue"){ // In Jenkins, "blue" build color means successful build. "red" means unsuccessful and "notbuilt" means yet to build. 
+                    resolve(true);
+                  } else {
+                    resolve(false);
+                  }
+                });
+            })
         } catch(err) {
             console.log(err);
             reject(new Error(`(checkJobStatus) err ${err.name} :- ${err.message}`));

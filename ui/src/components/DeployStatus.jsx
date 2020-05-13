@@ -18,11 +18,9 @@ class Integration extends Component {
       progressPercent: 0,
       postResp: ''
     }
-
-    //this.startIntegration();
   }
   componentWillUnmount = () => {
-    if (this.state.progressPercent != 100) {
+    if (this.state.progressPercent !== 100) {
       window.onbeforeunload = function() {
           return "Please wait while your build finishes!";
       }
@@ -44,13 +42,15 @@ class Integration extends Component {
     })
     .then(resp => resp.json())
     .then(res => {
-      console.log(res);
-      this.setState({ projName: res.data, progressPercent: '50' });
-      this.startDeployment();
+      if (res.data === "Build Failed - Check logs!") throw new Error("Build Failed - Check logs!");
+      else {
+        this.setState({ projName: res.data, progressPercent: '50' });
+        this.startDeployment();
+      }
     })
     .catch(err => {
-      console.log(err); 
-      this.setState({ postResp: err });
+      window.alert(err); 
+      this.setState({ progressPercent: '0' });
     })
 
   }
@@ -71,8 +71,8 @@ class Integration extends Component {
       this.setState({ projName: res.data, progressPercent: '100', postResp: res.url });
     })
     .catch(err => {
-      console.log(err); 
-      this.setState({ postResp: err });
+      window.alert(err); 
+      this.setState({ postResp: err , progressPercent: '50'});
     }) 
   }
   showLogs = (e) => {
@@ -90,6 +90,7 @@ class Integration extends Component {
     })
     .then(resp => resp.text())
     .then(res => {
+      console.log(res);
       this.setState({ postResp: res });
     })
     .catch(err => {

@@ -16,35 +16,17 @@ class Integration extends Component {
     this.state = {
       jenkinsfile: '',
       projName: '',
-      progressPercent: 0,
       jenkins_jobdesc: '',
-      resp: '',
       branchnames: [ "master", "feature1", "feature2" ],
-      projectnames: [ "reactapp", "sampleapp", "newsampleapp" ]
+      projectnames: [ "reactapp", "sampleapp", "newsampleapp", "testapp"]
     }
   }
   startIntegration = (e) => {
     e.preventDefault();
-    const { projName, jenkinsfile, jenkins_jobdesc } = this.state;
-
-    fetch('http://localhost:5003/integrateAndDeploy', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-          projName: projName,
-          jenkinsfile: jenkinsfile,
-          description: jenkins_jobdesc
-      })
+    const { projName } = this.state; 
+    this.props.history.push('/deploystatus',{
+      projName: projName
     })
-      .then(resp => resp.text())
-      .then(res => {
-        this.setState({ resp: res.data });
-      })
-      .catch(err => {
-        console.log(err);
-      })
   }
 
   componentDidUpdate(){

@@ -7,7 +7,7 @@ const xmljsconv = require('xml-js')
 const { exec } = require('child_process');
 
 
-router.post('/integrateAndDeploy', async (req, res) => {
+router.post('/integrate', async (req, res) => {
     try {
         let projName = req.body.projName || "reactapp";
         let description = req.body.description || `${projName} build`;
@@ -30,10 +30,14 @@ router.post('/integrateAndDeploy', async (req, res) => {
         let xmlConfigString = await readXmlFromSilo(projName);
 
         if (await doesJobExist(jenkins, projName)){
-            let data = await updateJob(projName, xmlConfigString);
-            res.status(200).send(data);
+            console.log("job exists - updating it now");
+            await updateJob(jenkins, projName, xmlConfigString);
+
+            //await checkJobStatus(jenkins, projName);
+            res.status(200).send(true);
         } else {
-            let data = await createJob(projName, xmlConfigString);
+            console.log("job does not exists - creating it now");
+            let data = await createJob(jenkins, projName, xmlConfigString);
             res.status(200).send(data);
         }
     } catch (err) {
@@ -57,35 +61,37 @@ function doesJobExist(jenkins, projName){
         }
     })
 }
-async function createJob(projName, xmlConfigString) {
-    try {
-        jenkins.create_job(projName, xmlConfigString, (err, data) => {
-            if (err) {
-                console.log(err);
-                throw new Error("jenkins create-job: \n"+err)
-            }
-            res.status(200)
-            res.write("Job Created of name: "+projName);
-        })
-    } catch(err) {
-        console.log(err);
-        throw new Error(`(createJob) err ${err.name} :- ${err.message}`);
-    }
+function createJob(jenkins, projName, xmlConfigString) {
+    return new Promise( (resolve, reject) => {
+        try {
+            jenkins.create_job(projName, xmlConfigString, (err, data) => {
+                if (err) {
+                    console.log(err);
+                    reject(new Error("jenkins create-job: \n"+err))
+                }
+                resolve(data);
+            })
+        } catch(err) {
+            console.log(err);
+            throw new Error(`(createJob) err ${err.name} :- ${err.message}`);
+        }
+    })
 }
-async function updateJob(projName, xmlConfigString) {
-    try {
-        jenkins.update_job(projName, xmlConfigString, (err, data) => {
-            if (err) {
-                console.log(err);
-                throw new Error("jenkins create-job: \n"+err)
-            }
-            res.status(200)
-            res.write("Job Created of name: "+projName);
-        })
-    } catch(err) {
-        console.log(err);
-        throw new Error(`(createJob) err ${err.name} :- ${err.message}`);
-    }
+function updateJob(jenkins, projName, xmlConfigString) {
+    return new Promise( (resolve, reject) => {
+        try {
+            jenkins.update_job(projName, xmlConfigString, (err, data) => {
+                if (err) {
+                    console.log(err);
+                    reject(new Error("jenkins update-job: \n"+err))
+                }
+                resolve(data);
+            })
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`(updateJob) err ${err.name} :- ${err.message}`));
+        }
+    })
 }
 function mkProjSilo() {
     return new Promise( (resolve, reject) =>{
@@ -139,7 +145,7 @@ function readXmlFromSilo(projName){
     return new Promise( async (resolve, reject) => {
         try {
             let xml_silo_path = await mkXmlSilo();
-            fs.readFile(path.resolve(xml_silo_path,`${projName}.xml`), { flags: 'w' }, (err, data) => {
+            fs.readFile(path.resolve(xml_silo_path,`${projName}.xml`), 'utf8' , (err, data) => {
                 if (err) reject(new Error('could not read XML'+err))
                 resolve(data);
             });
@@ -154,8 +160,9 @@ function cloneRepo(projName) {
         try {
             let projects_silo_path = await mkProjSilo();
             let url = `http://localhost:7005/projects/bare/${projName}.git`
-            let projPath = path.join(projects_silo_path,projName);
+            let projPath = path.join(projects_silo_path, projName);
             if (fs.existsSync(projPath)){
+                console.log("IT EXISTS - REMOVING NOW")
                 fs.rmdir(projPath, {
                     recursive: true
                 }, (err) => {
@@ -163,6 +170,7 @@ function cloneRepo(projName) {
                         console.log(err);
                         reject(new Error(`Could not remove old workspace: ${err}`))
                     }
+                    console.log("REMOVED");
                     exec(`git clone ${url} ${projName}`, {
                         cwd: projects_silo_path,
                         shell: true
@@ -179,7 +187,23 @@ function cloneRepo(projName) {
                         resolve(path.join(projects_silo_path, projName));
                     })
                 })
-            } 
+            } else {
+                exec(`git clone ${url} ${projName}`, {
+                        cwd: projects_silo_path,
+                        shell: true
+                    }, (err, stdout, stderr) => {
+                        if (err) {
+                            console.log(err);
+                            reject(new Error(`(cloneRepo) git-clone cli err ${err.name} :- ${err.message}`));
+                        }
+                        if (stderr) {
+                            // The cloning output is apparently put inside "stderr"... so not picking that.
+                            //console.log(stderr);
+                            //reject(new Error(`(cloneRepo) git-clone cli stderr:\n ${stderr}`));
+                        }
+                        resolve(path.join(projects_silo_path, projName));
+                    })
+            }
         } catch (err) {
             console.log(err);
             reject(new Error(`(cloneRepo) git-clone err ${err.name} :- ${err.message}`));

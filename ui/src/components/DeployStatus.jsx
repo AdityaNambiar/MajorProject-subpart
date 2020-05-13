@@ -14,19 +14,18 @@ class Integration extends Component {
     super(props);
 
     this.state = {
-      jenkinsfile: '',
       projName: '',
       progressPercent: 0,
-      jenkins_jobdesc: '',
-      resp: '',
       logs: 'HELLLLLLLLLLLLOOOOOOOOOOO'
     }
-  }
-  startIntegration = (e) => {
-    e.preventDefault();
-    const { projName, jenkinsfile, jenkins_jobdesc } = this.state;
 
-    fetch('http://localhost:5000/integrateAndDeploy', {
+    //this.startIntegration();
+    this.showLogs();
+  }
+  startIntegration = () => {
+    const { projName, jenkinsfile, jenkins_jobdesc } = this.props;
+
+    fetch('http://localhost:5003/integrate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -39,23 +38,62 @@ class Integration extends Component {
     })
       .then(resp => resp.text())
       .then(res => {
-        this.setState({ resp: res.data });
+        this.setState({ projName: res.data, progressPercent: 50 });
       })
       .catch(err => {
-        console.log(err);
+        console.log(err); 
       })
   }
+  showLogs = (props) => {
+    console.log("PROPS: ",this.props);
+    const { projName } = this.props;
 
+    fetch('http://localhost:5003/showLogs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+          projName: projName
+      })
+    })
+      .then(resp => resp.text())
+      .then(res => {
+        this.setState({ logs: res.data });
+      })
+      .catch(err => {
+        console.log(err); 
+      })
+  }
   componentDidUpdate(){
+    const { projName, jenkinsfile, jenkins_jobdesc } = this.props;
 
+    fetch('http://localhost:5003/deploy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+          projName: projName
+      })
+    })
+      .then(resp => resp.text())
+      .then(res => {
+        this.setState({ projName: res.data, progressPercent: 50 });
+      })
+      .catch(err => {
+        console.log(err); 
+      })
   }
   render() {
-    const { progressPercent, resp } = this.state;
+    const { progressPercent, projName } = this.props;
     return (
       <div style={{
         width: "75%",
         margin: "7% auto"
       }}>
+        <h2>{projName}</h2>
+      
           <ProgressBar
             percent={progressPercent}
             filledBackground="linear-gradient(to right, #fefb72, #f0bb31)"

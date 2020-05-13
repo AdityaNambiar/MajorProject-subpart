@@ -11,7 +11,8 @@ app.use(bodyParser.json())
 app.use(cors())
 
 // app.post('/cloneRepo', require('./routes/cloneRepo'));
-app.post('/integrateAndDeploy', require('./routes/integrateAndDeploy'));
+app.post('/integrate', require('./routes/integrate'));
+app.post('/showLogs', require('./routes/showLogs'));
 
 
 app.listen(5003, () => {

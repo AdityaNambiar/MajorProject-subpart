@@ -48,7 +48,7 @@ async function main(projName, barerepopath, workdirpath,  username, timestamp, b
     try {
             let retval = await mergeBranch(workdirpath,  username, timestamp, branchName, branchToUpdate)
             if (retval === "Conflict(s) occured while merging branch!")
-                return(retval); // Error message being sent back to main's caller.
+                throw new Error(retval); // Error message being sent back to main's caller.
             else {
                 const responseobj = await pushChecker(projName, username, timestamp, branchToUpdate, barerepopath, workdirpath, curr_majorHash); 
                 console.log("pushchecker returned this: \n", responseobj);    
@@ -62,7 +62,9 @@ async function main(projName, barerepopath, workdirpath,  username, timestamp, b
             }
         } catch (err) {
             console.log(err);
-            await cleanUp(workdirpath, err.message);
+            if (err.message != "Conflict(s) occured while merging branch!"){
+                await cleanUp(workdirpath, err.message);
+            }
             throw new Error(`(mergeBranch) main err ${err.name} :- ${err.message}`);
         }
 }

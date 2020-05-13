@@ -106,6 +106,9 @@ repos.on('push', async (push) => {
     //console.log(`push ${push.repo}/${push.commit} (${push.branch})`);
 });
 
+process.on('uncaughtException', (err) => {
+    
+})
 repos.on('fetch', async (fetch) => {
     console.log('fetch object: ',fetch);
     console.log(`fetch ${fetch.repo}/${fetch.commit} (${fetch.branch})`);

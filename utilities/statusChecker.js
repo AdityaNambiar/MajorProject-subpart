@@ -24,6 +24,7 @@ module.exports = function statusChecker(barerepopath, branchNamepath, username) 
             var computedpath = await scan(branchNamepath, username)
             //await gitFetch(barerepopath, computedpath)
             var statusLine = await gitStatus(computedpath)
+            console.log("executing at statuschecker after gitstatus: \n",statusLine);
             resolve(statusLine);
         } catch(err) {
             console.log(err);
@@ -38,8 +39,7 @@ function scan(branchNamepath, username){
         try {
             fs.readdir(branchNamepath, (err,files)=>{ // Scanning point - branchNamepath.
                 if (err) {console.log(err); reject(new Error(`(statusChecker) fs.readdir err ${err.name} :- ${err.message}`)) }
-                
-                filesarr = files.filter(e => !e.search(username)); // Only fetch current user's folders (username+timestamp folders).
+                filesarr = files.filter(e => e.includes(`${username}(|)`)); // Only fetch current user's folders (username+timestamp folders).
                 for (var i = 0; i < filesarr.length; i++) {
                     var str = filesarr[i]; // username+timestamp
                     var ts = parseInt(str.split("(|)-|-(|)")[1]); // timestamp of type "number".
@@ -49,7 +49,7 @@ function scan(branchNamepath, username){
                 minOftsarr = tsarr.reduce( (a,b) => (a < b)? a : b);  // Fetch minimum of the timestamp arr.
                 //console.log(minOftsarr)
                 computedpath = path.resolve(branchNamepath, username+"(|)-|-(|)"+minOftsarr);
-                //console.log(computedpath);
+                //console.log(computedpath, fs.existsSync(computedpath));
                 resolve(computedpath);
             })
         } catch(err) {

@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import {
-  Form, Button, Container
+  Form, Button, Container, Row, Col
 } from 'react-bootstrap';
 import "react-step-progress-bar/styles.css";
+import { withRouter } from 'react-router-dom';
 import { ProgressBar, Step } from "react-step-progress-bar";
 import jenkinsicon from '../assets/jenkinsicon.png';
 import dockericon from '../assets/dockericon.webp';
@@ -17,7 +18,9 @@ class Integration extends Component {
       projName: '',
       progressPercent: 0,
       jenkins_jobdesc: '',
-      resp: ''
+      resp: '',
+      branchnames: [ "master", "feature1", "feature2" ],
+      projectnames: [ "reactapp", "sampleapp", "newsampleapp" ]
     }
   }
   startIntegration = (e) => {
@@ -55,64 +58,43 @@ class Integration extends Component {
         margin: "7% auto"
       }}>
         <Form onSubmit={this.startIntegration}>
-        <Form.Group>
-            <Form.Label>Enter Project name</Form.Label>
-            <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ projName: e.target.value })} type="text" placeholder="Example: React application" />
-          </Form.Group>
+          <Row>
+            <Col>
+              <Form.Group>
+                <Form.Label>Enter Project name</Form.Label>
+                <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ projName: e.target.value })} as="select" >
+                  { this.state.projectnames.map( elem => <option>{elem}</option>) }
+                </Form.Control>
+              </Form.Group>
+            </Col>
+            <Col>
+              <Form.Group>
+                <Form.Label>Enter the branch you want to build</Form.Label>
+                <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ jenkins_branch: e.target.value })}  as="select">
+                  { this.state.branchnames.map( elem => <option>{elem}</option>) }
+                </Form.Control>
+              </Form.Group>
+            </Col>
+          </Row>
           <Form.Group>
-            <Form.Label>Enter Jenkinsfile name</Form.Label>
+            <Form.Label>Enter Jenkinsfile name (Optional)</Form.Label>
             <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ jenkinsfile: e.target.value })} type="text" placeholder="Example: Jenkinsfile" />
           </Form.Group>
           <Form.Group>
-            <Form.Label>Enter Job Description</Form.Label>
+            <Form.Label>Enter Job Description (Optional)</Form.Label>
             <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ jenkins_jobdesc: e.target.value })} as="textarea" rows="3" type="text" placeholder="Enter some description..." />
           </Form.Group>
           <Form.Group>
-            <Form.Label>Enter the branch you want to build</Form.Label>
-            <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ jenkins_branch: e.target.value })} type="text" placeholder="Example (like how you'd write on Jenkins): */master" />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>How often should Jenkins poll the repository?</Form.Label>
+            <Form.Label>How often should Jenkins poll the repository?(Optional)</Form.Label>
             <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ jenkins_branch: e.target.value })} type="text" placeholder="Example for every two minutes (like how you'd write on Jenkins): H/2 * * * * " />
           </Form.Group>
           <Button variant="primary" type="submit">
             Submit
           </Button>
         </Form>
-
-        <Container style={{ padding: '7%', boxShadow: "1px 1px 1px 1px rgba(120,194,255,0.8)", borderRadius: '5%' }}>
-          <ProgressBar
-            percent={progressPercent}
-            filledBackground="linear-gradient(to right, #fefb72, #f0bb31)"
-          >
-            <Step transition="scale">
-              {({ accomplished }) => (
-                <img
-                  style={{ filter: `grayscale(${accomplished ? 0 : 80}%)` , borderRadius: '20%' , marginRight: '100%'}}
-                  width="50"
-                  alt=""
-                  src={jenkinsicon}
-                />
-              )}
-            </Step>
-            <Step transition="scale">
-              {({ accomplished }) => (
-                <img
-                  style={{ filter: `grayscale(${accomplished ? 0 : 80}%)`, marginLeft: '100%', borderRadius: '20%'}}
-                  width="50"
-                  alt=""
-                  src={dockericon}
-                />
-              )}
-            </Step>
-          </ProgressBar>
-          <hr/>
-          <Container>{resp}</Container>
-        </Container>
-
       </Container>
     );
   }
 }
 
-export default Integration;
+export default withRouter(Integration);

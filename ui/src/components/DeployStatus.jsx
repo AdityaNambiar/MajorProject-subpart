@@ -4,6 +4,7 @@ import {
 } from 'react-bootstrap';
 import "react-step-progress-bar/styles.css";
 import { ProgressBar, Step } from "react-step-progress-bar";
+import { withRouter } from 'react-router-dom';
 import jenkinsicon from '../assets/jenkinsicon.png';
 import dockericon from '../assets/dockericon.webp';
 
@@ -17,7 +18,8 @@ class Integration extends Component {
       projName: '',
       progressPercent: 0,
       jenkins_jobdesc: '',
-      resp: ''
+      resp: '',
+      logs: 'HELLLLLLLLLLLLOOOOOOOOOOO'
     }
   }
   startIntegration = (e) => {
@@ -50,12 +52,10 @@ class Integration extends Component {
   render() {
     const { progressPercent, resp } = this.state;
     return (
-      <Container style={{
+      <div style={{
         width: "75%",
         margin: "7% auto"
       }}>
-      <h4>Resp: {resp}</h4>
-        <Container style={{ padding: '20%', boxShadow: "1px 1px 1px 1px rgba(120,194,255,0.8)", borderRadius: '5%' }}>
           <ProgressBar
             percent={progressPercent}
             filledBackground="linear-gradient(to right, #fefb72, #f0bb31)"
@@ -81,11 +81,14 @@ class Integration extends Component {
               )}
             </Step>
           </ProgressBar>
-        </Container>
+          <hr/>
+          <div className="text-center bg bg-dark text-light">
+                {this.state.logs}
+          </div>
 
-      </Container>
+      </div>
     );
   }
 }
 
-export default Integration;
+export default withRouter(Integration);

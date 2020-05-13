@@ -1,21 +1,17 @@
 import React, { Component } from 'react';
 import Form from './components/Form';
 import DeployStatus from './components/DeployStatus';
-import { Route, Switch, Redirect } from 'react-router-dom';
+import { Route, Switch, Redirect, BrowserRouter } from 'react-router-dom';
 
 class App extends Component {
   render() {
     return (
-      <div>
-        <div className="content">
+      <BrowserRouter>
           <Switch>
-            <Route path="/deployform" component={Form} />
-            <Route path="/deploystatus" component={DeployStatus} />
-            <Redirect from="/" to="/home" />
-            <Redirect to="/not-found" />
+            <Route path="/deployform" component= { Form } />
+            <Route path="/deploystatus" component= { DeployStatus } />
           </Switch>
-        </div>
-      </div>
+	  </BrowserRouter>
     );
   }
 }

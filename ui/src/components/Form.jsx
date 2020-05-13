@@ -4,10 +4,6 @@ import {
 } from 'react-bootstrap';
 import "react-step-progress-bar/styles.css";
 import { withRouter } from 'react-router-dom';
-import { ProgressBar, Step } from "react-step-progress-bar";
-import jenkinsicon from '../assets/jenkinsicon.png';
-import dockericon from '../assets/dockericon.webp';
-
 
 class Integration extends Component {
   constructor(props) {
@@ -23,17 +19,16 @@ class Integration extends Component {
   }
   startIntegration = (e) => {
     e.preventDefault();
-    const { projName } = this.state; 
+    const { projName, jenkinsfile, jenkins_jobdesc } = this.state; 
+    //console.log(projName);
     this.props.history.push('/deploystatus',{
-      projName: projName
+      projName: projName,
+      jenkinsfile: jenkinsfile,
+      jenkins_jobdesc: jenkins_jobdesc
     })
   }
 
-  componentDidUpdate(){
-
-  }
   render() {
-    const { progressPercent, resp } = this.state;
     return (
       <Container style={{
         width: "75%",
@@ -44,8 +39,11 @@ class Integration extends Component {
             <Col>
               <Form.Group>
                 <Form.Label>Enter Project name</Form.Label>
-                <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ projName: e.target.value })} as="select" >
-                  { this.state.projectnames.map( elem => <option>{elem}</option>) }
+                <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({projName:e.target.value})} as="select" >
+                  <option selected disabled hidden></option> 
+                  { 
+                    this.state.projectnames.map( (elem,key) => <option key={key}>{elem}</option>)
+                  }
                 </Form.Control>
               </Form.Group>
             </Col>
@@ -53,7 +51,10 @@ class Integration extends Component {
               <Form.Group>
                 <Form.Label>Enter the branch you want to build</Form.Label>
                 <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ jenkins_branch: e.target.value })}  as="select">
-                  { this.state.branchnames.map( elem => <option>{elem}</option>) }
+                  <option selected disabled hidden></option> 
+                  { 
+                    this.state.branchnames.map( (elem,key) => <option key={key}>{elem}</option>)
+                  }
                 </Form.Control>
               </Form.Group>
             </Col>

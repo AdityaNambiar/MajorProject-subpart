@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Form from './components/Form';
 import DeployStatus from './components/DeployStatus';
-import { Route, Switch, Redirect, BrowserRouter } from 'react-router-dom';
+import { Route, Switch, BrowserRouter } from 'react-router-dom';
 
 class App extends Component {
   render() {

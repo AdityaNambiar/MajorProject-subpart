@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
-  Container
+  Button, Container, Row, Col
 } from 'react-bootstrap';
 import "react-step-progress-bar/styles.css";
 import { ProgressBar, Step } from "react-step-progress-bar";
@@ -16,14 +16,20 @@ class Integration extends Component {
     this.state = {
       projName: '',
       progressPercent: 0,
-      logs: 'HELLLLLLLLLLLLOOOOOOOOOOO'
+      postResp: ''
     }
 
     //this.startIntegration();
-    this.showLogs();
   }
-  startIntegration = () => {
-    const { projName, jenkinsfile, jenkins_jobdesc } = this.props;
+  componentWillUnmount = () => {
+    if (this.state.progressPercent != 100) {
+      window.onbeforeunload = function() {
+          return "Please wait while your build finishes!";
+      }
+    }
+  }
+  componentDidMount = () => {
+    const { projName, jenkinsfile, jenkins_jobdesc } = this.props.location.state;
 
     fetch('http://localhost:5003/integrate', {
       method: 'POST',
@@ -36,37 +42,20 @@ class Integration extends Component {
           description: jenkins_jobdesc
       })
     })
-      .then(resp => resp.text())
-      .then(res => {
-        this.setState({ projName: res.data, progressPercent: 50 });
-      })
-      .catch(err => {
-        console.log(err); 
-      })
-  }
-  showLogs = (props) => {
-    console.log("PROPS: ",this.props);
-    const { projName } = this.props;
-
-    fetch('http://localhost:5003/showLogs', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-          projName: projName
-      })
+    .then(resp => resp.json())
+    .then(res => {
+      console.log(res);
+      this.setState({ projName: res.data, progressPercent: '50' });
+      this.startDeployment();
     })
-      .then(resp => resp.text())
-      .then(res => {
-        this.setState({ logs: res.data });
-      })
-      .catch(err => {
-        console.log(err); 
-      })
+    .catch(err => {
+      console.log(err); 
+      this.setState({ postResp: err });
+    })
+
   }
-  componentDidUpdate(){
-    const { projName, jenkinsfile, jenkins_jobdesc } = this.props;
+  startDeployment = () => {
+    const { projName } = this.props.location.state;
 
     fetch('http://localhost:5003/deploy', {
       method: 'POST',
@@ -77,16 +66,40 @@ class Integration extends Component {
           projName: projName
       })
     })
-      .then(resp => resp.text())
-      .then(res => {
-        this.setState({ projName: res.data, progressPercent: 50 });
+    .then(resp => resp.json())
+    .then(res => {
+      this.setState({ projName: res.data, progressPercent: '100', postResp: res.url });
+    })
+    .catch(err => {
+      console.log(err); 
+      this.setState({ postResp: err });
+    }) 
+  }
+  showLogs = (e) => {
+    e.preventDefault();
+    document.getElementById('logarea').classList.toggle("d-none");
+    const { projName } = this.props.location.state;
+    fetch('http://localhost:5003/showLogs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+          projName: projName
       })
-      .catch(err => {
-        console.log(err); 
-      })
+    })
+    .then(resp => resp.text())
+    .then(res => {
+      this.setState({ postResp: res });
+    })
+    .catch(err => {
+      console.log(err); 
+      this.setState({ postResp: err });
+    })
+
   }
   render() {
-    const { progressPercent, projName } = this.props;
+    const { progressPercent, projName } = this.state;
     return (
       <div style={{
         width: "75%",
@@ -111,7 +124,7 @@ class Integration extends Component {
             <Step transition="scale">
               {({ accomplished }) => (
                 <img
-                  style={{ filter: `grayscale(${accomplished ? 0 : 80}%)`, marginLeft: '100%', borderRadius: '20%'}}
+                  style={{ filter: `grayscale(${accomplished ? 0 : 100}%)`, marginLeft: '100%', borderRadius: '20%'}}
                   width="50"
                   alt=""
                   src={dockericon}
@@ -119,11 +132,20 @@ class Integration extends Component {
               )}
             </Step>
           </ProgressBar>
-          <hr/>
-          <div className="text-center bg bg-dark text-light">
-                {this.state.logs}
-          </div>
+          <hr className="mt-4"/>
+          <Container className="mt-5">
+            <Row>
+              <Col>
+                <Button onClick={(e) => {this.showLogs(e)}}>Show Build Console Logs</Button>
+              </Col>
+              {/*<Col>
+                <Button onClick={(e) => {this.downloadCurrentBuildReport}}>Download last build report</Button>
+              </Col>*/}
+            </Row>
+          </Container>
+          <textarea id="logarea" value={this.state.postResp} rows="20" className="d-none mt-3 p-5 w-100 bg bg-dark text-light" readOnly/>
 
+          <div value={this.state.url}  className="p-5 w-100 mt-3 bg bg-dark text-light"></div>
       </div>
     );
   }

@@ -3,7 +3,8 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const jenkinsapi = require('jenkins-api');
-
+const jenkinslogsapi = require('jenkins')({ baseUrl: 'http://admin:11917eb8415f1013d725ed47be3eb2c869@localhost:8080', crumbIssuer: true });; // Naming this specially like this because I am only using this package for getting logStream.
+const { exec } = require('child_process');
 
 router.post('/showLogs', async (req, res) => {
 
@@ -14,8 +15,10 @@ router.post('/showLogs', async (req, res) => {
         
         if (await doesJobExist(jenkins, projName)){
             console.log("job exists - it now");
-            let data = await showLogs(jenkins, projName);
-            res.status(200).send(data);
+            let data = await showLogs(jenkins, jenkinslogsapi, projName);
+            fs.writeFileSync('logop.txt', data);
+            let logs = fs.readFileSync('logop.txt');
+            res.status(200).send(logs);
         } else {
             throw new Error("Job Build does not exist");
         }
@@ -41,17 +44,19 @@ function doesJobExist(jenkins, projName){
     })
 }
 
-function showLogs(jenkins, projName){
+function showLogs(jenkins, jenkinslogsapi, projName){
     return new Promise( (resolve, reject) => {
         try {
             jenkins.last_build_info(projName, (err, data) =>{
                 if (err) {
                     console.log(err);
-                    reject(new Error(`showLogs jenkins err: ${err}`))
+                    reject(new Error(`(showLogs)  err ${err.name} :- ${err.message}`))
                 }
-                console.log(data);
-                resolve(data);
-            })
+                var log = jenkinslogsapi.build.logStream(projName, data.number);
+                log.on('data', (txt) => {
+                    resolve(txt);
+                })
+            });
         } catch(err) {
             console.log(err);
             reject(new Error(`showLogs err: ${err}`));

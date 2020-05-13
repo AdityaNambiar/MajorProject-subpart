@@ -1,0 +1,196 @@
+Started by an SCM change
+Checking out git /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp into /var/lib/jenkins/workspace/reactapp@script to read Jenkinsfile
+No credentials specified
+Cloning the remote Git repository
+Cloning repository /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > git init /var/lib/jenkins/workspace/reactapp@script # timeout=10
+Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > git --version # timeout=10
+ > git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse origin/master^{commit} # timeout=10
+Checking out Revision 2afd268607a32fc68dfb538d5cfe8d47c2bf1ac7 (origin/master)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 2afd268607a32fc68dfb538d5cfe8d47c2bf1ac7 # timeout=10
+Commit message: "Jenkinsfile updated"
+First time build. Skipping changelog.
+Running in Durability level: MAX_SURVIVABILITY
+[8mha:////4DVW1cQsdUxzTYCbJb2aJ/lJbqqG3h7Ul3mbZH9n2ao8AAAAoh+LCAAAAAAAAP9tjTEOwjAQBM8BClpKHuFItIiK1krDC0x8GCfWnbEdkooX8TX+gCESFVvtrLSa5wtWKcKBo5UdUu8otU4GP9jS5Mixv3geZcdn2TIl9igbHBs2eJyx4YwwR1SwULBGaj0nRzbDRnX6rmuvydanHMu2V1A5c4MHCFXMWcf8hSnC9jqYxPTz/BXAFEIGsfuclm8zQVqFvQAAAA==[0m[Pipeline] Start of Pipeline
+[8mha:////4L9GBJld+ZlYGl48iREGADorvYEv/IpKtypzqwLFLZ0aAAAApR+LCAAAAAAAAP9tjTEOwjAUQ3+KOrAycohUghExsUZZOEFIQkgb/d8mKe3EibgadyBQiQlLlmxL1nu+oE4RjhQdby12HpP2vA+jK4lPFLtroIm3dOGaMFGwXNpJkrGnpUrKFhaxClYC1hZ1oOTRZdiIVt1VExS65pxj2Q4CKm8GeAAThZxVzN8yR9jeRpMIf5y/AJj7DGxXvP/86jduZBmjwAAAAA==[0m[Pipeline] node
+Running on [8mha:////4NqlduOBXV7dk1WmX0Jz3BLVvYCj/ITiLiFEVFb12RHBAAAAnh+LCAAAAAAAAP9b85aBtbiIQTGjNKU4P08vOT+vOD8nVc83PyU1x6OyILUoJzMv2y+/JJUBAhiZGBgqihhk0NSjKDWzXb3RdlLBUSYGJk8GtpzUvPSSDB8G5tKinBIGIZ+sxLJE/ZzEvHT94JKizLx0a6BxUmjGOUNodHsLgAz2EgZh/eT83ILSktQifY3cxGIgrakPAHib2iPIAAAA[0mJenkins in /var/lib/jenkins/workspace/reactapp
+[8mha:////4CqJcZbtqoc3ElAg6GRSJv9K7BgvBY4NCWZbaLskuznoAAAApR+LCAAAAAAAAP9tjTEOwjAUQ3+KOrAycoh0gA0xsUZZOEFIQkgb/d8mKe3EibgadyBQiQlLlmxL1nu+oE4RjhQdby12HpP2vA+jK4lPFLtroIm3dOGaMFGwXNpJkrGnpUrKFhaxClYC1hZ1oOTRZdiIVt1VExS65pxj2Q4CKm8GeAAThZxVzN8yR9jeRpMIf5y/AJj7DGxXvP/86jfoP95RwAAAAA==[0m[Pipeline] {
+[8mha:////4I/3bdPidWD1aOZ+7EG6mwLrFz11fGGOsYWbb7mvaFljAAAApR+LCAAAAAAAAP9tjTEOwjAUQ3+KOrAycoh0gQkxsUZZOEFIQkgb/d8mKe3EibgadyBQiQlLlmxL1nu+oE4RjhQdby12HpP2vA+jK4lPFLtroIm3dOGaMFGwXNpJkrGnpUrKFhaxClYC1hZ1oOTRZdiIVt1VExS65pxj2Q4CKm8GeAAThZxVzN8yR9jeRpMIf5y/AJj7DGxXvP/86jc09154wAAAAA==[0m[Pipeline] stage
+[8mha:////4CqKz7i9a1S9+Q5H+HPi2EJlFb7jv7sZrMPZEH3bqFEyAAAApR+LCAAAAAAAAP9tjTEOwjAUQ3+KOrAycoh0ggUxsUZZOEFIQkgb/d8mKe3EibgadyBQiQlLlmxL1nu+oE4RjhQdby12HpP2vA+jK4lPFLtroIm3dOGaMFGwXNpJkrGnpUrKFhaxClYC1hZ1oOTRZdiIVt1VExS65pxj2Q4CKm8GeAAThZxVzN8yR9jeRpMIf5y/AJj7DGxXvP/86jek7ggRwAAAAA==[0m[Pipeline] { (Declarative: Checkout SCM)
+[8mha:////4J7f/xovur8sARKog015l/rZ4+JgVktK0hMqV8RPZt/4AAAAoh+LCAAAAAAAAP9tjTEOAiEURD9rLGwtPQTbaWGsbAmNJ0AWEZb8zwLrbuWJvJp3kLiJlZNMMm+a93rDOic4UbLcG+wdZu14DKOti0+U+lugiXu6ck2YKRguzSSpM+cFJRUDS1gDKwEbgzpQdmgLbIVXD9UGhba9lFS/o4DGdQM8gYlqLiqVL8wJdvexy4Q/z18BzLEA29ce4gfg7KmOvAAAAA==[0m[Pipeline] checkout
+No credentials specified
+Cloning the remote Git repository
+Cloning repository /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > git init /var/lib/jenkins/workspace/reactapp # timeout=10
+Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > git --version # timeout=10
+ > git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse origin/master^{commit} # timeout=10
+Checking out Revision 2afd268607a32fc68dfb538d5cfe8d47c2bf1ac7 (origin/master)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 2afd268607a32fc68dfb538d5cfe8d47c2bf1ac7 # timeout=10
+Commit message: "Jenkinsfile updated"
+[8mha:////4DiHb0baswU9fIJ9JtoWiTiXL/8YCZAX0NIrBVcrN4N5AAAAoh+LCAAAAAAAAP9tjTEOAiEURD9rLGwtPQTbGRNjZUtoPAGyiLDkfxZYdytP5NW8g8RNrJxkknnTvNcb1jnBiZLl3mDvMGvHYxhtXXyi1N8CTdzTlWvCTMFwaSZJnTkvKKkYWMIaWAnYGNSBskNbYCu8eqg2KLTtpaT6HQU0rhvgCUxUc1GpfGFOsLuPXSb8ef4KYI6xADvU7j9Dg2gqvAAAAA==[0m[Pipeline] }
+[8mha:////4HKkRJWpDLOhV69wCKSJFNdDPb0687A65eGuIA/rLTSCAAAAoh+LCAAAAAAAAP9tjTEOAiEURD9rLGwtPQRbWRhjZUtoPAGyiLDkfxZYdytP5NW8g8RNrJxkknnTvNcb1jnBiZLl3mDvMGvHYxhtXXyi1N8CTdzTlWvCTMFwaSZJnTkvKKkYWMIaWAnYGNSBskNbYCu8eqg2KLTtpaT6HQU0rhvgCUxUc1GpfGFOsLuPXSb8ef4KYI6xADvU7j9J+wGOvAAAAA==[0m[Pipeline] // stage
+[8mha:////4M3LHNlga2NZikxiDa8mKnM/fxFf0oIwfwZpKH3YJSrKAAAAph+LCAAAAAAAAP9tjTEOwjAQBM9BKWgpeYQDEh2iorXc8AITG+PEugv2haTiRXyNPxCIRMVWOyut5vmCMic4UPKycdgGzHWQXez91ORAqb1EGmRDZ1kTZopOajdosu44oyZ2MEcUsFCwdFhHygE9w0o15m6qaNBXJ07TtldQBHuDBwg1mdkk/sKYYH3tbSb8ef4KYOwYxI6h2G4+x/INtuQqUcEAAAA=[0m[Pipeline] withEnv
+[8mha:////4CXr4sjIjil8550gqIMjysRVZJnmaJac4asFntjFy92kAAAApR+LCAAAAAAAAP9tjTEOwjAUQ3+DOrAycoiUzoiJNerCCUITQtLo/zZJSSdOxNW4Ay2VmPBg2Zas93pDGQOcKBjuNHYWY2t570czJ54pdDdPmTu68pYwkte80bkhpc9rbShpWFUw2AjYamw9RYsmwU44+ZCVl2iqSwrzdhTArBrgCYWYyUmG9C1TgP19VJHwx/kLgKlPwOrDYvXyLD8BobDcwgAAAA==[0m[Pipeline] {
+[8mha:////4NU1S8olIsCXxjdZDhEN31H3RNjkp7KJCGutbzL1pEI6AAAAph+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUZUVMrFEWThCaEJJG/7dJSjpxIq7GHWipxIQHy7ZkvdcbqhjgRMEwp7GzGFvLej+aObFMobt5yszRlbWEkbxmQmdBSp/XKihpWFWUsOGw1dh6ihZNgh138iFrL9HUlxTm7cihtGqAJxR8JicZ0rdMAfb3UUXCH+cvAKY+Qdk0ix2WZ/UBbwyqm8IAAAA=[0m[Pipeline] withEnv
+[8mha:////4H1tq5NZe7FDa8KIoQeIaF7utmLGnTfYDAJIimCaXS9QAAAAph+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUwIiYukZZOEFoQkgb/V9+UtqJE3E17kBLJSY8WLYl673eUESGE7ETjcXWY6y96ELvpiQG4vYaaBANXURNGClYoeygyNhqqYqShUVZDisJa4t1oOjRJdjIRj90GTS68px42o4Scm/u8IRMTuSkOX3LyLC99SYS/jh/ATB2CfLdfrbD/Cw+y7kUycIAAAA=[0m[Pipeline] {
+[8mha:////4DUqJp494PldgJPL2JFLu0a/a1pzLscq8oIBnEtORKt3AAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUCDbE1DXKwglCE0La6P/yk9JOnIircQdaKjHhwbItWe/1hiIynIidaCy2HmPtRRd6NyUxELfXQINo6CJqwkjBCmUHRcZWS1WULCzKclhJWFusA0WPLsFGNvqhy6DRlefE03aUkHtzhydkciInzelbRobtrTeR8Mf5C4CxS5Dv9rMd5mfxAbNWnxXCAAAA[0m[Pipeline] stage
+[8mha:////4KfbMJqMA412omvO9lT0VNjI+SefhmiOK3W6i8EbVMmmAAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUSDAhpq5RFk4QmhDSRv+Xn5R24kRcjTvQUokJD5ZtyXqvNxSR4UTsRGOx9RhrL7rQuymJgbi9BhpEQxdRE0YKVig7KDK2WqqiZGFRlsNKwtpiHSh6dAk2stEPXQaNrjwnnrajhNybOzwhkxM5aU7fMjJsb72JhD/OXwCMXYJ8t5/tMD+LD5WQ+PfCAAAA[0m[Pipeline] { (Declarative: Tool Install)
+[8mha:////4GwPIz0Fer0S0bFSsp/WHCYzqKDYFLuh52hAI3RIy7I5AAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiCmgQVVrLDS8wsTFOrDtjOyQVL+Jr/IFAJCq2WO1sM88XLFOEI0eLraHOUWocBt/baeHAsbt4HrDlMzZMib1BaQbJ2tQzSs4G5hQlLASsDDWekyObYS1adVeVV2SrU47TdxBQOn2DBxRiMmcV8xfGCJtrrxPTz/NXAGPIUG53n9qHN7LjSKW+AAAA[0m[Pipeline] tool
+[8mha:////4NoGSI28/p9AeQPlSpc4ioIxxW4LBxETWyIQaqyTNk2JAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiCkSBqNJabniBiY1xYt0Z2yGpeBFf4w8EIlGxxWpnm3m+YJkiHDlabA11jlLjMPjeTgsHjt3F84Atn7FhSuwNSjNI1qaeUXI2MKcoYSFgZajxnBzZDGvRqruqvCJbnXKcvoOA0ukbPKAQkzmrmL8wRthce52Yfp6/AhhDhnK7+9Q+vAHz0lO8vgAAAA==[0m[Pipeline] envVarsForTool
+[8mha:////4MGi0hdhfzzC6ti8RUXrGLkh8Rul5bJjRfvhfahZu/A1AAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiCiQkRJXWcsMLTGyME+vO2A5JxYv4Gn8gEImKLVY728zzBcsU4cjRYmuoc5Qah8H3dlo4cOwungds+YwNU2JvUJpBsjb1jJKzgTlFCQsBK0ON5+TIZliLVt1V5RXZ6pTj9B0ElE7f4AGFmMxZxfyFMcLm2uvE9PP8FcAYQoZyu//U7g1b0dOKvgAAAA==[0m[Pipeline] }
+[8mha:////4FKjQWhYUiuFx1GLEzgR4i9xM2mHIQoygtimqzVJ5UD8AAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiJBqEqNJabniBiY1xYt0Z2yGpeBFf4w8EIlGxxWpnm3m+YJkiHDlabA11jlLjMPjeTgsHjt3F84Atn7FhSuwNSjNI1qaeUXI2MKcoYSFgZajxnBzZDGvRqruqvCJbnXKcvoOA0ukbPKAQkzmrmL8wRthce52Yfp6/AhhDyFBu95/avQFoMog2vgAAAA==[0m[Pipeline] // stage
+[8mha:////4AKuqaBpMKk79c2mz2z9mX7mBRloWJBBzLVBTFSEl+IeAAAApx+LCAAAAAAAAP9tjT0OwjAUg1+LOrAycoiUnxF1Yo26cILQhJA0eq8kKenEibgadyBQiQkPlm3J+p4vqIKHhrxmVmFvMHSGDW7UObFEvr84SszSmXWEgZxirUotSXWca0tRwayihAWHpcLOUTCoI6y4FXdRO4G6PkWftwOH0sgbPKDgmRyFj98yeVhfRxkIf5y/AJiGCOV2n223+TyrNzgO5r/CAAAA[0m[Pipeline] withEnv
+[8mha:////4CKgTPC8sD+2RfXVO/X30YzpYA24SNe0SdMe2DMO4gEaAAAAph+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycogUWBFT1ygLJwhNCGmj/8tPSjtxIq7GHWipxIQHy7ZkvdcbishwInaisdh6jLUXXejdlMRA3F4DDaKhi6gJIwUrlB0UGVstVVGysCjLYSVhbbEOFD26BBvZ6Icug0ZXnhNP21FC7s0dnpDJiZw0p28ZGba33kTCH+cvAMYuQX7Yzbafn8UHbGnGmsIAAAA=[0m[Pipeline] {
+[8mha:////4F05mmqsvRskA0ZmUbPrvgjWrSsTBTU1rryjQaDUwOvXAAAAph+LCAAAAAAAAP9tjTEOwjAUQ3+DOrAycohUdEVMrFEXThCaEJJG/7dJSjpxIq7GHWipxIQHy7ZkvdcbyhjgRMFwp7GzGFvLez+aOfFMobt5ytzRlbeEkbzmjc4NKX1ea0NJw6qCwUbAVmPrKVo0CXbCyYesvERTXVKYt6MAZtUATyjETE4ypG+ZAuzvo4qEP85fAEx9AlYfFquXZ/kBAsTc3cIAAAA=[0m[Pipeline] stage
+[8mha:////4JwYWYP45SToso/e2Zhvk4ttBFwvg+P4+jGKNNInme9rAAAAph+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUKiNiYo2ycILQhJA0+r9NUtKJE3E17kBLJSY8WLYl673eUMUAJwqGOY2dxdha1vvRzIllCt3NU2aOrqwljOQ1EzoLUvq8VkFJw6qihA2HrcbWU7RoEuy4kw9Ze4mmvqQwb0cOpVUDPKHgMznJkL5lCrC/jyoS/jh/ATD1CcqmWeywPKsPpnFij8IAAAA=[0m[Pipeline] { (Environment)
+[8mha:////4H4GHBmNsCOeXWe30h0uHF5Bwp4zVr13CwmGEjiCfLRzAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiAR2iSmu54QUmNsaJdWdsh6TiRXyNPxCIRMUWq51t5vmCZYpw5GixNdQ5So3D4Hs7LRw4dhfPA7Z8xoYpsTcozSBZm3pGydnAnKKEhYCVocZzcmQzrEWr7qryimx1ynH6DgJKp2/wgEJM5qxi/sIYYXPtdWL6ef4KYAwZyu3uU/vwBrANZ3i+AAAA[0m[Pipeline] tool
+[8mha:////4HphSmOADwwVPFLBZdBe255OYwG/DwnPRcVaqjYTh1MqAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIigagQVVrLDS8wsTFOrDtjOyQVL+Jr/IFAJCq2WO1sM88XLFOEI0eLraHOUWocBt/baeHAsbt4HrDlMzZMib1BaQbJ2tQzSs4G5hQlLASsDDWekyObYS1adVeVV2SrU47TdxBQOn2DBxRiMmcV8xfGCJtrrxPTz/NXAGPIUG53n9qHN/E8fGG+AAAA[0m[Pipeline] envVarsForTool
+[8mha:////4PScovl0CtblztPOvWv5t+W5Z4+MHbwH2puocQXOB3pHAAAAqB+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUAokFMXWNsnCC0ISQNvq//KS0EyfiatyBlkpMeLBsS9Z7vaGIDCdiJxqLrcdYe9GF3k1JDMTtNdAgGrqImjBSsELZQZGx1VIVJQuLshxWEtYW60DRo0uwkY1+6DJodOU58bQdJeTe3OEJmZzISXP6lpFhe+tNJPxx/gJg7BLku/1sh/lZfADVPyEewgAAAA==[0m[Pipeline] withEnv
+[8mha:////4FP2+L6VTw0TF/YyvXwuKOB2sfFXK8DcFm0u15V9V7KhAAAAqB+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUYoABMXWNsnCC0ISQNvq//KS0EyfiatyBlkpMeLBsS9Z7vaGIDCdiJxqLrcdYe9GF3k1JDMTtNdAgGrqImjBSsELZQZGx1VIVJQuLshxWEtYW60DRo0uwkY1+6DJodOU58bQdJeTe3OEJmZzISXP6lpFhe+tNJPxx/gJg7BLku/1sh/lZfAAyQCqkwgAAAA==[0m[Pipeline] {
+[8mha:////4Eh4Wy4ALdtG6OVRAFWEMnuvo3fyfD0XFt7CuVWrMFj5AAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIi0YCEqNJabniBiY1xYt0Z2yGpeBFf4w8EIlGxxWpnm3m+YJkiHDlabA11jlLjMPjeTgsHjt3F84Atn7FhSuwNSjNI1qaeUXI2MKcoYSFgZajxnBzZDGvRqruqvCJbnXKcvoOA0ukbPKAQkzmrmL8wRthce52Yfp6/AhhDhnK7+9Q+vAGvZp0gvgAAAA==[0m[Pipeline] sh
++ node -v
+v14.2.0
+[8mha:////4FweV3nTWU7e73Kle13l1bj22whM+vA4ipWprsIT2xxmAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIi0SCEqNJabniBiY1xYt0Z2yGpeBFf4w8EIlGxxWpnm3m+YJkiHDlabA11jlLjMPjeTgsHjt3F84Atn7FhSuwNSjNI1qaeUXI2MKcoYSFgZajxnBzZDGvRqruqvCJbnXKcvoOA0ukbPKAQkzmrmL8wRthce52Yfp6/AhhDhnK7+9Q+vAHuV4Y5vgAAAA==[0m[Pipeline] sh
++ npm i
+
+> core-js@2.6.11 postinstall /var/lib/jenkins/workspace/reactapp/node_modules/babel-runtime/node_modules/core-js
+> node -e "try{require('./postinstall')}catch(e){}"
+
+
+> core-js@3.6.5 postinstall /var/lib/jenkins/workspace/reactapp/node_modules/core-js
+> node -e "try{require('./postinstall')}catch(e){}"
+
+
+> core-js-pure@3.6.5 postinstall /var/lib/jenkins/workspace/reactapp/node_modules/core-js-pure
+> node -e "try{require('./postinstall')}catch(e){}"
+
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.12 (node_modules/webpack-dev-server/node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.12: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.12 (node_modules/watchpack/node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.12: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.12 (node_modules/jest-haste-map/node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.12: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@2.1.2 (node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@2.1.2: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+
+added 1621 packages from 801 contributors and audited 1823 packages in 30.187s
+
+59 packages are looking for funding
+  run `npm fund` for details
+
+found 1 low severity vulnerability
+  run `npm audit fix` to fix them, or `npm audit` for details
+[8mha:////4N8kUhjZ5C0j5fH3lXV63mEnOkS9zkdMZIrDlELYv5GSAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOKCoKBAqWgtN7zAJMY4se6C7eBUvIiv8QcsIlGxxWpnm3m9YRk81OwNdpp6S6GxOLjR5IWJfX91nLDjCzZMgZ1GqZPkVp9mlBw1zClKWAhYaWocB0smwlp06qEqp8hU5+jzdxRQ2vYOTyhENkfl4xcmD5vb2Aamn+evAKZhiFDut7l2hw/wcDw0vgAAAA==[0m[Pipeline] }
+[8mha:////4KMZdHmgZpuHl+pr3Zv72y7Ynoc0iEG43WwtVw2G4SEKAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiQKJBqWgtN7zAJMY4se6C7eBUvIiv8QcsIlGxxWpnm3m9YRk81OwNdpp6S6GxOLjR5IWJfX91nLDjCzZMgZ1GqZPkVp9mlBw1zClKWAhYaWocB0smwlp06qEqp8hU5+jzdxRQ2vYOTyhENkfl4xcmD5vb2Aamn+evAKZhiFDut7l2hw/Dk2eIvgAAAA==[0m[Pipeline] // withEnv
+[8mha:////4Px+Yhec4oCEWwu8aEIggtu19j4mjB1hn34Qzxgp2PVEAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPMKRkhJR0VppeIGJjXFi3Tn2haTiRXyNP2ARiYotVjvbzOsN2xThRNGK3uDgMHVOBD/ZvMRMcbh5mkVPV9ERJvJGtGZuSZvzii2xgTVFCRsJO4Odp+TQMuxlrx6q8gptdeGYv6OE0ukRnlDIbGYV+QtLhMN90onw5/krgCUEhrKpc9XNB+IVmX6+AAAA[0m[Pipeline] }
+[8mha:////4KtB9IVb7piQ4aQ5jLq+MPWpuODNSXzmgW04/l0f+IAUAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPMKRkhJR0VppeIGJjXFi3Tn2haTiRXyNP2ARiYotVjvbzOsN2xThRNGK3uDgMHVOBD/ZvMRMcbh5mkVPV9ERJvJGtGZuSZvzii2xgTVFCRsJO4Odp+TQMuxlrx6q8gptdeGYv6OE0ukRnlDIbGYV+QtLhMN90onw5/krgCUEhrJpctX1B9H2wsK+AAAA[0m[Pipeline] // stage
+[8mha:////4IvJmRza/b3HExjUhq9vK5pn2US7Qc2FR7zOLpJjNJb/AAAAqB+LCAAAAAAAAP9tjT0OwjAUg1+LOrAycohU/GyoE2vUhROEJoSk0XslSUknTsTVuAOBSkx4sGxL1vd8QRU8NOQ1swp7g6EzbHCjzokl8v3FUWKWzqwjDOQUa1VqSarjXFuKCmYVJSw4LBV2joJBHWHFrbiL2gnU9Sn6vB04lEbe4AEFz+QofPyWycP6OspA+OP8BcA0RCi3m2y7/edZvQGrLPKtwgAAAA==[0m[Pipeline] stage
+[8mha:////4JkthVXxLtrS96Fh9P0VD8dFiaDr44HqZUF3jwzWUSdjAAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycoh0ACbE1DXKwglCE0La6P/yk9JOnIircQdaKjHhwbItWe/1hiIynIidaCy2HmPtRRd6NyUxELfXQINo6CJqwkjBCmUHRcZWS1WULCzKclhJWFusA0WPLsFGNvqhy6DRlefE03aUkHtzhydkciInzelbRobtrTeR8Mf5C4CxS5Dv9rMd5mfxASMfXIzCAAAA[0m[Pipeline] { (Test)
+[8mha:////4GTNKCGFLaesbCFQk4hc+DakPUm9ipu1CwLBU58pQHcdAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSIGgQVVrLDS8wsTFOrDtjOyQVL+Jr/IFAJCq2WO1sM88XLFOEI0eLraHOUWocBt/baeHAsbt4HrDlMzZMib1BaQbJ2tQzSs4G5hQlLASsDDWekyObYS1adVeVV2SrU47TdxBQOn2DBxRiMmcV8xfGCJtrrxPTz/NXAGPIUG53n9qHN6Ew6eS+AAAA[0m[Pipeline] tool
+[8mha:////4EGQgP+CN0TKbQd10W84GZyLmoiVOS2OJcsH797rxaFjAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSIESBqNJabniBiY1xYt0Z2yGpeBFf4w8EIlGxxWpnm3m+YJkiHDlabA11jlLjMPjeTgsHjt3F84Atn7FhSuwNSjNI1qaeUXI2MKcoYSFgZajxnBzZDGvRqruqvCJbnXKcvoOA0ukbPKAQkzmrmL8wRthce52Yfp6/AhhDhnK7+9Q+vAHgAfL9vgAAAA==[0m[Pipeline] envVarsForTool
+[8mha:////4Cn6MipY3yIJPifB5PkxpyLdikxDbG9QkYQYoqYavpxdAAAAqB+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycoh0QEhIiKlrlIUThCaEtNH/5SelnTgRV+MOtFRiwoNlW7Le6w1FZDgRO9FYbD3G2osu9G5KYiBur4EG0dBF1ISRghXKDoqMrZaqKFlYlOWwkrC2WAeKHl2CjWz0Q5dBoyvPiaftKCH35g5PyORETprTt4wM21tvIuGP8xcAY5cg3+1nO8zP4gM900zxwgAAAA==[0m[Pipeline] withEnv
+[8mha:////4I0Y4og3uLl3LC6PbJ9PuyNOlbQtwW9QOMKNeogjhCyJAAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycoh0YAEhpq5RFk4QmhDSRv+Xn5R24kRcjTvQUokJD5ZtyXqvNxSR4UTsRGOx9RhrL7rQuymJgbi9BhpEQxdRE0YKVig7KDK2WqqiZGFRlsNKwtpiHSh6dAk2stEPXQaNrjwnnrajhNybOzwhkxM5aU7fMjJsb72JhD/OXwCMXYJ8t5/tMD+LD59NhPHCAAAA[0m[Pipeline] {
+[8mha:////4K5W9gjitO56yHhb0C+pYWjIigPdt3H1FD3SK19vUV3cAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOKCBA1CqWgtN7zAJMY4se6C7eBUvIiv8QcsIlGxxWpnm3m9YRk81OwNdpp6S6GxOLjR5IWJfX91nLDjCzZMgZ1GqZPkVp9mlBw1zClKWAhYaWocB0smwlp06qEqp8hU5+jzdxRQ2vYOTyhENkfl4xcmD5vb2Aamn+evAKYhQrk75Npvhw/W61xwvgAAAA==[0m[Pipeline] sh
++ npm run test
+
+> reactrelative@0.1.0 test /var/lib/jenkins/workspace/reactapp
+> react-scripts test
+
+FAIL src/App.test.js
+  ✕ renders learn react link (92ms)
+
+  ● renders learn react link
+
+    Unable to find an element with the text: /datum state/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+    [36m<body>[39m
+      [36m<div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"App"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<form>[39m
+              [36m<input[39m
+                [33mname[39m=[32m"txt1"[39m
+                [33mtype[39m=[32m"text"[39m
+              [36m/>[39m
+              [36m<input[39m
+                [33mname[39m=[32m"btn1"[39m
+                [33mtype[39m=[32m"button"[39m
+                [33mvalue[39m=[32m"Submit btn"[39m
+              [36m/>[39m
+            [36m</form>[39m
+            [36m<div[39m
+              [33mid[39m=[32m"output"[39m
+            [36m>[39m
+              [0mDefault value of data state variable.[0m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</body>[39m
+
+       5 | test('renders learn react link', () => {
+       6 |   const { getByText } = render(<App />);
+    >  7 |   const linkElement = getByText(/datum state/i);
+         |                       ^
+       8 |   expect(linkElement).toBeInTheDocument();
+       9 | });
+      10 | 
+
+      at Object.getElementError (node_modules/@testing-library/dom/dist/config.js:34:12)
+      at node_modules/@testing-library/dom/dist/query-helpers.js:71:38
+      at getByText (node_modules/@testing-library/dom/dist/query-helpers.js:54:17)
+      at Object.<anonymous> (src/App.test.js:7:23)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 1 total
+Snapshots:   0 total
+Time:        2.518s
+Ran all test suites.
+npm ERR! code ELIFECYCLE
+npm ERR! errno 1
+npm ERR! reactrelative@0.1.0 test: `react-scripts test`
+npm ERR! Exit status 1
+npm ERR! 
+npm ERR! Failed at the reactrelative@0.1.0 test script.
+npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
+
+npm ERR! A complete log of this run can be found in:
+npm ERR!     /var/lib/jenkins/.npm/_logs/2020-05-13T10_49_52_767Z-debug.log
+[8mha:////4J2JoARG3gc7JyaNgHB/rkxrisJ6pfOmFA944jq3J6WJAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiBA1CqWgtN7zAJMY4se6C7eBUvIiv8QcsIlGxxWpnm3m9YRk81OwNdpp6S6GxOLjR5IWJfX91nLDjCzZMgZ1GqZPkVp9mlBw1zClKWAhYaWocB0smwlp06qEqp8hU5+jzdxRQ2vYOTyhENkfl4xcmD5vb2Aamn+evAKZhiFDut7l2hw+dgWTEvgAAAA==[0m[Pipeline] }
+[8mha:////4PVNl3ha1EzEU+2MTxPG5ozQ/HXx3ZSLtAimMFZFV0QXAAAAph+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiAQUSSkVrueEFJjHGiXUXbAen4kV8jT9gEYmKLVY728zrDcvgoWZvsNPUWwqNxcGNJi9M7Pur44QdX7BhCuw0Sp0kt/o0o+SoYU5RwkLASlPjOFgyEdaiUw9VOUWmOkefv6OA0rZ3eEIhsjkqH78wedjcxjYw/Tx/BTANQ4Ryv821O3wApcP3Nb4AAAA=[0m[Pipeline] // withEnv
+[8mha:////4BPa8sVPU1oNDAK1YGTVlc3tBsOHgw+M71XCzE6PMxPHAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSBCpEldZKwwtMbIwT687YDknFi/gaf8AiEhVbrHa2mdcb1jHAiYPBXtNgKXYWvRtNXjhxGK6OJ+z5gh1TZKex1VPLSjcLtpw0LClKWAnYaOocR0smwVb08iErJ8lU5xTydxRQWnWHJxQim5MM6QtzgN1tVJHp5/krgNn7BOW+zlUfPr1sGoC+AAAA[0m[Pipeline] }
+[8mha:////4CxQ2z0ZaapLq3SJo9v2t1V3oB1Qi7CP8JrHDyRrTeA7AAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPMIpSIeoaC03vMAkh3Fi3Rnbwal4EV/jD1hEomKL1c4283rDOgY4cjBiQBotxc4K7yZTlsgcxqvjLAa+iI4pskOhMCvu8bSg4oSwpKphJWGD1DmOlkyCrRz0QzdOk2nOKZTvIKG2/R2eUMliTjqkL8wBdrepj0w/z18BzN4nqNu21L79AJNsGOq+AAAA[0m[Pipeline] // stage
+[8mha:////4NmBjjg9Wfza+8aNeVuSVUgkfPLz3sRPx1NMVQ/Hqh72AAAAqB+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUIJhQJ9aoCycITQhJo/9LkpJOnIircQcClZjwYNmWrPd8QRU8NOQ1swp7g6EzbHCjzokl8v3FUWKWzqwjDOQUa1VqSarjXFuKCmYVJSw4LBV2joJBHWHFrbiL2gnU9Sn6vB04lEbe4AEFz+QofPyWycP6OspA+OP8BcA0RCi3m2y7/edZvQGAwQmjwgAAAA==[0m[Pipeline] stage
+[8mha:////4GtVvkJSG9JjTjO0oXlaJuBaGtXm2YNbyk0zNiKEdIFKAAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycoh0ARbE1DXKwglCE0La6P/yk9JOnIircQdaKjHhwbItWe/1hiIynIidaCy2HmPtRRd6NyUxELfXQINo6CJqwkjBCmUHRcZWS1WULCzKclhJWFusA0WPLsFGNvqhy6DRlefE03aUkHtzhydkciInzelbRobtrTeR8Mf5C4CxS5Dv9rMd5mfxAUxleXrCAAAA[0m[Pipeline] { (Build)
+Stage "Build" skipped due to earlier failure(s)
+[8mha:////4Fgch9JKzQS+SGAOazKi1oqgUuXwoApap1ftZ8g42wCwAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOLSICgQVVrLDS8wsTFOrDtjOyQVL+Jr/IFAJCq2WO1sM88XLFOEI0eLraHOUWocBt/baeHAsbt4HrDlMzZMib1BaQbJ2tQzSs4G5hQlLASsDDWekyObYS1adVeVV2SrU47TdxBQOn2DBxRiMmcV8xfGCJtrrxPTz/NXAGMIGcrt/lO7N9bpw82+AAAA[0m[Pipeline] }
+[8mha:////4Dc/HYGJTlQBdn+h/hTxoJKz41XSbxxe0QhhVSh+4ttDAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOLSgISEqNJabniBiY1xYt0Z2yGpeBFf4w8EIlGxxWpnm3m+YJkiHDlabA11jlLjMPjeTgsHjt3F84Atn7FhSuwNSjNI1qaeUXI2MKcoYSFgZajxnBzZDGvRqruqvCJbnXKcvoOA0ukbPKAQkzmrmL8wRthce52Yfp6/AhhDyFBu95/avQG5CpylvgAAAA==[0m[Pipeline] // stage
+[8mha:////4NKl2Da0+cRaJLX9VRjKXDHzj6OQ8Vw/Ks8XcBPKGpWlAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiEA1CqWgtN7zAJMY4se6C7eBUvIiv8QcsIlGxxWpnm3m9YRk81OwNdpp6S6GxOLjR5IWJfX91nLDjCzZMgZ1GqZPkVp9mlBw1zClKWAhYaWocB0smwlp06qEqp8hU5+jzdxRQ2vYOTyhENkfl4xcmD5vb2Aamn+evAKZhiFDuD7l22w+Duvc/vgAAAA==[0m[Pipeline] }
+[8mha:////4InaN4K5YmsckCeguDh5cVKsYNNNwlulPRkZ5REGEYoDAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOISIVEhqrRWGl5gYmOcWHfGdkgqXsTX+AMWkajYYrWzzbzesI4BThwM9poGS7Gz6N1o8sKJw3B1PGHPF+yYIjuNrZ5aVrpZsOWkYUlRwkrARlPnOFoyCbailw9ZOUmmOqeQv6OA0qo7PKEQ2ZxkSF+YA+xuo4pMP89fAczeJygPda59/QFp0IjJvgAAAA==[0m[Pipeline] // withEnv
+[8mha:////4A+vdyBSHWuOxlaaNlNuaVXEXN1J7TTlr0sSUbe4qMOlAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOKiCFEhqrRWGl5gYmOcWHfGdkgqXsTX+AMWkajYYrWzzbzesI4BThwM9poGS7Gz6N1o8sKJw3B1PGHPF+yYIjuNrZ5aVrpZsOWkYUlRwkrARlPnOFoyCbailw9ZOUmmOqeQv6OA0qo7PKEQ2ZxkSF+YA+xuo4pMP89fAczeJygPda56/wG1AfCwvgAAAA==[0m[Pipeline] }
+[8mha:////4LiLRsQggkDLgvr5LFzJ97W4LUPN+GJnXXHXysbkEKAfAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPMIRkagQVVorDS8w8WGcWHfGdkgqXsTX+AMWkajYYrWzzbzesI4BThyM6JEGS7GzwrvR5CUmDsPV8SR6voiOKbJD0eLUssZmwZYTwpKihJWEDVLnOFoyCbayVw9VOUWmOqeQv6OE0uo7PKGQ2ZxUSF+YA+xuo45MP89fAczeJygPda59/QGNQ2NBvgAAAA==[0m[Pipeline] // withEnv
+[8mha:////4E708CjZ99zBlP5YDRnCx/EXji4+0PWEjej2weW273asAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOKiCFEhqrRWGl5gYmOcWHfGdkgqXsTX+AMWkajYYrWzzbzesI4BThwM9poGS7Gz6N1o8sKJw3B1PGHPF+yYIjuNrZ5aVrpZsOWkYUlRwkrARlPnOFoyCbailw9ZOUmmOqeQv6OA0qo7PKEQ2ZxkSF+YA+xuo4pMP89fAczeJygP+1x1/QGSwTYTvgAAAA==[0m[Pipeline] }
+[8mha:////4M10/FJEgwxZsRTgGi6RxBPDzPFuIYUt2c9V3jNmn4DlAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOICElQoFa3lhheYxBgn1l2wHZyKF/E1/oBFJCq2WO1sM683LIOHmr3BTlNvKTQWBzeavDCx76+OE3Z8wYYpsNModZLc6tOMkqOGOUUJCwErTY3jYMlEWItOPVTlFJnqHH3+jgJK297hCYXI5qh8/MLkYXMb28D08/wVwDQMEcrDPtdu+wG8wTR5vgAAAA==[0m[Pipeline] // withEnv
+[8mha:////4FEcMutcOd509Dq06zA1VIyMex31f8fpdC7jaAV2asTVAAAAoh+LCAAAAAAAAP9tjTESgjAQRT84FraWHiI0UjlWthkaTxAhxkBmF5NFqDyRV/MOMjJj5a/+e817vbFOEUeOTrWWOk+p9qoPg5ufGjl218CjavmiaqbEwarKjhU39rRgxWKxLMux0thYqgMnT06w1a15mCIYcsVZ4uwOGrlv7ngi03NZTJQvTBG729Akpl/nbwBT3wvyshRk+w/j5jSBvQAAAA==[0m[Pipeline] }
+[8mha:////4O7Tqu9WtvmOytDbDkIDm2CIbGahThc2Npr4eUchl5YIAAAAox+LCAAAAAAAAP9tjTEOwjAQBDdBFLSUPMIpEDSIitZKwwtMYowT6y7YF5KKF/E1/kBEJCq22plmXm8sU8SRo1ONpdZTqrzqQu+mpwaO7TXwoBq+qIopcbCqtEPJtT3NWLJYzMtyLDRWlqrAyZMTrHVjHqYIhlxxlji5g0bu6zueyPRUFhPlC2PE5tbXienX+RvA2HWCfLcXZNsPkAnwWL0AAAA=[0m[Pipeline] // node
+[8mha:////4MQ1h2MZCIp1cePxr8G53fojKH2Uljy0s/21lOn0AYy4AAAApB+LCAAAAAAAAP9tjTEOwjAQBDdBFLSUPMKRkBAFoqK10vACkxjjxLoL9oWk4kV8jT8QEYmKrXammdcbyxRx5OhUY6n1lCqvutC76amBY3sNPKiGL6piShysKu1Qcm1PM5YsFvOyHAuNlaUqcPLkBGvdmIcpgiFXnCVO7qCR+/qOJzI9lcVE+cIYsbn1dWL6df4GMHadIN/tBdn2A7YQlxK9AAAA[0m[Pipeline] End of Pipeline
+ERROR: script returned exit code 1
+Finished: FAILURE

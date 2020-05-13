@@ -1,8 +1,9 @@
 const path = require('path');
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
+const fs = require('fs-extra');
 const jenkinsapi = require('jenkins-api');
+const jenkinsbuildstatusapi = require('jenkins'); // name defines the only purpoe of importing this package here.
 const xmljsconv = require('xml-js')
 const { exec } = require('child_process');
 
@@ -33,12 +34,21 @@ router.post('/integrate', async (req, res) => {
             console.log("job exists - updating it now");
             await updateJob(jenkins, projName, xmlConfigString);
 
-            //await checkJobStatus(jenkins, projName);
-            res.status(200).send(true);
+            let isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, projName);
+            if (isCompleted){
+                res.status(200).json({data: projName});
+            } else {
+                res.status(400).json("Build Failed - Check logs!");                
+            }
         } else {
             console.log("job does not exists - creating it now");
             let data = await createJob(jenkins, projName, xmlConfigString);
-            res.status(200).send(data);
+            let isCompleted = await checkJobStatus(jenkins, projName);
+            if (isCompleted){
+                res.status(200).json({data: projName});
+            } else {
+                res.status(400).json("Build Failed - Check logs!");                
+            }
         }
     } catch (err) {
         console.log(err);
@@ -46,6 +56,27 @@ router.post('/integrate', async (req, res) => {
     }
 })
 
+function checkJobStatus(jenkins, projName){
+    return new Promise((resolve, reject) => {
+        try {
+            jenkins.last_
+            jenkins.build.get('example', 1, function(err, data) {
+              if (err) {
+                console.log(err);
+                reject(new Error(`jenkins-build-get err ${err.name} :- ${err.message}`))
+              }
+              if (data.color == "blue"){
+                resolve(true);
+              } else {
+                resolve(false);
+              }
+            });
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`(checkJobStatus) err ${err.name} :- ${err.message}`));
+        }
+    })
+}
 function doesJobExist(jenkins, projName){
     return new Promise( (resolve, reject) => {
         try {
@@ -162,15 +193,11 @@ function cloneRepo(projName) {
             let url = `http://localhost:7005/projects/bare/${projName}.git`
             let projPath = path.join(projects_silo_path, projName);
             if (fs.existsSync(projPath)){
-                console.log("IT EXISTS - REMOVING NOW")
-                fs.rmdir(projPath, {
-                    recursive: true
-                }, (err) => {
+                fs.remove(projPath, (err) => {
                     if (err) {
                         console.log(err);
                         reject(new Error(`Could not remove old workspace: ${err}`))
                     }
-                    console.log("REMOVED");
                     exec(`git clone ${url} ${projName}`, {
                         cwd: projects_silo_path,
                         shell: true
@@ -202,7 +229,7 @@ function cloneRepo(projName) {
                             //reject(new Error(`(cloneRepo) git-clone cli stderr:\n ${stderr}`));
                         }
                         resolve(path.join(projects_silo_path, projName));
-                    })
+                })
             }
         } catch (err) {
             console.log(err);

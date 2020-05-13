@@ -1,9 +1,9 @@
 const path = require('path');
 const express = require('express');
 const router = express.Router();
-const fs = require('fs-extra');
+const fs = require('fs');
 const jenkinsapi = require('jenkins-api');
-const jenkinsbuildstatusapi = require('jenkins')({ baseUrl: 'http://admin:11917eb8415f1013d725ed47be3eb2c869@localhost:8080', crumbIssuer: true }); // name defines the only purpoe of importing this package here.
+const jenkinsbuildstatusapi = require('jenkins')({ baseUrl: 'http://admin:11a4469a856bdf30c30a7c0053f822beaa@localhost:8080', crumbIssuer: true }); // name defines the only purpoe of importing this package here.
 const xmljsconv = require('xml-js')
 const { exec } = require('child_process');
 
@@ -16,7 +16,7 @@ router.post('/integrate', async (req, res) => {
         let branchName = req.body.branchName || 'master';
         let pollSCMSchedule = req.body.pollSCMSchedule || 'H/2 * * * *';
         // username/API token:
-        let jenkins = jenkinsapi.init("http://admin:11917eb8415f1013d725ed47be3eb2c869@localhost:8080");
+        let jenkins = jenkinsapi.init("http://admin:11a4469a856bdf30c30a7c0053f822beaa@localhost:8080");
         
         // Setup working directory for jenkins to access it.
         let workdirpath = await cloneRepo(projName); 
@@ -36,16 +36,16 @@ router.post('/integrate', async (req, res) => {
 
             let isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, projName);
             if (isCompleted){
-                res.status(200).json({data: projName});
+                res.status(200).json({data: projName, workdirpath: workdirpath});
             } else {
                 res.status(400).json({data:"Build Failed - Check logs!"});                
             }
         } else {
             console.log("job does not exists - creating it now");
             let data = await createJob(jenkins, projName, xmlConfigString);
-            let isCompleted = await checkJobStatus(jenkins, projName);
+            let isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, projName);
             if (isCompleted){
-                res.status(200).json({data: projName});
+                res.status(200).json({data: projName, workdirpath: workdirpath});
             } else {
                 res.status(400).json({data:"Build Failed - Check logs!"});                
             }
@@ -64,17 +64,16 @@ function checkJobStatus(jenkins,jenkinsbuildstatusapi, projName){
                     console.log(err);
                     reject(new Error(`(checkJobStatus) last-build-info err ${err.name} :- ${err.message}`))
                 }
-                jenkinsbuildstatusapi.build.get(projName, data.number, function(err, data) {
-                  if (err) {
+                let buildstatus = jenkinsbuildstatusapi.build.get(projName, data.number)//, function(err, data) {
+                  /*if (err) {
                     console.log(err);
                     reject(new Error(`(checkJobStatus) jenkins-build-get err ${err.name} :- ${err.message}`))
-                  }
-                  if (data.color == "blue"){ // In Jenkins, "blue" build color means successful build. "red" means unsuccessful and "notbuilt" means yet to build. 
+                  }*/
+                  if (buildstatus.color == "blue"){ // In Jenkins, "blue" build color means successful build. "red" means unsuccessful and "notbuilt" means yet to build. 
                     resolve(true);
                   } else {
                     resolve(false);
                   }
-                });
             })
         } catch(err) {
             console.log(err);
@@ -198,7 +197,7 @@ function cloneRepo(projName) {
             let url = `http://localhost:7005/projects/bare/${projName}.git`
             let projPath = path.join(projects_silo_path, projName);
             if (fs.existsSync(projPath)){
-                fs.remove(projPath, (err) => {
+                fs.rmdir(projPath, {recursive:true}, (err) => {
                     if (err) {
                         console.log(err);
                         reject(new Error(`Could not remove old workspace: ${err}`))

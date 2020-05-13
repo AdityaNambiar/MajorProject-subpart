@@ -1,23 +1,28 @@
 Started by an SCM change
-Checking out git /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp into /var/lib/jenkins/workspace/reactapp@script to read Jenkinsfile
+Checking out git /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp into /var/lib/jenkins/jobs/reactapp/workspace@script to read Jenkinsfile
 No credentials specified
- > git rev-parse --is-inside-work-tree # timeout=10
-Fetching changes from the remote Git repository
- > git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+Cloning the remote Git repository
+Cloning repository /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > /usr/bin/git init /var/lib/jenkins/jobs/reactapp/workspace@script # timeout=10
 Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
- > git --version # timeout=10
- > git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
- > git rev-parse origin/master^{commit} # timeout=10
-Checking out Revision 3165f1153476a3ab5d829b199748ec2bcaf9c37b (origin/master)
- > git config core.sparsecheckout # timeout=10
- > git checkout -f 3165f1153476a3ab5d829b199748ec2bcaf9c37b # timeout=10
-Commit message: "Updated Jenkinfile with customWorkspace"
- > git rev-list --no-walk 5cfb75204afd1963b380e890e6dc1fec1bac3c5e # timeout=10
+ > /usr/bin/git --version # timeout=10
+ > /usr/bin/git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+ > /usr/bin/git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > /usr/bin/git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > /usr/bin/git rev-parse origin/master^{commit} # timeout=10
+Checking out Revision 1a1fe1c6932005563ccd809176ca2576c6d5b552 (origin/master)
+ > /usr/bin/git config core.sparsecheckout # timeout=10
+ > /usr/bin/git checkout -f 1a1fe1c6932005563ccd809176ca2576c6d5b552 # timeout=10
+Commit message: "Updated Jenkinfile with customWorkspace relative path"
+First time build. Skipping changelog.
 Running in Durability level: MAX_SURVIVABILITY
 org.codehaus.groovy.control.MultipleCompilationErrorsException: startup failed:
-WorkflowScript: 3: Missing required parameter for agent type "node": label @ line 3, column 2.
-   	node {
-    ^
+WorkflowScript: 11: Tool type "nodejs" does not have an install of "node" configured - did you mean "node14"? @ line 11, column 19.
+       tools {nodejs "node"}
+                     ^
 
 1 error
 

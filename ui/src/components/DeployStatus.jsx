@@ -36,6 +36,7 @@ class Integration extends Component {
       },
       body: JSON.stringify({ 
           projName: projName,
+          workdirpath: '',
           jenkinsfile: jenkinsfile,
           description: jenkins_jobdesc
       })
@@ -44,7 +45,11 @@ class Integration extends Component {
     .then(res => {
       if (res.data === "Build Failed - Check logs!") throw new Error("Build Failed - Check logs!");
       else {
-        this.setState({ projName: res.data, progressPercent: '50' });
+        this.setState({ 
+           projName: res.data,
+           workdirpath: res.workdirpath, 
+           progressPercent: '50' 
+        });
         this.startDeployment();
       }
     })
@@ -55,7 +60,7 @@ class Integration extends Component {
 
   }
   startDeployment = () => {
-    const { projName } = this.props.location.state;
+    const { projName,workdirpath } = this.props.location.state;
 
     fetch('http://localhost:5003/deploy', {
       method: 'POST',
@@ -63,7 +68,8 @@ class Integration extends Component {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ 
-          projName: projName
+          projName: projName,
+          workdirpath: workdirpath
       })
     })
     .then(resp => resp.json())

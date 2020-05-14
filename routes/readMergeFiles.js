@@ -18,15 +18,7 @@ router.post('/readMergeFiles', async (req, res) => {
     try {
         var projName = req.body.projName;
         var mergeobj = JSON.parse(req.body.mergeobj);
-        var branchToUpdate = '';
-        var title = mergeobj.title;
-        // Using Regex to avoid vigorously checking to make sure if its type is branch or pull because there's type special as well. 
-        var rgxForBranch = /Merge conflict raised when merging/
-        var rgxForPull = /Merge conflict raised pulling/
-        if (rgxForBranch.test(title))
-            branchToUpdate = title.split("merging ")[1].split(" into ")[1]; // Destination branch name (where it should be left out)
-        if (rgxForPull.test(title))
-            branchToUpdate = title.split("pulling ")[1].split(" branch")[0];
+        var branchToUpdate = req.body.branchToUpdate;
 
         var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
         var mergeid = mergeobj.mergeid;
@@ -54,6 +46,7 @@ async function main(projName, workdirpath, url) {
 }
 
 function checkUnmergedFiles(workdirpath) {
+    
     return new Promise((resolve, reject) => {
         try {
             exec(`git diff --name-only --diff-filter=U`, {

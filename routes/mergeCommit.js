@@ -23,19 +23,11 @@ router.post('/mergeCommit', async (req, res) => {
         var curr_majorHash = req.body.majorHash; // latest
         var username = req.body.username;
         var mergeobj = JSON.parse(req.body.mergeobj);
-        var branchToUpdate = '';
+        var branchToUpdate = req.body.branchToUpdate;
         var filebuffobj = JSON.parse(req.body.filebuffobj);
         var url = `'http://localhost:7005/projects/bare/${projName}.git'`;
         var mergeid = mergeobj.mergeid;
-        var title = mergeobj.title;
-        // Using Regex to avoid vigorously checking to make sure if its type is branch or pull because there's type special as well. 
-        var rgxForBranch = /Merge conflict raised when merging/
-        var rgxForPull = /Merge conflict raised pulling/
-        if (rgxForBranch.test(title))
-            branchToUpdate = title.split("merging ")[1].split(" into ")[1]; // Destination branch name (where it should be left out)
-        if (rgxForPull.test(title))
-            branchToUpdate = title.split("pulling ")[1].split(" branch")[0];
-
+        
         var authorname = req.body.authorname;
         var authoremail = req.body.authoremail;
         var usermsg = req.body.usermsg;

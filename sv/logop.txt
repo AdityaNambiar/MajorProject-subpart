@@ -1,18 +1,23 @@
 Started by user Aditya Nambiar
 Checking out git /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp into /var/lib/jenkins/jobs/reactapp/workspace@script to read Jenkinsfile
 No credentials specified
- > /usr/bin/git rev-parse --is-inside-work-tree # timeout=10
-Fetching changes from the remote Git repository
- > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+Cloning the remote Git repository
+Cloning repository /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > /usr/bin/git init /var/lib/jenkins/jobs/reactapp/workspace@script # timeout=10
 Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
  > /usr/bin/git --version # timeout=10
  > /usr/bin/git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+ > /usr/bin/git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > /usr/bin/git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
  > /usr/bin/git rev-parse origin/master^{commit} # timeout=10
-Checking out Revision db33060e3bf97e46035bb17c3cafe6c83c56ac0c (origin/master)
+Checking out Revision d49cfb46b642f058804a82f76b1c1d02f5de42d0 (origin/master)
  > /usr/bin/git config core.sparsecheckout # timeout=10
- > /usr/bin/git checkout -f db33060e3bf97e46035bb17c3cafe6c83c56ac0c # timeout=10
-Commit message: "Fixed webserver index and Dockerfile"
- > /usr/bin/git rev-list --no-walk db33060e3bf97e46035bb17c3cafe6c83c56ac0c # timeout=10
+ > /usr/bin/git checkout -f d49cfb46b642f058804a82f76b1c1d02f5de42d0 # timeout=10
+Commit message: "Purposefully modified testcase - its incorrect and gives error"
+First time build. Skipping changelog.
 Running in Durability level: MAX_SURVIVABILITY
 [Pipeline] Start of Pipeline
 [Pipeline] node
@@ -22,17 +27,22 @@ Running on Jenkins in /var/lib/jenkins/jobs/reactapp/workspace
 [Pipeline] { (Declarative: Checkout SCM)
 [Pipeline] checkout
 No credentials specified
- > /usr/bin/git rev-parse --is-inside-work-tree # timeout=10
-Fetching changes from the remote Git repository
- > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+Cloning the remote Git repository
+Cloning repository /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > /usr/bin/git init /var/lib/jenkins/jobs/reactapp/workspace # timeout=10
 Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
  > /usr/bin/git --version # timeout=10
  > /usr/bin/git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+ > /usr/bin/git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > /usr/bin/git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
  > /usr/bin/git rev-parse origin/master^{commit} # timeout=10
-Checking out Revision db33060e3bf97e46035bb17c3cafe6c83c56ac0c (origin/master)
+Checking out Revision d49cfb46b642f058804a82f76b1c1d02f5de42d0 (origin/master)
  > /usr/bin/git config core.sparsecheckout # timeout=10
- > /usr/bin/git checkout -f db33060e3bf97e46035bb17c3cafe6c83c56ac0c # timeout=10
-Commit message: "Fixed webserver index and Dockerfile"
+ > /usr/bin/git checkout -f d49cfb46b642f058804a82f76b1c1d02f5de42d0 # timeout=10
+Commit message: "Purposefully modified testcase - its incorrect and gives error"
 [Pipeline] }
 [Pipeline] // stage
 [Pipeline] withEnv
@@ -58,162 +68,3 @@ Commit message: "Fixed webserver index and Dockerfile"
 v14.2.0
 [Pipeline] sh
 + npm i
-npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
-npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@2.1.2 (node_modules/fsevents):
-npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@2.1.2: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
-npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.12 (node_modules/webpack-dev-server/node_modules/fsevents):
-npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.12: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
-npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.12 (node_modules/watchpack/node_modules/fsevents):
-npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.12: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
-npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.12 (node_modules/jest-haste-map/node_modules/fsevents):
-npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.12: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
-
-up to date in 10.994s
-
-59 packages are looking for funding
-  run `npm fund` for details
-
-[Pipeline] }
-[Pipeline] // withEnv
-[Pipeline] }
-[Pipeline] // stage
-[Pipeline] stage
-[Pipeline] { (Test)
-[Pipeline] tool
-[Pipeline] envVarsForTool
-[Pipeline] withEnv
-[Pipeline] {
-[Pipeline] sh
-+ npm run test
-
-> reactrelative@0.1.0 test /var/lib/jenkins/jobs/reactapp/workspace
-> react-scripts test
-
-PASS src/App.test.js
-  ✓ renders learn react link (108ms)
-
-Test Suites: 1 passed, 1 total
-Tests:       1 passed, 1 total
-Snapshots:   0 total
-Time:        2.859s
-Ran all test suites.
-[Pipeline] }
-[Pipeline] // withEnv
-[Pipeline] }
-[Pipeline] // stage
-[Pipeline] stage
-[Pipeline] { (Build)
-[Pipeline] tool
-[Pipeline] envVarsForTool
-[Pipeline] withEnv
-[Pipeline] {
-[Pipeline] sh
-+ npm run build
-
-> reactrelative@0.1.0 build /var/lib/jenkins/jobs/reactapp/workspace
-> react-scripts build
-
-Creating an optimized production build...
-Compiled successfully.
-
-File sizes after gzip:
-
-  39.77 KB  build/static/js/2.cf40ef3f.chunk.js
-  897 B     build/static/js/main.8442eafa.chunk.js
-  774 B     build/static/js/runtime-main.5d4c4a18.js
-  556 B     build/static/css/main.d1b05096.chunk.css
-
-The project was built assuming it is hosted at /.
-You can control this with the homepage field in your package.json.
-
-The build folder is ready to be deployed.
-You may serve it with a static server:
-
-  yarn global add serve
-  serve -s build
-
-Find out more about deployment here:
-
-  bit.ly/CRA-deploy
-
-[Pipeline] }
-[Pipeline] // withEnv
-[Pipeline] }
-[Pipeline] // stage
-[Pipeline] stage
-[Pipeline] { (Deploy to Docker Hub)
-[Pipeline] tool
-[Pipeline] envVarsForTool
-[Pipeline] withEnv
-[Pipeline] {
-[Pipeline] sh
-+ docker build -t reactapp:0.1 -f Dockerfile.deploy .
-Sending build context to Docker daemon  2.106MB
-Step 1/9 : FROM node:14.0.0-alpine3.11
- ---> ea308280893e
-Step 2/9 : WORKDIR /webserver
- ---> Using cache
- ---> 4b28b00c6eae
-Step 3/9 : COPY build build
- ---> Using cache
- ---> f7bdb311aa70
-Step 4/9 : COPY webserver .
- ---> Using cache
- ---> 37588e7f73a9
-Step 5/9 : RUN node -v
- ---> Using cache
- ---> c3cb2ecc2c68
-Step 6/9 : RUN rm -rf node_modules
- ---> Using cache
- ---> a3f0cdf5e47f
-Step 7/9 : RUN npm install
- ---> Using cache
- ---> e53f0b40d8ae
-Step 8/9 : EXPOSE 8080
- ---> Using cache
- ---> 9c6551d6ef38
-Step 9/9 : CMD ["node", "index.js"]
- ---> Using cache
- ---> e3cee8adfdcf
-Successfully built e3cee8adfdcf
-Successfully tagged reactapp:0.1
-Post stage
-[Pipeline] sh
-+ docker tag reactapp:0.1 localhost:7009/reactapp:0.1
-[Pipeline] sh
-+ docker push localhost:7009/reactapp:0.1
-The push refers to repository [localhost:7009/reactapp]
-748cc49e2027: Preparing
-73fc978595cb: Preparing
-14fda51d130b: Preparing
-47d6ffb515ad: Preparing
-9d7d51d9fb49: Preparing
-0e0dc10cb2cc: Preparing
-a9bc5004c16d: Preparing
-beee9f30bc1f: Preparing
-0e0dc10cb2cc: Waiting
-a9bc5004c16d: Waiting
-beee9f30bc1f: Waiting
-73fc978595cb: Layer already exists
-14fda51d130b: Layer already exists
-47d6ffb515ad: Layer already exists
-748cc49e2027: Layer already exists
-9d7d51d9fb49: Layer already exists
-0e0dc10cb2cc: Layer already exists
-a9bc5004c16d: Layer already exists
-beee9f30bc1f: Layer already exists
-0.1: digest: sha256:c81c87a9d2022deed7f7f3cce71c92396279edb33b6ee5c28056245e008634d3 size: 1994
-[Pipeline] }
-[Pipeline] // withEnv
-[Pipeline] }
-[Pipeline] // stage
-[Pipeline] }
-[Pipeline] // withEnv
-[Pipeline] }
-[Pipeline] // withEnv
-[Pipeline] }
-[Pipeline] // withEnv
-[Pipeline] }
-[Pipeline] // node
-[Pipeline] End of Pipeline
-Finished: SUCCESS

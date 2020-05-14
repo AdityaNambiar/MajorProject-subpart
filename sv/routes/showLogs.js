@@ -24,7 +24,7 @@ router.post('/showLogs', async (req, res) => {
         }
     } catch (err) {
         console.log(err);
-        res.status(400).send(`(integrateAndDeploy) main err ${err.name} :- ${err.message}`);
+        res.status(400).send(`(showLogs) main err ${err.name} :- ${err.message}`);
     }
 })
 

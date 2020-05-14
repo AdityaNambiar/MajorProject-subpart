@@ -43,6 +43,7 @@ class Integration extends Component {
     })
     .then(resp => resp.json())
     .then(res => {
+      console.log(res);
       if (res.data === "Build Failed - Check logs!") throw new Error("Build Failed - Check logs!");
       else {
         this.setState({ 
@@ -54,7 +55,9 @@ class Integration extends Component {
       }
     })
     .catch(err => {
-      window.alert(err.data); 
+      console.log("got err: ", err);
+      let errmsg = err.data || err.message;
+      window.alert(errmsg); 
       this.setState({ progressPercent: '0' });
     })
 
@@ -96,8 +99,7 @@ class Integration extends Component {
         })
       })
       .then(resp => resp.text())
-      .then(res => {
-        console.log(res);
+      .then(res => {                                                                                                      
         this.setState({ postResp: res });
       })
       .catch(err => {

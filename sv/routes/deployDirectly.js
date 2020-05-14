@@ -12,7 +12,7 @@ router.post('/deployDirectly', async (req, res) => {
         let projName = req.body.projName;
 
         let workdirpath = await cloneRepo(projName);
-        let stream = await deploy(workdirpath, projName);
+        let stream = await buildImage(workdirpath, projName);
         let isCompleted = await isImageBuilt(stream);
         if (isCompleted){
             res.status(200).json({data: projName});
@@ -112,7 +112,8 @@ function buildImage(workdirpath, projName){
         }
     })
 }
-function pushToDockerHub(workdirpath, projName){
+
+function imageTagChange(workdirpath, projName){
     return new Promise( (resolve, reject) => {
         try {
             dockerapi.push({
@@ -131,7 +132,26 @@ function pushToDockerHub(workdirpath, projName){
         }
     })
 }
-function pullFromDockerHub(workdirpath, projName){
+function pushToPrivReg(workdirpath, projName){
+    return new Promise( (resolve, reject) => {
+        try {
+            dockerapi.push({
+              context: workdirpath,
+              src: ['Dockerfile']
+            }, {t: projName}, function (err, response) {
+              if (err) {
+                console.log(err);
+                reject(new Error(`(deploy)  err ${err.name} :- ${err.message}`));
+              }
+              resolve(response);
+            });
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`showLogs err: ${err}`));
+        }
+    })
+}
+function pullFromPrivReg(workdirpath, projName){
     return new Promise( (resolve, reject) => {
         try {
             dockerapi.push({

@@ -4,16 +4,16 @@ const router = express.Router();
 const fs = require('fs');
 const { exec } = require('child_process');
 const Docker = require('dockerode');
+const IP = require('ip').address(); // Get machine IP.
 const dockerapi = new Docker();
-
 router.post('/deploy', async (req, res) => {
 
     try {
         let projName = req.body.projName;
         let workdirpath = req.body.workdirpath;
 
-        let stream = await deploy(workdirpath, projName);
-        let isCompleted = await hasContainerRan(stream);
+        let op1 = await pullImage(workdirpath, projName);
+        let isCompleted = await createContainer(stream);
         if (isCompleted){
             res.status(200).json({data: projName});
         } else {
@@ -44,8 +44,57 @@ function searchImage(projName) {
         }
     })
 }
+
 function pullImage(projName) {
-    
+    return new Promise( (resolve, reject) => {
+        try {
+            let tag = await getTagName(projName);
+            docker.pull(`${IP}:7009/${projName}:${tag}`, function (err, stream) {
+              if (err) {
+                console.log(err);
+                reject(new Error(`docker-pull err ${err.name} :- ${err.message}`))
+              }
+              stream.on('data', (data) => {
+                resolve(data);
+              })
+            });
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`pullImage err: ${err}`));
+        }
+    })
+}
+
+function getTagName(projName) {
+    return new Promise( (resolve, reject) => {
+        try {
+            exec(`curl http://${IP}:7009/v2/${projName}/tags/list`, {
+                cwd: process.cwd(),
+                shell: true
+            }, (err, stdout, stderr) => {
+                if (err) {
+                    console.log(err);
+                    reject(new Error(`curl err ${err.name} :- ${err.message}`))
+                }
+                if (stderr) {
+                    console.log(stderr);
+                    reject(new Error(`curl err ${stderr}`))
+                }
+                if (stdout.includes("404")){ // Because curl thinks of 404 as stdout from private registry server.
+                    console.log(stderr);
+                    reject(new Error(`curl err ${stdout}`))    
+                }
+                let img_json = JSON.parse(stdout); 
+                let len = img_json.tags.length; // Get length of image tags array
+                let latest_tag = img_json.tags[len -1];
+                console.log(latest_tag);
+                resolve(latest_tag);
+            })
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`pullImage err: ${err}`));
+        }
+    })
 }
 function createContainer(workdirpath, projName){
     return new Promise( (resolve, reject) => {

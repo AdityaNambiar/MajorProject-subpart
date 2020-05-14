@@ -53,14 +53,16 @@ router.post('/integrate', async (req, res) => {
             let data = await createJob(jenkins, projName, xmlConfigString);
             var isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, projName);
             if (isCompleted){
+                console.log("build successful");
                 res.status(200).json({data: projName, workdirpath: workdirpath});
             } else {
+                console.log("build unsuccessful");
                 res.status(400).json({data:"Build Failed - Check logs!"});                
             }
         }
     } catch (err) {
         console.log(err);
-        res.status(400).json({data:`(integrateAndDeploy) main err ${err.name} :- ${err.message}`});
+        res.status(400).json({data:`(integrate) main err ${err.name} :- ${err.message}`});
     }
 })
 
@@ -75,16 +77,16 @@ function checkJobStatus(jenkins,jenkinsbuildstatusapi, projName){
                         if (err) {
                             if (err.includes("code: 404")) // This makes sure that this loop is only for 404 errors. Any other error will be rejected.
                             {
-                                console.log("found 404");
+                                console.log("build not completed yet);
                                 errmsg = err;
                             }
                             else{
-                                console.log("found some other error")
+                                console.log("found some other error than 404")
                                 errmsg = "";
                                 reject(new Error(`(checkJobStatus) last-build-info err ${err.name} :- ${err.message}`))
                             } 
                         } else {
-                            console.log("no err")
+                            console.log("build completed - setting buildnumber")
                             errmsg = ""; // Reseting errmsg variable to get out of loop.
                             buildnumber = data.number
                         }
@@ -97,21 +99,19 @@ function checkJobStatus(jenkins,jenkinsbuildstatusapi, projName){
                 }
                 else{
                    clearInterval(myVar); 
+                    jenkinsbuildstatusapi.build.get(projName, buildnumber, function(err, data) {
+                      if (err) {
+                        console.log(err);
+                        reject(new Error(`(checkJobStatus) jenkins-build-get err ${err.name} :- ${err.message}`))
+                      }
+                      if (data.result !== 'SUCCESS'){ // In Jenkins, "blue" build color means successful build. "red" means unsuccessful and "notbuilt" means yet to build. 
+                        resolve(false);
+                      } else {
+                        resolve(true);
+                      }
+                    })
                 }
             }
-            jenkinsbuildstatusapi.build.get(projName, buildnumber, function(err, data) {
-              if (err) {
-                console.log("buildnumber: ",buildnumber);
-                console.log(err);
-                reject(new Error(`(checkJobStatus) jenkins-build-get err ${err.name} :- ${err.message}`))
-              }
-              //console.log(data);
-              if (data.color !== "blue"){ // In Jenkins, "blue" build color means successful build. "red" means unsuccessful and "notbuilt" means yet to build. 
-                resolve(false);
-              } else {
-                resolve(true);
-              }
-            })
         } catch(err) {
             console.log(err);
             if (!errmsg.includes("code: 404"))
@@ -163,7 +163,6 @@ function createJob(jenkins, projName, xmlConfigString) {
                     console.log(err);
                     reject(new Error("jenkins build-job: \n"+err))
                   }
-                    console.log("jenkins build data: \n",data)
                     resolve(data);
                 });
             })
@@ -186,7 +185,6 @@ function updateJob(jenkins, projName, xmlConfigString) {
                     console.log(err);
                     reject(new Error("jenkins build-job: \n"+err))
                   }
-                    console.log(data)
                     resolve(data);
                 });
             })

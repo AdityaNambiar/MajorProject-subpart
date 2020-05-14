@@ -31,7 +31,7 @@ class ClientList extends Component {
   };
   render() {
     const clientList = this.state.clientList.map((clientList) => (
-      <div>
+      <div className="ml-4" style={{ marginBottom: "-14px" }}>
         <li>
           <a href="#" onClick={this.onClickClient}>
             {clientList.fname} {clientList.lname}
@@ -78,7 +78,7 @@ class ClientList extends Component {
                 <ThreeDotsLoader height={"100%"} width={"100%"} />
               ) : (
                 <FadeIn>
-                  <ol className="mt-4">{clientList}</ol>
+                  <ol className="mt-2">{clientList}</ol>
                 </FadeIn>
               )}
             </div>

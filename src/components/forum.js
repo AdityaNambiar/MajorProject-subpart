@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
 import "../style.css";
@@ -114,7 +115,7 @@ class Forum extends Component {
 
   render() {
     const usersOnline = this.state.usersOnline.map((usersOnline) => (
-      <li key={usersOnline.id}>
+      <li key={usersOnline.id} class="list-group-item list-group-item-action">
         <i
           class="fa fa-user-circle"
           aria-hidden="true"
@@ -140,7 +141,7 @@ class Forum extends Component {
               <h4>
                 <i class="fa fa-users"></i> Users Online
               </h4>
-              <ul id="users">{usersOnline}</ul>
+              <ul class="list-group list-group-flush">{usersOnline}</ul>
             </div>
             <div class="chat-messages bg bg-dark">
               {this.state.loadingModal ? (

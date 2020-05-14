@@ -82,6 +82,19 @@ class ClientDashboard extends Component {
                 Forum
               </a>
             </li>
+            <li class="nav-item">
+              <a
+                class="nav-link "
+                id="upload-tab"
+                data-toggle="pill"
+                href="#upload"
+                role="tab"
+                aria-controls="upload"
+                aria-selected="false"
+              >
+                Upload
+              </a>
+            </li>
           </ul>
           <div class="tab-content" id="pills-tabContent">
             <div
@@ -92,31 +105,7 @@ class ClientDashboard extends Component {
             >
               <div class="container">
                 <div class="row">
-                  <div class="col-md-6 mt-4">
-                    <form method="post" action="#" id="#">
-                      <div class="form-group files">
-                        <input
-                          type="file"
-                          class="form-control"
-                          multiple="true"
-                          onChange={this.getFile}
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        class="float-right btn btn-primary btn-sm"
-                        onClick={this.handleClientDocUpload}
-                      >
-                        {this.state.loading && (
-                          <small>
-                            Uploading <Spinner />
-                          </small>
-                        )}
-                        {!this.state.loading && <small>Upload</small>}
-                      </button>
-                    </form>
-                  </div>
-                  <div className="col-md-6 mt-4">
+                  <div className="col-md-12 mt-4">
                     <h5 className="bg bg-warning text-center">
                       Shared Attachments
                     </h5>
@@ -132,6 +121,39 @@ class ClientDashboard extends Component {
               aria-labelledby="forum-tab"
             >
               <Forum forumFor={"clientChats"} />
+            </div>
+            <div
+              class="tab-pane fade "
+              id="upload"
+              role="tabpanel"
+              aria-labelledby="upload-tab"
+            >
+              <div className="row">
+                <div class="col-md-12 mt-4">
+                  <form method="post" action="#" id="#">
+                    <div class="form-group files">
+                      <input
+                        type="file"
+                        class="form-control"
+                        multiple="true"
+                        onChange={this.getFile}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      class="float-right btn btn-primary btn-sm"
+                      onClick={this.handleClientDocUpload}
+                    >
+                      {this.state.loading && (
+                        <small>
+                          Uploading <Spinner />
+                        </small>
+                      )}
+                      {!this.state.loading && <small>Upload</small>}
+                    </button>
+                  </form>
+                </div>
+              </div>
             </div>
           </div>
         </div>

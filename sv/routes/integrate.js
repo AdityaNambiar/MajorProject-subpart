@@ -60,39 +60,52 @@ router.post('/integrate', async (req, res) => {
         }
     } catch (err) {
         console.log(err);
-        res.status(400).send(`(integrateAndDeploy) main err ${err.name} :- ${err.message}`);
+        res.status(400).json({data:`(integrateAndDeploy) main err ${err.name} :- ${err.message}`});
     }
 })
 
 function checkJobStatus(jenkins,jenkinsbuildstatusapi, projName){
     return new Promise((resolve, reject) => {
+        var errmsg = "code: 404";
         try {
-            var errmsg = "code: 404", buildnumber = null;
-            while(errmsg.includes("code: 404")) {
-                jenkins.last_completed_build_info(projName, (err, data) =>{
-                    if (err) {
-                        if (err.includes("code: 404")) // This makes sure that this loop is only for 404 errors. Any other error will be rejected.
-                        {
-                            console.log("found 404");
-                            errmsg = err;
+            var buildnumber = null;
+            var myVar =  setInterval(check,5000);
+            var func = () => {
+                    jenkins.last_completed_build_info(projName, (err, data) =>{
+                        if (err) {
+                            if (err.includes("code: 404")) // This makes sure that this loop is only for 404 errors. Any other error will be rejected.
+                            {
+                                console.log("found 404");
+                                errmsg = err;
+                            }
+                            else{
+                                console.log("found some other error")
+                                errmsg = "";
+                                reject(new Error(`(checkJobStatus) last-build-info err ${err.name} :- ${err.message}`))
+                            } 
+                        } else {
+                            console.log("no err")
+                            errmsg = ""; // Reseting errmsg variable to get out of loop.
+                            buildnumber = data.number
                         }
-                        else{
-                            console.log("found some other error")
-                            errmsg = "";
-                            reject(new Error(`(checkJobStatus) last-build-info err ${err.name} :- ${err.message}`))
-                        } 
-                    } else {
-                        console.log("no err")
-                        errmsg = ""; // Reseting errmsg variable to get out of loop.
-                        buildnumber = data.number
-                    }
-                })
+                    })
+                }
+
+            function check(){
+                if(errmsg.includes("code: 404")){
+                    func();
+                }
+                else{
+                   clearInterval(myVar); 
+                }
             }
             jenkinsbuildstatusapi.build.get(projName, buildnumber, function(err, data) {
               if (err) {
+                console.log("buildnumber: ",buildnumber);
                 console.log(err);
                 reject(new Error(`(checkJobStatus) jenkins-build-get err ${err.name} :- ${err.message}`))
               }
+              //console.log(data);
               if (data.color !== "blue"){ // In Jenkins, "blue" build color means successful build. "red" means unsuccessful and "notbuilt" means yet to build. 
                 resolve(false);
               } else {
@@ -101,7 +114,8 @@ function checkJobStatus(jenkins,jenkinsbuildstatusapi, projName){
             })
         } catch(err) {
             console.log(err);
-            reject(new Error(`(checkJobStatus) err ${err.name} :- ${err.message}`));
+            if (!errmsg.includes("code: 404"))
+                reject(new Error(`(checkJobStatus) err ${err.name} :- ${err.message}`));
         }
     })
 }

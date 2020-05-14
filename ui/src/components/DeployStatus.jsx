@@ -54,7 +54,7 @@ class Integration extends Component {
       }
     })
     .catch(err => {
-      window.alert(err); 
+      window.alert(err.data); 
       this.setState({ progressPercent: '0' });
     })
 
@@ -77,33 +77,34 @@ class Integration extends Component {
       this.setState({ projName: res.data, progressPercent: '100', postResp: res.url });
     })
     .catch(err => {
-      window.alert(err); 
+      window.alert(err.data); 
       this.setState({ postResp: err , progressPercent: '50'});
     }) 
   }
   showLogs = (e) => {
     e.preventDefault();
     document.getElementById('logarea').classList.toggle("d-none");
-    const { projName } = this.props.location.state;
-    fetch('http://localhost:5003/showLogs', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-          projName: projName
+    if (!document.getElementById('logarea').classList.contains("d-none")){
+      const { projName } = this.props.location.state;
+      fetch('http://localhost:5003/showLogs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+            projName: projName
+        })
       })
-    })
-    .then(resp => resp.text())
-    .then(res => {
-      console.log(res);
-      this.setState({ postResp: res });
-    })
-    .catch(err => {
-      console.log(err); 
-      this.setState({ postResp: err });
-    })
-
+      .then(resp => resp.text())
+      .then(res => {
+        console.log(res);
+        this.setState({ postResp: res });
+      })
+      .catch(err => {
+        console.log(err); 
+        this.setState({ postResp: err });
+      })
+    }
   }
   render() {
     const { progressPercent, projName } = this.state;

@@ -22,7 +22,7 @@ router.post('/deploy', async (req, res) => {
         console.log(resp);
     } catch (err) {
         console.log(err);
-        res.status(400).send(`(deploy) main err ${err.name} :- ${err.message}`);
+        res.status(400).json({data:`(deploy) main err ${err.name} :- ${err.message}`});
     }
 })
 function searchImage(projName) {

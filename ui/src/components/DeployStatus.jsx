@@ -14,9 +14,10 @@ class Integration extends Component {
     super(props);
 
     this.state = {
-      projName: '',
+      projName: this.props.location.state.projName,
       progressPercent: 0,
-      postResp: ''
+      postResp: '',
+      url: ''
     }
   }
   componentWillUnmount = () => {
@@ -43,7 +44,7 @@ class Integration extends Component {
     })
     .then(resp => resp.json())
     .then(res => {
-      console.log(res);
+      //console.log(res);
       if (res.data === "Build Failed - Check logs!") throw new Error("Build Failed - Check logs!");
       else {
         this.setState({ 
@@ -77,7 +78,10 @@ class Integration extends Component {
     })
     .then(resp => resp.json())
     .then(res => {
-      this.setState({ projName: res.data, progressPercent: '100', postResp: res.url });
+      console.log(res);
+      if (res.data.includes("Error")) throw new Error(res.data);
+      if (res.data === "Docker Build Failed - Check logs!") throw new Error("Docker Build Failed - Check logs!");
+      this.setState({ projName: res.data, progressPercent: '100', url: res.url });
     })
     .catch(err => {
       window.alert(err.data); 
@@ -155,7 +159,7 @@ class Integration extends Component {
           </Container>
           <textarea id="logarea" value={this.state.postResp} rows="20" className="d-none mt-3 p-5 w-100 bg bg-dark text-light" readOnly/>
 
-          <div value={this.state.url}  className="p-5 w-100 mt-3 bg bg-dark text-light"></div>
+          <a className="p-5 w-100 mt-3 bg bg-dark text-center text-light">{this.state.url}</a>
       </div>
     );
   }

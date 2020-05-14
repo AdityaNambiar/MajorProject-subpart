@@ -13,13 +13,11 @@ router.post('/deploy', async (req, res) => {
         let projName = req.body.projName;
         let workdirpath = req.body.workdirpath;
 
-        //let op1 = await pullImage(workdirpath, projName);
-        //let isCompleted = 
-        await createContainer(projName);
-        //if (isCompleted){
-            res.status(200).json({data: projName});
+        //let op1 = await pullImage(workdirpath, projName); 
+        let url = await createContainer(projName);
+            res.status(200).json({data: projName, url: url});
         //} else {
-            res.status(400).json({data:"Docker Build Failed - Check logs!"});                
+           // res.status(400).json({data:"Docker Build Failed - Check logs!"});                
         //}
     } catch (err) {
         console.log(err);
@@ -27,6 +25,12 @@ router.post('/deploy', async (req, res) => {
     }
 })
 function pullImage(projName) {
+    /**
+        When pulling images:
+        - Remove the existing any projName image on local system (so that you can pull the projName image and only it stays - the one with the private registry IP)
+        - Remove any existing projName containers. (Containers with the same projName cannot exist so it gives a "Conflict. The container name "/reactapp" is already in use" error anyway)
+            -- I think it's better to clean up and then pull and then run container.
+    */
     return new Promise( async (resolve, reject) => {
         try {
             let tag = await getTagName(projName);
@@ -59,7 +63,7 @@ function getTagName(projName) {
                 }
                 if (stderr) {
                     console.log(stderr);
-                    reject(new Error(`curl err ${stderr}`))
+                    //reject(new Error(`curl err ${stderr}`))
                 }
                 if (stdout.includes("404")){ // Because curl thinks of 404 as stdout from private registry server.
                     console.log(stderr);
@@ -81,14 +85,19 @@ function createContainer(projName){
     return new Promise( async (resolve, reject) => {
         try {
             let tag = await getTagName(projName);
-            docker.createContainer({
+            let container = await dockerapi.createContainer({
               Image: `${IP}:7009/${projName}:${tag}`,
+              name: `${projName}`,
               PublishAllPorts: true
-            }).then(function(container) {
-               console.log(container);
-            }).catch(function(err) {
-              console.log(err);
-            });
+            }) 
+            let containerStarted = await container.start();
+            var port = "";
+            await container.inspect((err, data) => {
+                if (err) throw new Error(err);
+                console.log(data.NetworkSettings.Ports['8080/tcp'][0]);
+                port = data.NetworkSettings.Ports['8080/tcp'][0].HostPort;
+                resolve(`http://${IP}:${port}`);
+            })
         } catch(err) {
             console.log(err);
             reject(new Error(`showLogs err: ${err}`));

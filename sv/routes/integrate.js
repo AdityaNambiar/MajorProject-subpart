@@ -22,28 +22,36 @@ router.post('/integrate', async (req, res) => {
         let workdirpath = await cloneRepo(projName); 
         
         // Updating XML by creating nodes in variables
-        let newPObj = await preparePipelineObj(description, pollSCMSchedule,
-                        branchName, jenkinsFile, workdirpath);
-        let newPXML = xmljsconv.js2xml(newPObj);
-
-        let projXmlPath= await writeXmlToSilo(projName, newPXML);
-        
-        let xmlConfigString = await readXmlFromSilo(projName);
-
         if (await doesJobExist(jenkins, projName)){
+            let existingXml = await getConfigOfJob(jenkins,projName);
+            let newPObj = await preparePipelineObj(description, pollSCMSchedule,
+                            branchName, jenkinsFile, workdirpath, existingXml);
+            let newPXML = xmljsconv.js2xml(newPObj);
+
+            let projXmlPath= await writeXmlToSilo(projName, newPXML);
+            
+            let xmlConfigString = await readXmlFromSilo(projName);
+
             console.log("job exists - updating it now");
             await updateJob(jenkins, projName, xmlConfigString);
-
-            let isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, projName);
+            var isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, projName);
             if (isCompleted){
                 res.status(200).json({data: projName, workdirpath: workdirpath});
             } else {
                 res.status(400).json({data:"Build Failed - Check logs!"});                
             }
         } else {
+            let newPObj = await preparePipelineObj(description, pollSCMSchedule,
+                            branchName, jenkinsFile, workdirpath, null);
+            let newPXML = xmljsconv.js2xml(newPObj);
+
+            let projXmlPath= await writeXmlToSilo(projName, newPXML);
+            
+            let xmlConfigString = await readXmlFromSilo(projName);
+
             console.log("job does not exists - creating it now");
             let data = await createJob(jenkins, projName, xmlConfigString);
-            let isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, projName);
+            var isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, projName);
             if (isCompleted){
                 res.status(200).json({data: projName, workdirpath: workdirpath});
             } else {
@@ -59,21 +67,37 @@ router.post('/integrate', async (req, res) => {
 function checkJobStatus(jenkins,jenkinsbuildstatusapi, projName){
     return new Promise((resolve, reject) => {
         try {
-            jenkins.last_build_info(projName, (err, data) =>{
-                if (err) {
-                    console.log(err);
-                    reject(new Error(`(checkJobStatus) last-build-info err ${err.name} :- ${err.message}`))
-                }
-                let buildstatus = jenkinsbuildstatusapi.build.get(projName, data.number)//, function(err, data) {
-                  /*if (err) {
-                    console.log(err);
-                    reject(new Error(`(checkJobStatus) jenkins-build-get err ${err.name} :- ${err.message}`))
-                  }*/
-                  if (buildstatus.color == "blue"){ // In Jenkins, "blue" build color means successful build. "red" means unsuccessful and "notbuilt" means yet to build. 
-                    resolve(true);
-                  } else {
-                    resolve(false);
-                  }
+            var errmsg = "code: 404", buildnumber = null;
+            while(errmsg.includes("code: 404")) {
+                jenkins.last_completed_build_info(projName, (err, data) =>{
+                    if (err) {
+                        if (err.includes("code: 404")) // This makes sure that this loop is only for 404 errors. Any other error will be rejected.
+                        {
+                            console.log("found 404");
+                            errmsg = err;
+                        }
+                        else{
+                            console.log("found some other error")
+                            errmsg = "";
+                            reject(new Error(`(checkJobStatus) last-build-info err ${err.name} :- ${err.message}`))
+                        } 
+                    } else {
+                        console.log("no err")
+                        errmsg = ""; // Reseting errmsg variable to get out of loop.
+                        buildnumber = data.number
+                    }
+                })
+            }
+            jenkinsbuildstatusapi.build.get(projName, buildnumber, function(err, data) {
+              if (err) {
+                console.log(err);
+                reject(new Error(`(checkJobStatus) jenkins-build-get err ${err.name} :- ${err.message}`))
+              }
+              if (data.color !== "blue"){ // In Jenkins, "blue" build color means successful build. "red" means unsuccessful and "notbuilt" means yet to build. 
+                resolve(false);
+              } else {
+                resolve(true);
+              }
             })
         } catch(err) {
             console.log(err);
@@ -96,6 +120,22 @@ function doesJobExist(jenkins, projName){
         }
     })
 }
+function getConfigOfJob(jenkins,projName){
+    return new Promise( (resolve, reject) => {
+        try {
+            jenkins.get_config_xml(projName, function(err, data) {
+                if (err === "Server returned unexpected status code: 404"){ 
+                    resolve(false) // means job does not exist
+                }   
+                resolve(data); // means job does exist and send its xml 
+            });
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`(doesJobExist) err: `+err));
+        }
+    })
+}
+
 function createJob(jenkins, projName, xmlConfigString) {
     return new Promise( (resolve, reject) => {
         try {
@@ -104,11 +144,18 @@ function createJob(jenkins, projName, xmlConfigString) {
                     console.log(err);
                     reject(new Error("jenkins create-job: \n"+err))
                 }
-                resolve(data);
+                jenkins.build(projName, function(err, data) {
+                  if (err){ 
+                    console.log(err);
+                    reject(new Error("jenkins build-job: \n"+err))
+                  }
+                    console.log("jenkins build data: \n",data)
+                    resolve(data);
+                });
             })
         } catch(err) {
             console.log(err);
-            throw new Error(`(createJob) err ${err.name} :- ${err.message}`);
+            reject(new Error(`(createJob) err ${err.name} :- ${err.message}`));
         }
     })
 }
@@ -120,7 +167,14 @@ function updateJob(jenkins, projName, xmlConfigString) {
                     console.log(err);
                     reject(new Error("jenkins update-job: \n"+err))
                 }
-                resolve(data);
+                jenkins.build(projName, function(err, data) {
+                  if (err){ 
+                    console.log(err);
+                    reject(new Error("jenkins build-job: \n"+err))
+                  }
+                    console.log(data)
+                    resolve(data);
+                });
             })
         } catch(err) {
             console.log(err);
@@ -243,12 +297,15 @@ function cloneRepo(projName) {
 }
 
 async function preparePipelineObj(description, pollSCMSchedule,
-                        branchName, jenkinsFile, workdirpath) {
+                        branchName, jenkinsFile, workdirpath, existingJobXml) {
     try {
         // Read the sample pipeline job's XML:
-        
-        let pipelinexml = fs.readFileSync(path.resolve(__dirname,'..','pipeline.xml'), 'utf8');
-        
+        let pipelinexml = '';
+        if (existingJobXml == null)
+            pipelinexml = fs.readFileSync(path.resolve(__dirname,'..','pipeline.xml'), 'utf8');
+        else 
+            pipelinexml = existingJobXml;
+            
         let pipelineObj = JSON.parse(xmljsconv.xml2json(pipelinexml));
         var descElement = [ {
             "type":"text",

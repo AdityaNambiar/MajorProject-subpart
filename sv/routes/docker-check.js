@@ -6,38 +6,27 @@ const { exec } = require('child_process');
 const Docker = require('dockerode');
 const dockerapi = new Docker();
 
-router.post('/deploy', async (req, res) => {
+      
+        
+router.post('/docker-check', async (req, res) => {
 
     try {
-        let projName = req.body.projName;
-        let workdirpath = req.body.workdirpath;
-
-        let stream = await deploy(workdirpath, projName);
-        let isCompleted = await hasContainerRan(stream);
-        if (isCompleted){
-            res.status(200).json({data: projName});
-        } else {
-            res.status(400).json({data:"Docker Build Failed - Check logs!"});                
-        }
-        console.log(resp);
+        
+      res.status(200).send(dockerimage);
     } catch (err) {
-        console.log(err);
-        res.status(400).send(`(deploy) main err ${err.name} :- ${err.message}`);
+      console.log(err);
+      res.status(400).send(`(deploy) main err ${err.name} :- ${err.message}`);
     }
 })
 function searchImage(projName) {
     return new Promise( (resolve, reject) => {
         try {
-            dockerapi.push({
-              context: workdirpath,
-              src: ['Dockerfile']
-            }, {t: projName}, function (err, response) {
-              if (err) {
-                console.log(err);
-                reject(new Error(`(deploy)  err ${err.name} :- ${err.message}`));
-              }
-              resolve(response);
-            });
+            dockerapi.listImages({ 
+                filter: `localhost:7009/${projName}`
+            })
+            .then( (resp) => { 
+              console.log(resp) 
+            })
         } catch(err) {
             console.log(err);
             reject(new Error(`showLogs err: ${err}`));

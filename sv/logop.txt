@@ -1,23 +1,18 @@
 Started by user Aditya Nambiar
 Checking out git /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp into /var/lib/jenkins/jobs/reactapp/workspace@script to read Jenkinsfile
 No credentials specified
-Cloning the remote Git repository
-Cloning repository /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
- > /usr/bin/git init /var/lib/jenkins/jobs/reactapp/workspace@script # timeout=10
+ > /usr/bin/git rev-parse --is-inside-work-tree # timeout=10
+Fetching changes from the remote Git repository
+ > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
 Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
  > /usr/bin/git --version # timeout=10
  > /usr/bin/git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
- > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
- > /usr/bin/git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
- > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
-Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
- > /usr/bin/git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
  > /usr/bin/git rev-parse origin/master^{commit} # timeout=10
-Checking out Revision d49cfb46b642f058804a82f76b1c1d02f5de42d0 (origin/master)
+Checking out Revision 8afd75703999adda4b89c060523ae9a2317f2c09 (origin/master)
  > /usr/bin/git config core.sparsecheckout # timeout=10
- > /usr/bin/git checkout -f d49cfb46b642f058804a82f76b1c1d02f5de42d0 # timeout=10
-Commit message: "Purposefully modified testcase - its incorrect and gives error"
-First time build. Skipping changelog.
+ > /usr/bin/git checkout -f 8afd75703999adda4b89c060523ae9a2317f2c09 # timeout=10
+Commit message: "Fixed broken test case"
+ > /usr/bin/git rev-list --no-walk 8afd75703999adda4b89c060523ae9a2317f2c09 # timeout=10
 Running in Durability level: MAX_SURVIVABILITY
 [Pipeline] Start of Pipeline
 [Pipeline] node
@@ -27,22 +22,17 @@ Running on Jenkins in /var/lib/jenkins/jobs/reactapp/workspace
 [Pipeline] { (Declarative: Checkout SCM)
 [Pipeline] checkout
 No credentials specified
-Cloning the remote Git repository
-Cloning repository /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
- > /usr/bin/git init /var/lib/jenkins/jobs/reactapp/workspace # timeout=10
+ > /usr/bin/git rev-parse --is-inside-work-tree # timeout=10
+Fetching changes from the remote Git repository
+ > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
 Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
  > /usr/bin/git --version # timeout=10
  > /usr/bin/git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
- > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
- > /usr/bin/git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
- > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
-Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
- > /usr/bin/git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
  > /usr/bin/git rev-parse origin/master^{commit} # timeout=10
-Checking out Revision d49cfb46b642f058804a82f76b1c1d02f5de42d0 (origin/master)
+Checking out Revision 8afd75703999adda4b89c060523ae9a2317f2c09 (origin/master)
  > /usr/bin/git config core.sparsecheckout # timeout=10
- > /usr/bin/git checkout -f d49cfb46b642f058804a82f76b1c1d02f5de42d0 # timeout=10
-Commit message: "Purposefully modified testcase - its incorrect and gives error"
+ > /usr/bin/git checkout -f 8afd75703999adda4b89c060523ae9a2317f2c09 # timeout=10
+Commit message: "Fixed broken test case"
 [Pipeline] }
 [Pipeline] // stage
 [Pipeline] withEnv
@@ -68,3 +58,60 @@ Commit message: "Purposefully modified testcase - its incorrect and gives error"
 v14.2.0
 [Pipeline] sh
 + npm i
+npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@2.1.2 (node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@2.1.2: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.12 (node_modules/webpack-dev-server/node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.12: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.12 (node_modules/watchpack/node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.12: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.12 (node_modules/jest-haste-map/node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.12: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+
+audited 1823 packages in 14.178s
+
+59 packages are looking for funding
+  run `npm fund` for details
+
+found 3 vulnerabilities (1 low, 2 high)
+  run `npm audit fix` to fix them, or `npm audit` for details
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Test)
+[Pipeline] tool
+[Pipeline] envVarsForTool
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ npm run test
+
+> reactrelative@0.1.0 test /var/lib/jenkins/jobs/reactapp/workspace
+> react-scripts test
+
+PASS src/App.test.js
+  ✓ renders learn react link (84ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        1.874s, estimated 2s
+Ran all test suites.
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build)
+[Pipeline] tool
+[Pipeline] envVarsForTool
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ npm run build
+
+> reactrelative@0.1.0 build /var/lib/jenkins/jobs/reactapp/workspace
+> react-scripts build
+

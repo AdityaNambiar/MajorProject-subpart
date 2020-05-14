@@ -3,7 +3,8 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const jenkinsapi = require('jenkins-api');
-const jenkinsbuildstatusapi = require('jenkins')({ baseUrl: 'http://admin:11a4469a856bdf30c30a7c0053f822beaa@localhost:8080', crumbIssuer: true }); // name defines the only purpoe of importing this package here.
+const IP = require('ip').address();
+const jenkinsbuildstatusapi = require('jenkins')({ baseUrl: `http://admin:11a4469a856bdf30c30a7c0053f822beaa@${IP}:8080`, crumbIssuer: true }); // name defines the only purpoe of importing this package here.
 const xmljsconv = require('xml-js')
 const { exec } = require('child_process');
 
@@ -16,7 +17,7 @@ router.post('/integrate', async (req, res) => {
         let branchName = req.body.branchName || 'master';
         let pollSCMSchedule = req.body.pollSCMSchedule || 'H/2 * * * *';
         // username/API token:
-        let jenkins = jenkinsapi.init("http://admin:11a4469a856bdf30c30a7c0053f822beaa@localhost:8080");
+        let jenkins = jenkinsapi.init(`http://admin:11a4469a856bdf30c30a7c0053f822beaa@${IP}:8080`);
         
         // Setup working directory for jenkins to access it.
         let workdirpath = await cloneRepo(projName); 
@@ -33,8 +34,8 @@ router.post('/integrate', async (req, res) => {
             let xmlConfigString = await readXmlFromSilo(projName);
 
             console.log("job exists - updating it now");
-            await updateJob(jenkins, projName, xmlConfigString);
-            var isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, projName);
+            let queueId = await updateJob(jenkins, projName, xmlConfigString);
+            var isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, queueId, projName);
             if (isCompleted){
                 res.status(200).json({data: projName, workdirpath: workdirpath});
             } else {
@@ -50,8 +51,8 @@ router.post('/integrate', async (req, res) => {
             let xmlConfigString = await readXmlFromSilo(projName);
 
             console.log("job does not exists - creating it now");
-            let data = await createJob(jenkins, projName, xmlConfigString);
-            var isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, projName);
+            let queueId = await createJob(jenkins, projName, xmlConfigString);
+            var isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, queueId, projName);
             if (isCompleted){
                 console.log("build successful");
                 res.status(200).json({data: projName, workdirpath: workdirpath});
@@ -66,56 +67,59 @@ router.post('/integrate', async (req, res) => {
     }
 })
 
-function checkJobStatus(jenkins,jenkinsbuildstatusapi, projName){
+function checkJobStatus(jenkins,jenkinsbuildstatusapi, queueId, projName){
     return new Promise((resolve, reject) => {
-        var errmsg = "code: 404";
+        var queuedata = {};
+        var builddata = {};
         try {
             var buildnumber = null;
-            var myVar =  setInterval(check,5000);
-            var func = () => {
-                    jenkins.last_completed_build_info(projName, (err, data) =>{
-                        if (err) {
-                            if (err.includes("code: 404")) // This makes sure that this loop is only for 404 errors. Any other error will be rejected.
-                            {
-                                console.log("build not completed yet);
-                                errmsg = err;
-                            }
-                            else{
-                                console.log("found some other error than 404")
-                                errmsg = "";
-                                reject(new Error(`(checkJobStatus) last-build-info err ${err.name} :- ${err.message}`))
-                            } 
-                        } else {
-                            console.log("build completed - setting buildnumber")
-                            errmsg = ""; // Reseting errmsg variable to get out of loop.
-                            buildnumber = data.number
-                        }
+            var queueVar =  setInterval(queuecheck,5000);
+            var queuelabel = () => {
+                    jenkins.queue_item(queueId, (err, data) =>{
+                        if (err){
+                                console.log(err);
+                                reject(new Error(`(checkJobStatus) queue-item err ${err.name} :- ${err.message}`))
+                        }   
+                        //console.log("queue_item get: \n", data);
+                        queuedata = data;
                     })
                 }
+            function queuecheck(){
+                if(!queuedata.hasOwnProperty("executable")){
+                    queuelabel();
+                } else{
+                   clearInterval(queueVar); 
+                    buildnumber = queuedata.executable.number;
+                    fs.writeFileSync('currjob_buildno.txt', buildnumber);
+                    var buildVar =  setInterval(buildcheck,5000);
+                    builddata.building = true // Initially the build will be in this state.
+                    var buildlabel = () => {
+                        jenkinsbuildstatusapi.build.get(projName, buildnumber, function(err, data) {
+                          if (err) {
+                            console.log(err);
+                            reject(new Error(`(checkJobStatus) jenkins-build-get err ${err.name} :- ${err.message}`))
+                          }
+                          builddata = data;
+                        })
+                    }
 
-            function check(){
-                if(errmsg.includes("code: 404")){
-                    func();
-                }
-                else{
-                   clearInterval(myVar); 
-                    jenkinsbuildstatusapi.build.get(projName, buildnumber, function(err, data) {
-                      if (err) {
-                        console.log(err);
-                        reject(new Error(`(checkJobStatus) jenkins-build-get err ${err.name} :- ${err.message}`))
-                      }
-                      if (data.result !== 'SUCCESS'){ // In Jenkins, "blue" build color means successful build. "red" means unsuccessful and "notbuilt" means yet to build. 
-                        resolve(false);
-                      } else {
-                        resolve(true);
-                      }
-                    })
+                    function buildcheck() {
+                        if (builddata.building == true){
+                            buildlabel()
+                        } else {
+                            clearInterval(buildVar)
+                            if (builddata.result !== 'SUCCESS'){  
+                                resolve(false);
+                            } else {
+                                resolve(true);
+                            }
+                        }
+                    }
                 }
             }
         } catch(err) {
             console.log(err);
-            if (!errmsg.includes("code: 404"))
-                reject(new Error(`(checkJobStatus) err ${err.name} :- ${err.message}`));
+            reject(new Error(`(checkJobStatus) err ${err.name} :- ${err.message}`));
         }
     })
 }
@@ -163,7 +167,7 @@ function createJob(jenkins, projName, xmlConfigString) {
                     console.log(err);
                     reject(new Error("jenkins build-job: \n"+err))
                   }
-                    resolve(data);
+                    resolve(data.queueId);
                 });
             })
         } catch(err) {
@@ -185,7 +189,7 @@ function updateJob(jenkins, projName, xmlConfigString) {
                     console.log(err);
                     reject(new Error("jenkins build-job: \n"+err))
                   }
-                    resolve(data);
+                    resolve(data.queueId);
                 });
             })
         } catch(err) {
@@ -260,7 +264,7 @@ function cloneRepo(projName) {
     return new Promise( async (resolve, reject) => {
         try {
             let projects_silo_path = await mkProjSilo();
-            let url = `http://localhost:7005/projects/bare/${projName}.git`
+            let url = `http://${IP}:7005/projects/bare/${projName}.git`
             let projPath = path.join(projects_silo_path, projName);
             if (fs.existsSync(projPath)){
                 fs.rmdir(projPath, {recursive:true}, (err) => {

@@ -47,16 +47,11 @@ function doesJobExist(jenkins, projName){
 function showLogs(jenkins, jenkinslogsapi, projName){
     return new Promise( (resolve, reject) => {
         try {
-            jenkins.last_build_info(projName, (err, data) =>{
-                if (err) {
-                    console.log(err);
-                    reject(new Error(`(showLogs)  err ${err.name} :- ${err.message}`))
-                }
-                var log = jenkinslogsapi.build.logStream(projName, data.number);
-                log.on('data', (txt) => {
-                    resolve(txt);
-                })
-            });
+            let buildnumber = fs.readFileSync('currjob_buildno.txt', 'utf8');
+            var log = jenkinslogsapi.build.logStream(projName, buildnumber);
+            log.on('data', (txt) => {
+                resolve(txt);
+            })
         } catch(err) {
             console.log(err);
             reject(new Error(`showLogs err: ${err}`));

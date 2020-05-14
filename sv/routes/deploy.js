@@ -5,6 +5,7 @@ const fs = require('fs');
 const { exec } = require('child_process');
 const Docker = require('dockerode');
 const IP = require('ip').address(); // Get machine IP.
+const getPort = require('get-port'); // To fetch random port number.
 const dockerapi = new Docker();
 router.post('/deploy', async (req, res) => {
 
@@ -12,41 +13,21 @@ router.post('/deploy', async (req, res) => {
         let projName = req.body.projName;
         let workdirpath = req.body.workdirpath;
 
-        let op1 = await pullImage(workdirpath, projName);
-        let isCompleted = await createContainer(stream);
-        if (isCompleted){
+        //let op1 = await pullImage(workdirpath, projName);
+        //let isCompleted = 
+        await createContainer(projName);
+        //if (isCompleted){
             res.status(200).json({data: projName});
-        } else {
+        //} else {
             res.status(400).json({data:"Docker Build Failed - Check logs!"});                
-        }
-        console.log(resp);
+        //}
     } catch (err) {
         console.log(err);
         res.status(400).json({data:`(deploy) main err ${err.name} :- ${err.message}`});
     }
 })
-function searchImage(projName) {
-    return new Promise( (resolve, reject) => {
-        try {
-            dockerapi.push({
-              context: workdirpath,
-              src: ['Dockerfile']
-            }, {t: projName}, function (err, response) {
-              if (err) {
-                console.log(err);
-                reject(new Error(`(deploy)  err ${err.name} :- ${err.message}`));
-              }
-              resolve(response);
-            });
-        } catch(err) {
-            console.log(err);
-            reject(new Error(`showLogs err: ${err}`));
-        }
-    })
-}
-
 function pullImage(projName) {
-    return new Promise( (resolve, reject) => {
+    return new Promise( async (resolve, reject) => {
         try {
             let tag = await getTagName(projName);
             docker.pull(`${IP}:7009/${projName}:${tag}`, function (err, stream) {
@@ -96,18 +77,17 @@ function getTagName(projName) {
         }
     })
 }
-function createContainer(workdirpath, projName){
-    return new Promise( (resolve, reject) => {
+function createContainer(projName){
+    return new Promise( async (resolve, reject) => {
         try {
-            dockerapi.push({
-              context: workdirpath,
-              src: ['Dockerfile']
-            }, {t: projName}, function (err, response) {
-              if (err) {
-                console.log(err);
-                reject(new Error(`(deploy)  err ${err.name} :- ${err.message}`));
-              }
-              resolve(response);
+            let tag = await getTagName(projName);
+            docker.createContainer({
+              Image: `${IP}:7009/${projName}:${tag}`,
+              PublishAllPorts: true
+            }).then(function(container) {
+               console.log(container);
+            }).catch(function(err) {
+              console.log(err);
             });
         } catch(err) {
             console.log(err);

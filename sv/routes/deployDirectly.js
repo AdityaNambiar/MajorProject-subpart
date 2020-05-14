@@ -113,7 +113,7 @@ function buildImage(workdirpath, projName){
     })
 }
 
-function imageTagChange(workdirpath, projName){
+function imageTagChange(projName){
     return new Promise( (resolve, reject) => {
         try {
             dockerapi.push({

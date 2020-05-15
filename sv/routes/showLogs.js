@@ -52,6 +52,9 @@ function showLogs(jenkins, jenkinslogsapi, projName){
             log.on('data', (txt) => {
                 resolve(txt);
             })
+            log.on('error', (err) => {
+                console.log(err);
+            })
         } catch(err) {
             console.log(err);
             reject(new Error(`showLogs err: ${err}`));

@@ -9,6 +9,13 @@ const http = require('http');
 const dockerapi = new Docker();
 const registryPort = 7009; // Ideally you can set this as process.env or something like this to take in the registry port no. from environment variables.
 
+
+(async () => {
+    const image = await dockerapi.listImages({
+                filter: `${IP}:${registryPort}/react`
+            });
+    console.log(image);
+});
 router.post('/deploy', async (req, res) => {
 
     try {
@@ -16,7 +23,7 @@ router.post('/deploy', async (req, res) => {
         let workdirpath = req.body.workdirpath;
 
         await cleanUp(projName);
-        await pullImage(workdirpath, projName); 
+        await pullImage(projName); 
         let urls = await createContainer(projName);
         res.status(200).json({data: projName, urls: urls});
     } catch (err) {
@@ -53,15 +60,21 @@ function removeImages(projName){
             const image = await dockerapi.listImages({
                 filter: `${IP}:${registryPort}/${projName}`
             });
-            let repoTags = await image.RepoTags; // Gives an array of tags already present of the same image name.
-            let allRepoTags = repoTags.filter(e => e.includes("192.168.1.101:7009/")) // Only consider the registry tagged images.
+            let repoTags = image[0].RepoTags; // Gives an array of tags already present of the same image name.
+            let allRepoTags = repoTags.filter(e => e.includes(`${IP}:${registryPort}/`)) // Only consider the registry tagged images.
+            console.log("allRepoTags: \n",allRepoTags);
             let most_recent_img = allRepoTags[allRepoTags.length - 1] // which among them is the latest
             let oldRepoTags = allRepoTags.filter(e => e !== most_recent_img)
-
+            console.log("oldRepoTags: \n",oldRepoTags);
             for (let i = 0; i < oldRepoTags.length; i++) {
-                const image = await dockerapi.getImage(oldRepoTags[i]);
-                await image.remove(); 
+                const image = await dockerapi.listImages({ filter: oldRepoTags[i] });
+                console.log("img to be deleted: \n",image);
+                await image.remove({name: oldRepoTags[i]}); 
             }
+            const imagecheck = await dockerapi.listImages({
+                filter: `${IP}:${registryPort}/${projName}`
+            });
+            console.log("imagecheck: \n",imagecheck);
             console.log("images has been cleaned now")
             resolve(true);
         } catch(err) {
@@ -107,6 +120,7 @@ function pullImage(projName) {
                 reject(new Error(`docker-pull err ${err.name} :- ${err.message}`))
               }
               stream.on('data', (data) => {
+                console.log("pullImage: \n",data);
                 resolve(data);
               })
             });
@@ -123,10 +137,11 @@ function getTagName(projName) {
             const image = await dockerapi.listImages({
                 filter: `${IP}:${registryPort}/${projName}`
             });
-            let repoTags = await image.RepoTags; // Gives an array of tags already present of the same image name.
+            console.log(image);
+            let repoTags = image[0].RepoTags; // Gives an array of tags already present of the same image name.
             let newRepoTags = repoTags.filter(e => e.includes(`${IP}:${registryPort}/`))
             // The last element of RepoTags[] is always the latest tagged image
-            let most_recent_tag = newrepotags[newrepotags.length - 1].split(`${projName}:`)[1] // Eg: "192.168.1.101:7009/reactapp:v4"            
+            let most_recent_tag = newRepoTags[newRepoTags.length - 1].split(`${projName}:`)[1] // Eg: "192.168.1.101:7009/reactapp:v4"            
             resolve(most_recent_tag);
         } catch(err) {
             console.log(err);

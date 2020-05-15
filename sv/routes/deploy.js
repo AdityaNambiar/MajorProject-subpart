@@ -61,8 +61,13 @@ function removeImages(projName){
                 const image = await dockerapi.getImage(oldRepoTags[i]);
                 await image.remove(); 
             }
+            console.log("images has been cleaned now")
+            resolve(true);
         } catch(err) {
             console.log(err);
+            if (err.message.includes("(HTTP code 404) no such image")){
+                resolve(true);
+            }
             reject(new Error('(removeImages) err: '+err));
         }
     })
@@ -73,10 +78,15 @@ function removeContainer(projName) {
         try {   
             const container = await dockerapi.getContainer(projName);
             let resp = await container.remove({ v: true }); // v = remove 'volume' of container as well. 
+            console.log("container - if any - has been removed now")
             resolve(resp);
         } catch(err) {
             console.log(err);
-            reject(new Error(`(removeContainer) err ${err.name} :- ${err.message}`))
+            if (err.message.includes("(HTTP code 404) no such container")){
+                resolve(true);
+            } else {
+                reject(new Error(`(removeContainer) err ${err.name} :- ${err.message}`))
+            }
         }
     })
 }
@@ -89,7 +99,7 @@ function pullImage(projName) {
     */
     return new Promise( async (resolve, reject) => {
         try {
-            let tag = await getTagName(projName);
+            let tag = await getTagName(projName+":latest");
             dockerapi.pull(`${IP}:${registryPort}/${projName}:${tag}`, function (err, stream) {
               if (err) {
                 console.log(err);
@@ -109,7 +119,7 @@ function pullImage(projName) {
 function getTagName(projName) {
     return new Promise( async (resolve, reject) => {
         try {
-            const image = await dockerapi.getImage(projName)
+            const image = await dockerapi.getImage(projName+":latest")
             let repoTags = await image.inspect().RepoTags; // Gives an array of tags already present of the same image name.
             let newRepoTags = repoTags.filter(e => e.includes(`${IP}:${registryPort}/`))
             let most_recent_tag = newrepotags[newrepotags.length - 1].split(`${projName}:`)[1] // Eg: "192.168.1.101:7009/reactapp:v4"            

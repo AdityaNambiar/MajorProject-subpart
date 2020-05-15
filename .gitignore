@@ -1,2 +1,5 @@
 projects_silo
 node_modules
+*-currjob_buildno.txt
+*-logop.txt
+*-dockerlogs.txt

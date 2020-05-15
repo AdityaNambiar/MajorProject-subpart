@@ -50,9 +50,10 @@ function cleanUp(projName) {
 function removeImages(projName){
     return new Promise( async (resolve, reject) => {
         try{ 
-            const nametag = await getTagName(projName);
-            const image = await dockerapi.getImage(projName+nametag); // Need to provide tagname here incase the default "latest" is not present, it would give an error if that would be the case.
-            let repoTags = await image.inspect().RepoTags; // Gives an array of tags already present of the same image name.
+            const image = await dockerapi.listImages({
+                filter: `${IP}:${registryPort}/${projName}`
+            });
+            let repoTags = await image.RepoTags; // Gives an array of tags already present of the same image name.
             let allRepoTags = repoTags.filter(e => e.includes("192.168.1.101:7009/")) // Only consider the registry tagged images.
             let most_recent_img = allRepoTags[allRepoTags.length - 1] // which among them is the latest
             let oldRepoTags = allRepoTags.filter(e => e !== most_recent_img)
@@ -99,8 +100,8 @@ function pullImage(projName) {
     */
     return new Promise( async (resolve, reject) => {
         try {
-            let tag = await getTagName(projName+":latest");
-            dockerapi.pull(`${IP}:${registryPort}/${projName}:${tag}`, function (err, stream) {
+            let tagname = await getTagName(projName);
+            dockerapi.pull(`${IP}:${registryPort}/${projName}:${tagname}`, function (err, stream) {
               if (err) {
                 console.log(err);
                 reject(new Error(`docker-pull err ${err.name} :- ${err.message}`))
@@ -119,9 +120,12 @@ function pullImage(projName) {
 function getTagName(projName) {
     return new Promise( async (resolve, reject) => {
         try {
-            const image = await dockerapi.getImage(projName+":latest")
-            let repoTags = await image.inspect().RepoTags; // Gives an array of tags already present of the same image name.
+            const image = await dockerapi.listImages({
+                filter: `${IP}:${registryPort}/${projName}`
+            });
+            let repoTags = await image.RepoTags; // Gives an array of tags already present of the same image name.
             let newRepoTags = repoTags.filter(e => e.includes(`${IP}:${registryPort}/`))
+            // The last element of RepoTags[] is always the latest tagged image
             let most_recent_tag = newrepotags[newrepotags.length - 1].split(`${projName}:`)[1] // Eg: "192.168.1.101:7009/reactapp:v4"            
             resolve(most_recent_tag);
         } catch(err) {
@@ -159,7 +163,6 @@ function createContainer(projName){
         }
     })
 }
-
 /* BACKUP FOR REFERENCE (whenever we want to fetch digest of an image -
     As said in the API documentation, you need to pass name and digest with HTTP Method "DELETE" to remove the 
     image from registry but this gives me UNSUPPORTED error.. probably it requires RepoDigest and not .Id):

@@ -17,8 +17,8 @@ router.post('/deploy', async (req, res) => {
 
         await cleanUp(projName);
         await pullImage(workdirpath, projName); 
-        let url = await createContainer(projName);
-        res.status(200).json({data: projName, url: url});
+        let urls = await createContainer(projName);
+        res.status(200).json({data: projName, urls: urls});
     } catch (err) {
         console.log(err);
         res.status(400).json({data:`(deploy) main err ${err.name} :- ${err.message}`});

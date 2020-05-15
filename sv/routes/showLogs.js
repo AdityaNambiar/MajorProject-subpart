@@ -16,7 +16,7 @@ router.post('/showLogs', async (req, res) => {
         if (await doesJobExist(jenkins, projName)){
             console.log("job exists - fetching logs now");
             let data = await showLogs(jenkins, jenkinslogsapi, projName);
-            fs.writeFileSync('logop.txt', data);
+            fs.writeFileSync(projName+'-'+'logop.txt', data);
             let logs = fs.readFileSync('logop.txt');
             res.status(200).send(logs);
         } else {
@@ -47,7 +47,7 @@ function doesJobExist(jenkins, projName){
 function showLogs(jenkins, jenkinslogsapi, projName){
     return new Promise( (resolve, reject) => {
         try {
-            let buildnumber = fs.readFileSync('currjob_buildno.txt', 'utf8');
+            let buildnumber = fs.readFileSync(projName+'-'+'currjob_buildno.txt', 'utf8');
             var log = jenkinslogsapi.build.logStream(projName, buildnumber);
             log.on('data', (txt) => {
                 resolve(txt);

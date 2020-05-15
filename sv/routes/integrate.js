@@ -90,7 +90,7 @@ function checkJobStatus(jenkins,jenkinsbuildstatusapi, queueId, projName){
                 } else{
                    clearInterval(queueVar); 
                     buildnumber = queuedata.executable.number;
-                    fs.writeFileSync('currjob_buildno.txt', buildnumber);
+                    fs.writeFileSync(projName+'-'+'currjob_buildno.txt', buildnumber);
                     var buildVar =  setInterval(buildcheck,5000);
                     builddata.building = true // Initially the build will be in this state.
                     var buildlabel = () => {

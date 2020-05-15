@@ -14,7 +14,7 @@
     "dockerode": "^3.2.0",
     "express": "^4.17.1",
     "fs-extra": "^9.0.0",
-    "get-port": "^5.1.1",
+    "http": "0.0.1-security",
     "ip": "^1.1.5",
     "isomorphic-git": "^1.4.0",
     "jenkins": "^0.28.0",

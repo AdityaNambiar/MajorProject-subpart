@@ -9,7 +9,7 @@ import jenkinsicon from '../assets/jenkinsicon.png';
 import dockericon from '../assets/dockericon.webp';
 
 
-class Integration extends Component {
+class DeployDirect extends Component {
   constructor(props) {
     super(props);
 
@@ -172,4 +172,4 @@ class Integration extends Component {
   }
 }
 
-export default withRouter(Integration);
+export default withRouter(DeployDirect);

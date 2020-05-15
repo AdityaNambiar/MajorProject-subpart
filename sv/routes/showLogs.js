@@ -17,7 +17,7 @@ router.post('/showLogs', async (req, res) => {
             console.log("job exists - fetching logs now");
             let data = await showLogs(jenkins, jenkinslogsapi, projName);
             fs.writeFileSync(projName+'-'+'logop.txt', data);
-            let logs = fs.readFileSync('logop.txt');
+            let logs = fs.readFileSync(projName+'-'+'logop.txt');
             res.status(200).send(logs);
         } else {
             throw new Error("Job Build does not exist");

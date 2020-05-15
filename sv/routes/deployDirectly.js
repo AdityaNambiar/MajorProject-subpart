@@ -15,7 +15,6 @@ router.post('/deployDirectly', async (req, res) => {
         let projName = req.body.projName;
 
         let workdirpath = await cloneRepo(projName);
-        await cleanUp(projName);
         await buildImage(workdirpath, projName);
         await pushImage(projName);
         await cleanUp(projName);
@@ -107,8 +106,7 @@ function buildImage(workdirpath, projName){
                 console.log(err);
                 reject(new Error(`(buildImage) docker.buildImage err ${err.name} :- ${err.message}`));
               }
-
-                docker.modem.followProgress(stream, onFinished, (event) => {});
+                dockerapi.modem.followProgress(stream, onFinished, (event) => {});
 
                 function onFinished(err, output) {
                     if (err){ // docker image build was unsuccessful.
@@ -116,7 +114,8 @@ function buildImage(workdirpath, projName){
                         reject(new Error(`followProgress - buildImage err: ${err}`))
                     }
 
-                    fs.writeFileSync(projName+'-dockerlogs.txt', output, { flags: 'w' });
+                    fs.writeFileSync(projName+'-dockerlogs.txt', JSON.stringify(output)
+                        , { flags: 'w' });
                     resolve(true);
                 }
             });
@@ -130,7 +129,8 @@ function buildImage(workdirpath, projName){
 function pushImage(projName){
     return new Promise( (resolve, reject) => {
         try {
-            dockerapi.push({
+            const image = dockerapi.getImage(`${IP}:${registryPort}/${projName}:latest`)
+            image.push({
                 name: `${IP}:${registryPort}/${projName}:latest`
             }, function (err, response) {
               if (err) {
@@ -182,8 +182,13 @@ function removeImages(projName){
                 const image = await dockerapi.getImage(oldRepoTags[i]);
                 await image.remove(); 
             }
+            console.log("images has been cleaned now")
+            resolve(true);
         } catch(err) {
             console.log(err);
+            if (err.message.includes("(HTTP code 404) no such image")){
+                resolve(true);
+            }
             reject(new Error('(removeImages) err: '+err));
         }
     })
@@ -194,10 +199,11 @@ function removeContainer(projName) {
         try {   
             const container = await dockerapi.getContainer(projName);
             let resp = await container.remove({ v: true }); // v = remove 'volume' of container as well. 
+            console.log("container - if any - has been removed now")
             resolve(resp);
         } catch(err) {
             console.log(err);
-            if (err.includes("(HTTP code 404) no such container")){
+            if (err.message.includes("(HTTP code 404) no such container")){
                 resolve(true);
             } else {
                 reject(new Error(`(removeContainer) err ${err.name} :- ${err.message}`))
@@ -234,7 +240,7 @@ function pullImage(projName) {
 function getTagName(projName) {
     return new Promise( async (resolve, reject) => {
         try {
-            const image = await dockerapi.getImage(projName)
+            const image = await dockerapi.getImage(projName+":latest")
             let repoTags = await image.inspect().RepoTags; // Gives an array of tags already present of the same image name.
             let newRepoTags = repoTags.filter(e => e.includes(`${IP}:${registryPort}/`))
             let most_recent_tag = newrepotags[newrepotags.length - 1].split(`${projName}:`)[1] // Eg: "192.168.1.101:7009/reactapp:v4"            

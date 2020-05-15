@@ -1,0 +1,168 @@
+Started by user Aditya Nambiar
+Checking out git /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp into /var/lib/jenkins/jobs/reactapp/workspace@script to read Jenkinsfile
+No credentials specified
+ > /usr/bin/git rev-parse --is-inside-work-tree # timeout=10
+Fetching changes from the remote Git repository
+ > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > /usr/bin/git --version # timeout=10
+ > /usr/bin/git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > /usr/bin/git rev-parse origin/master^{commit} # timeout=10
+Checking out Revision 98774095ddda4581183f20577b5007d62a8a734f (origin/master)
+ > /usr/bin/git config core.sparsecheckout # timeout=10
+ > /usr/bin/git checkout -f 98774095ddda4581183f20577b5007d62a8a734f # timeout=10
+Commit message: "Updated Jenkinsfile and renamed Dockerfile.deploy to Dockerfile"
+ > /usr/bin/git rev-list --no-walk 98774095ddda4581183f20577b5007d62a8a734f # timeout=10
+Running in Durability level: MAX_SURVIVABILITY
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/lib/jenkins/jobs/reactapp/workspace
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+No credentials specified
+ > /usr/bin/git rev-parse --is-inside-work-tree # timeout=10
+Fetching changes from the remote Git repository
+ > /usr/bin/git config remote.origin.url /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp # timeout=10
+Fetching upstream changes from /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp
+ > /usr/bin/git --version # timeout=10
+ > /usr/bin/git fetch --tags --force --progress -- /home/playground/devopschain_int_deploy/sv/projects_silo/reactapp +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > /usr/bin/git rev-parse origin/master^{commit} # timeout=10
+Checking out Revision 98774095ddda4581183f20577b5007d62a8a734f (origin/master)
+ > /usr/bin/git config core.sparsecheckout # timeout=10
+ > /usr/bin/git checkout -f 98774095ddda4581183f20577b5007d62a8a734f # timeout=10
+Commit message: "Updated Jenkinsfile and renamed Dockerfile.deploy to Dockerfile"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Tool Install)
+[Pipeline] tool
+[Pipeline] envVarsForTool
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Environment)
+[Pipeline] tool
+[Pipeline] envVarsForTool
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ node -v
+v14.2.0
+[Pipeline] sh
++ npm i
+npm WARN tsutils@3.17.1 requires a peer of typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta but none is installed. You must install peer dependencies yourself.
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@2.1.2 (node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@2.1.2: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.12 (node_modules/webpack-dev-server/node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.12: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.12 (node_modules/watchpack/node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.12: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.12 (node_modules/jest-haste-map/node_modules/fsevents):
+npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.12: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+
+audited 1823 packages in 12.024s
+
+59 packages are looking for funding
+  run `npm fund` for details
+
+found 3 vulnerabilities (1 low, 2 high)
+  run `npm audit fix` to fix them, or `npm audit` for details
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Test)
+[Pipeline] tool
+[Pipeline] envVarsForTool
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ npm run test
+
+> reactrelative@0.1.0 test /var/lib/jenkins/jobs/reactapp/workspace
+> react-scripts test
+
+PASS src/App.test.js
+  ✓ renders learn react link (93ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        2.772s
+Ran all test suites.
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build)
+[Pipeline] tool
+[Pipeline] envVarsForTool
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ npm run build
+
+> reactrelative@0.1.0 build /var/lib/jenkins/jobs/reactapp/workspace
+> react-scripts build
+
+Creating an optimized production build...
+Compiled successfully.
+
+File sizes after gzip:
+
+  39.77 KB  build/static/js/2.cf40ef3f.chunk.js
+  897 B     build/static/js/main.8442eafa.chunk.js
+  774 B     build/static/js/runtime-main.5d4c4a18.js
+  556 B     build/static/css/main.d1b05096.chunk.css
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  yarn global add serve
+  serve -s build
+
+Find out more about deployment here:
+
+  bit.ly/CRA-deploy
+
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy to Private Docker Registry)
+[Pipeline] tool
+[Pipeline] envVarsForTool
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] sh
++ docker build -t 192.168.1.101:7009/reactapp:0.1 -f Dockerfile.deploy .
+unable to prepare context: unable to evaluate symlinks in Dockerfile path: lstat /var/lib/jenkins/jobs/reactapp/workspace/Dockerfile.deploy: no such file or directory
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 1
+Finished: FAILURE

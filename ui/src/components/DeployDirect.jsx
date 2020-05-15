@@ -4,7 +4,7 @@ import {
 } from 'react-bootstrap';
 import "react-step-progress-bar/styles.css";
 import { withRouter } from 'react-router-dom';
-
+import JSONPretty from 'react-json-pretty';
 
 class DeployDirect extends Component {
   constructor(props) {
@@ -59,7 +59,7 @@ class DeployDirect extends Component {
             projName: projName
         })
       })
-      .then(resp => resp.text())
+      .then(resp => resp.json())
       .then(res => {                                                                                                      
         this.setState({ postResp: res.data });
       })
@@ -86,7 +86,8 @@ class DeployDirect extends Component {
               </Col>
             </Row>
           </Container>
-          <textarea id="logarea" value={this.state.postResp} rows="20" className="d-none mt-3 p-5 w-100 bg bg-dark text-light" readOnly/>
+          <textarea id="logarea" value={this.state.postResp} rows="20" className="d-none mt-3 p-5 w-100 bg bg-dark text-light" readOnly>
+          </textarea>
 
           <div className="p-5 w-100 mt-3 bg bg-dark text-center text-light">
           <span>Access your application here</span><br/>

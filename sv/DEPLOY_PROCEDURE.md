@@ -21,7 +21,7 @@
 The port 7009 will be having our own Docker private registry ("registry" docker image).
 
 command to run private docker registry image:
-docker run -d -p 7009:5000 --restart always --name registry -v registrydata:/data registry:2
+docker run -d -p 7009:5000 --restart always --name registry -v registrydata:/data registry:2.7.1
 
 
 -- Currently, I am unable to remove old project images from registry.. It's HTTP DELETE request is working for me.

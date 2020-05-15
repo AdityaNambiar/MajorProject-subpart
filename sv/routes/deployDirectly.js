@@ -197,7 +197,11 @@ function removeContainer(projName) {
             resolve(resp);
         } catch(err) {
             console.log(err);
-            reject(new Error(`(removeContainer) err ${err.name} :- ${err.message}`))
+            if (err.includes("(HTTP code 404) no such container")){
+                resolve(true);
+            } else {
+                reject(new Error(`(removeContainer) err ${err.name} :- ${err.message}`))
+            }
         }
     })
 }

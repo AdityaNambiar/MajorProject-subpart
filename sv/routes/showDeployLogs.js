@@ -1,6 +1,7 @@
 const fs = require('fs');
+const router = require('express').Router();
 
-router.get('/showDeployLogs', (req,res) =>{
+router.post('/showDeployLogs', (req,res) =>{
 	try {
 		const projName = req.body.projName;
 
@@ -13,3 +14,5 @@ router.get('/showDeployLogs', (req,res) =>{
 	}
 
 })
+
+module.exports = router;

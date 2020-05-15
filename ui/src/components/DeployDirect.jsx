@@ -18,11 +18,9 @@ class DeployDirect extends Component {
     }
   }
   componentWillUnmount = () => {
-    if (this.state.progressPercent !== 100) {
       window.onbeforeunload = function() {
           return "Please wait while your build finishes!";
       }
-    }
   }
   componentDidMount = () => {
     const { projName } = this.props.location.state;
@@ -40,7 +38,7 @@ class DeployDirect extends Component {
     .then(res => {
       console.log(res);
       if (res.data.includes("Error")) throw new Error(res.data);
-      this.setState({ urls: res.url });
+      this.setState({ urls: res.urls });
     })
     .catch(err => {
       window.alert(err.data); 
@@ -52,7 +50,7 @@ class DeployDirect extends Component {
     document.getElementById('logarea').classList.toggle("d-none");
     if (!document.getElementById('logarea').classList.contains("d-none")){
       const { projName } = this.props.location.state;
-      fetch('http://localhost:5003/showLogs', {
+      fetch('http://localhost:5003/showDeployLogs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -63,7 +61,7 @@ class DeployDirect extends Component {
       })
       .then(resp => resp.text())
       .then(res => {                                                                                                      
-        this.setState({ postResp: res });
+        this.setState({ postResp: res.data });
       })
       .catch(err => {
         console.log(err); 
@@ -93,9 +91,7 @@ class DeployDirect extends Component {
           <div className="p-5 w-100 mt-3 bg bg-dark text-center text-light">
           <span>Access your application here</span><br/>
           {
-            this.state.urls.map(url => {
-              <span>{url}</span>
-            });
+            this.state.urls.map(url => <span>url</span>)
           }
           </div>
       </div>

@@ -80,8 +80,7 @@ class Integration extends Component {
     .then(res => {
       console.log(res);
       if (res.data.includes("Error")) throw new Error(res.data);
-      if (res.data === "Docker Build Failed - Check logs!") throw new Error("Docker Build Failed - Check logs!");
-      this.setState({ projName: res.data, progressPercent: '100', url: res.url });
+      this.setState({ projName: res.data, progressPercent: '100', urls: res.urls });
     })
     .catch(err => {
       window.alert(err.data); 
@@ -162,9 +161,7 @@ class Integration extends Component {
           <div className="p-5 w-100 mt-3 bg bg-dark text-center text-light">
           <span>Access your application here</span><br/>
           {
-            this.state.urls.map(url => {
-              <span>{url}</span>
-            });
+            this.state.urls.map(url => <span>url</span>)
           }
           </div>
       </div>

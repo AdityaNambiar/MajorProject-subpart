@@ -24,10 +24,10 @@ module.exports = function cleanUp(projName) {
         try {
             await removeContainer(projName);
             await removeImages(projName);
-            resolve(true); 
+            return resolve(true); 
         } catch(err) {
             console.log(err);
-            reject(new Error(`(cleanUp) err ${err.name} :- ${err.message}`))
+            return reject(new Error(`(cleanUp) err ${err.name} :- ${err.message}`))
         }
     })
 }
@@ -38,43 +38,47 @@ function removeImages(projName){
             const image = await dockerapi.listImages({
                 filter: `${IP}:${registryPort}/${projName}`
             });
+            if (!image[0]){ // Means no images are present of the same name.
+                resolve(true);
+            }
             let repoTags = image[0].RepoTags; // Gives an array of tags already present of the same image name.
             let allRepoTags = repoTags.filter(e => e.includes(`${IP}:${registryPort}/`)) // Only consider the registry tagged images.
             // let most_recent_img = allRepoTags[allRepoTags.length - 1] // which among them is the latest
             // let oldRepoTags = allRepoTags.filter(e => e !== most_recent_img)
             for (let i = 0; i < allRepoTags.length; i++) {
                 const image = await dockerapi.getImage(allRepoTags[i]);
-                console.log("img to be deleted: \n",image);
+                console.log("image to be deleted: \n",image.name);
                 await image.remove({remove: true}); 
             }
             const imagecheck = await dockerapi.listImages({
                 filter: `${IP}:${registryPort}/${projName}`
             });
-            console.log("images has been cleaned now")
-            resolve(true);
+            console.log("images has been cleaned now: \n", imagecheck);
+            return resolve(true);
         } catch(err) {
             console.log(err);
             if (err.message.includes("(HTTP code 404) no such image")){
-                resolve(true);
+                return resolve(true);
             }
-            reject(new Error('(removeImages) err: '+err));
+            return reject(new Error('(removeImages) err: '+err));
         }
     })
 }
 
-function removeContainer(projName) {
+function removeContainer(projName) {    
+    console.log("Removing container ...");
     return new Promise( async (resolve,reject) => {
         try {   
             const container = await dockerapi.getContainer(projName);
             let resp = await container.remove({ force: true, v: true }); // v = remove 'volume' of container as well. 
             console.log("container - if any - has been removed now")
-            resolve(resp);
+            return resolve(resp);
         } catch(err) {
             console.log(err);
             if (err.message.includes("(HTTP code 404) no such container")){
-                resolve(true);
+                return resolve(true);
             } else {
-                reject(new Error(`(removeContainer) err ${err.name} :- ${err.message}`))
+                return reject(new Error(`(removeContainer) err ${err.name} :- ${err.message}`))
             }
         }
     })

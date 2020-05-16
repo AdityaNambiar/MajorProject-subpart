@@ -7,13 +7,18 @@ module.exports = function mkXmlSilo() {
             let xml_silo_path = path.resolve(__dirname,'..','xml_silo');
             if(!fs.existsSync(xml_silo_path)){
                 fs.mkdir(xml_silo_path, { recursive: true }, (err) => {
-                    if (err) reject(new Error(`mkdir xml silo err: ${err}`));
-                    resolve(xml_silo_path);
+                    if (err){ 
+                        return reject(new Error(`mkdir xml silo err: ${err}`));
+                    } else {
+                        return resolve(xml_silo_path);
+                    }
                 })
+            } else {
+                return resolve(xml_silo_path);
             }
-            resolve(xml_silo_path);
         } catch (err) {
-            reject(new Error('mkXmlSilo err: '+err));
+            console.log(err);
+            return reject(new Error('mkXmlSilo err: '+err));
         }
     })
 }

@@ -8,11 +8,15 @@ module.exports = function writeXmlToSilo(projName, newPXML){
         try {
             let xml_silo_path = await mkXmlSilo();
             fs.writeFile(path.resolve(xml_silo_path,`${projName}.xml`), newPXML, { flags: 'w' }, (err) => {
-                if (err) reject(new Error('could not write XML'+err))
-                resolve(true);
+                if (err) {
+                    console.log(err);
+                    return reject(new Error('could not write XML'+err))
+                } else {
+                    return resolve(true);
+                }
             });
         } catch(err) {
-            reject(new Error('(writeXmlToSilo) err'+err));
+            return reject(new Error('(writeXmlToSilo) err'+err));
         }
 
     })

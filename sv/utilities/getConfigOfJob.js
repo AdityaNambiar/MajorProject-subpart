@@ -10,13 +10,14 @@ module.exports = function getConfigOfJob(projName){
         try {
             jenkins.get_config_xml(projName, function(err, data) {
                 if (err === "Server returned unexpected status code: 404"){ 
-                    resolve(false) // means job does not exist
-                }   
-                resolve(data); // means job does exist and send its xml 
+                    return resolve(false) // means job does not exist
+                } else {
+                    return resolve(data); // means job does exist and send its xml 
+                }
             });
         } catch(err) {
             console.log(err);
-            reject(new Error(`(doesJobExist) err: `+err));
+            return reject(new Error(`(doesJobExist) err: `+err));
         }
     })
 }

@@ -13,6 +13,7 @@ class Integration extends Component {
   constructor(props) {
     super(props);
 
+    console.log("CONSTRUCTOR EXECUTED");
     this.state = {
       projName: this.props.location.state.projName,
       branchName: this.props.location.state.branchName,
@@ -31,6 +32,7 @@ class Integration extends Component {
       }
   }
   componentDidMount = () => {
+    console.log("COMPONENT DID MOUNT EXECUTED");
     const { projName, branchName, jenkinsfile, jenkins_jobdesc } = this.state;
 
     fetch('http://localhost:5003/integrate', {

@@ -19,10 +19,11 @@ module.exports = function checkJobStatus(queueId, projName){
                     jenkins.queue_item(queueId, (err, data) =>{
                         if (err){
                                 console.log(err);
-                                reject(new Error(`(checkJobStatus) queue-item err ${err.name} :- ${err.message}`))
-                        }   
-                        //console.log("queue_item get: \n", data);
-                        queuedata = data;
+                                return reject(new Error(`(checkJobStatus) queue-item err ${err.name} :- ${err.message}`))
+                        } else {
+                            //console.log("queue_item get: \n", data);
+                            queuedata = data;
+                        } 
                     })
                 }
             function queuecheck(){
@@ -39,9 +40,10 @@ module.exports = function checkJobStatus(queueId, projName){
                         jenkinsbuildstatusapi.build.get(projName, buildnumber, function(err, data) {
                           if (err) {
                             console.log(err);
-                            reject(new Error(`(checkJobStatus) jenkins-build-get err ${err.name} :- ${err.message}`))
+                            return reject(new Error(`(checkJobStatus) jenkins-build-get err ${err.name} :- ${err.message}`))
+                          } else {
+                              builddata = data;
                           }
-                          builddata = data;
                         })
                     }
 
@@ -51,9 +53,9 @@ module.exports = function checkJobStatus(queueId, projName){
                         } else {
                             clearInterval(buildVar)
                             if (builddata.result !== 'SUCCESS'){  
-                                resolve(false);
+                                return resolve(false);
                             } else {
-                                resolve(true);
+                                return resolve(true);
                             }
                         }
                     }
@@ -61,7 +63,7 @@ module.exports = function checkJobStatus(queueId, projName){
             }
         } catch(err) {
             console.log(err);
-            reject(new Error(`(checkJobStatus) err ${err.name} :- ${err.message}`));
+            return reject(new Error(`(checkJobStatus) err ${err.name} :- ${err.message}`));
         }
     })
 }

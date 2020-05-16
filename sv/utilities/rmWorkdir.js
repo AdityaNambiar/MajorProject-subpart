@@ -10,8 +10,12 @@ module.exports = function rmWorkdir(projName, branchName, timestamp) {
         fs.rmdir(workdirpath, { 
             recursive: true
         }, (err) => {
-            if (err) { console.log(err); reject(new Error(`rmWorkdir err ${err.name} :- ${err.message}`)); }
-            resolve(true);
+            if (err) { 
+            	console.log(err); 
+            	return reject(new Error(`rmWorkdir err ${err.name} :- ${err.message}`)); 
+            } else {
+	            return resolve(true);
+            }
         })
     })
 }

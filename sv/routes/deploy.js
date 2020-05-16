@@ -27,6 +27,7 @@ router.post('/deploy', async (req, res) => {
         let tagName = req.body.tagName;
         console.log(tagName);
         await cleanUp(projName);
+        await pruneImages();
         await pullImage(projName, tagName); 
         let urls = await createContainer(projName, tagName);
         res.status(200).json({data: projName, urls: urls});
@@ -44,10 +45,10 @@ function pruneImages(){
                     "dangling":["true"]
                 }
             })
-            resolve(true)
+            return resolve(true)
         } catch(err) {
             console.log(err);
-            reject(new Error(`Unable to prune images: `+err));
+            return reject(new Error(`Unable to prune images: `+err));
         }
     })
 }
@@ -59,28 +60,34 @@ function pullImage(projName, tagName) {
         - Remove any existing projName containers. (Containers with the same projName cannot exist so it gives a "Conflict. The container name "/reactapp" is already in use" error anyway)
             -- I think it's better to clean up and then pull and then run container.
     */
+    console.log("pullImage ran");
     return new Promise( async (resolve, reject) => {
         try {
             let tagname = tagName;
             dockerapi.pull(`${IP}:${registryPort}/${projName}:${tagname}`, (err, stream) => {
               if (err) {
                 console.log(err);
-                reject(new Error(`docker-pull err ${err.name} :- ${err.message}`))
+                return reject(new Error(`docker-pull err ${err.name} :- ${err.message}`))
               } else {
-                  stream.on('end', (data) => {
+                  stream.on('data', (data) => 
+                  {
                     console.log("pullImage: \n",String(data));
-                    resolve(data);
+                    return resolve(data);
+                  })
+                  stream.on('error', (error) => {
+                    return console.log("pullImage stream error: \n",error);
                   })
               }
             });
         } catch(err) {
             console.log(err);
-            reject(new Error(`pullImage err: ${err}`));
+            return reject(new Error(`pullImage err: ${err}`));
         }
     })
 }
 
 function createContainer(projName, tagName){
+    console.log("createContainer ran");
     return new Promise( async (resolve, reject) => {
         try {
             let tag = tagName;
@@ -104,11 +111,11 @@ function createContainer(projName, tagName){
                     urls.push(`http://${IP}:${ports[p]} (${containerPort})`);
                 }
                 console.log("urls: \n", urls);
-                resolve(urls);
+                return resolve(urls);
             })
         } catch(err) {
             console.log(err);
-            reject(new Error(`createContainer err: ${err}`));
+            return reject(new Error(`createContainer err: ${err}`));
         }
     })
 }

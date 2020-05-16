@@ -27,7 +27,7 @@ router.post('/integrate', async (req, res) => {
         
         // Setup working directory for jenkins to access it.
         let workdirpath = await cloneRepository(projName, branchName, timestamp); 
-        
+        console.log("timestamp: ", Date.now());
         // Updating XML by creating nodes in variables
         if (await doesJobExist(projName)){
 
@@ -60,7 +60,7 @@ router.post('/integrate', async (req, res) => {
             let xmlConfigString = await readXmlFromSilo(projName);
 
             console.log("job does not exists - creating it now");
-            let queueId = await createJob( projName, xmlConfigString);
+            let queueId = await createJob(projName, xmlConfigString);
             let isCompleted = await checkJobStatus(queueId, projName);
             if (isCompleted){
                 console.log("build successful");
@@ -81,63 +81,66 @@ router.post('/integrate', async (req, res) => {
 })
 
 function doesJobExist(projName){
+    console.log("doesJobExist executed");
     return new Promise( (resolve, reject) => {
         try {
-            jenkins.get_config_xml(projName, function(err, data) {
+            jenkins.get_config_xml(projName, (err, data) => {
                 if (err === "Server returned unexpected status code: 404"){ 
-                    resolve(false) // means job does not exist
+                    return resolve(false) // means job does not exist
                 }   
-                resolve(true); // means job does exist
+                return resolve(true); // means job does exist
             });
         } catch(err) {
             console.log(err);
-            reject(new Error(`(doesJobExist) err: `+err));
+            return reject(new Error(`(doesJobExist) err: `+err));
         }
     })
 }
 
 
 function createJob(projName, xmlConfigString) {
+    console.log("createJob executed");
     return new Promise( (resolve, reject) => {
         try {
             jenkins.create_job(projName, xmlConfigString, (err, data) => {
                 if (err) {
                     console.log(err);
-                    reject(new Error("jenkins create-job: \n"+err))
+                    return reject(new Error("jenkins create-job: \n"+err))
                 }
                 jenkins.build(projName, function(err, data) {
                   if (err){ 
                     console.log(err);
-                    reject(new Error("jenkins build-job: \n"+err))
+                    return reject(new Error("jenkins build-job: \n"+err))
                   }
-                    resolve(data.queueId);
+                 return resolve(data.queueId);
                 });
             })
         } catch(err) {
             console.log(err);
-            reject(new Error(`(createJob) err ${err.name} :- ${err.message}`));
+            return reject(new Error(`(createJob) err ${err.name} :- ${err.message}`));
         }
     })
 }
 function updateJob(projName, xmlConfigString) {
+    console.log("updateJob executed");
     return new Promise( (resolve, reject) => {
         try {
             jenkins.update_job(projName, xmlConfigString, (err, data) => {
                 if (err) {
                     console.log(err);
-                    reject(new Error("jenkins update-job: \n"+err))
+                    return reject(new Error("jenkins update-job: \n"+err))
                 }
                 jenkins.build(projName, function(err, data) {
                   if (err){ 
                     console.log(err);
-                    reject(new Error("jenkins build-job: \n"+err))
+                    return reject(new Error("jenkins build-job: \n"+err))
                   }
-                    resolve(data.queueId);
+                    return resolve(data.queueId);
                 });
             })
         } catch(err) {
             console.log(err);
-            reject(new Error(`(updateJob) err ${err.name} :- ${err.message}`));
+            return reject(new Error(`(updateJob) err ${err.name} :- ${err.message}`));
         }
     })
 }

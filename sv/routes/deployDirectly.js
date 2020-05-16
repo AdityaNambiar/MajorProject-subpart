@@ -19,8 +19,9 @@ router.post('/deployDirectly', async (req, res) => {
 
     try {
         let projName = req.body.projName;
+        let branchName = req.body.branchName;
 
-        let workdirpath = await cloneRepo(projName);
+        let workdirpath = await cloneRepo(projName, branchName);
         await buildImage(workdirpath, projName);
         await pushImage(projName);
         await cleanUp(projName);
@@ -49,7 +50,7 @@ function mkProjSilo() {
         }
     })
 }
-function cloneRepo(projName) {
+function cloneRepo(projName, branchName) {
     return new Promise( async (resolve, reject) => {
         try {
             let projects_silo_path = await mkProjSilo();
@@ -61,7 +62,7 @@ function cloneRepo(projName) {
                         console.log(err);
                         reject(new Error(`Could not remove old workspace: ${err}`))
                     }
-                    exec(`git clone ${url} ${projName}`, {
+                    exec(`git clone ${url} ${projName}-${branchName}`, {
                         cwd: projects_silo_path,
                         shell: true
                     }, (err, stdout, stderr) => {
@@ -78,7 +79,7 @@ function cloneRepo(projName) {
                     })
                 })
             } else {
-                exec(`git clone ${url} ${projName}`, {
+                exec(`git clone ${url} ${projName}-${branchName}`, {
                         cwd: projects_silo_path,
                         shell: true
                     }, (err, stdout, stderr) => {
@@ -153,7 +154,6 @@ function pushImage(projName){
         }
     })
 }
-
 function cleanUp(projName) {
     /**
         To remove all same name containers:
@@ -183,14 +183,17 @@ function removeImages(projName){
                 filter: `${IP}:${registryPort}/${projName}`
             });
             let repoTags = image[0].RepoTags; // Gives an array of tags already present of the same image name.
-            let allRepoTags = repoTags.filter(e => e.includes("192.168.1.101:7009/")) // Only consider the registry tagged images.
-            let most_recent_img = allRepoTags[allRepoTags.length - 1] // which among them is the latest
-            let oldRepoTags = allRepoTags.filter(e => e !== most_recent_img)
-
-            for (let i = 0; i < oldRepoTags.length; i++) {
-                const image = await dockerapi.getImage(oldRepoTags[i]);
-                await image.remove(); 
+            let allRepoTags = repoTags.filter(e => e.includes(`${IP}:${registryPort}/`)) // Only consider the registry tagged images.
+            //let most_recent_img = allRepoTags[allRepoTags.length - 1] // which among them is the latest
+            //let oldRepoTags = allRepoTags.filter(e => e !== most_recent_img)
+            for (let i = 0; i < allRepoTags.length; i++) {
+                const image = await dockerapi.getImage(allRepoTags[i]);
+                console.log("img to be deleted: \n",image);
+                await image.remove({remove: true}); 
             }
+            const imagecheck = await dockerapi.listImages({
+                filter: `${IP}:${registryPort}/${projName}`
+            });
             console.log("images has been cleaned now")
             resolve(true);
         } catch(err) {
@@ -207,7 +210,7 @@ function removeContainer(projName) {
     return new Promise( async (resolve,reject) => {
         try {   
             const container = await dockerapi.getContainer(projName);
-            let resp = await container.remove({ v: true }); // v = remove 'volume' of container as well. 
+            let resp = await container.remove({ force: true, v: true }); // v = remove 'volume' of container as well. 
             console.log("container - if any - has been removed now")
             resolve(resp);
         } catch(err) {
@@ -236,6 +239,7 @@ function pullImage(projName) {
                 reject(new Error(`docker-pull err ${err.name} :- ${err.message}`))
               }
               stream.on('data', (data) => {
+                console.log("pullImage: \n",String(data));
                 resolve(data);
               })
             });
@@ -255,7 +259,7 @@ function getTagName(projName) {
             let repoTags = image[0].RepoTags; // Gives an array of tags already present of the same image name.
             let newRepoTags = repoTags.filter(e => e.includes(`${IP}:${registryPort}/`))
             // The last element of RepoTags[] is always the latest tagged image
-            let most_recent_tag = newrepotags[newrepotags.length - 1].split(`${projName}:`)[1] // Eg: "192.168.1.101:7009/reactapp:v4"            
+            let most_recent_tag = newRepoTags[newRepoTags.length - 1].split(`${projName}:`)[1] // Eg: "192.168.1.101:7009/reactapp:v4"            
             resolve(most_recent_tag);
         } catch(err) {
             console.log(err);
@@ -276,14 +280,17 @@ function createContainer(projName){
             var ports = [], urls = [], containerPort = "";
             await container.inspect((err, data) => {
                 if (err) throw new Error(err);
-                var portBindings = data.HostConfig.PortBindings;
+                var portBindings = data.NetworkSettings.Ports;
+                //console.log("pbings: \n",portBindings);
                 for (let pb in portBindings){
                     containerPort = pb;
                     ports.push(portBindings[pb][0].HostPort);
                 }
+                console.log("ports: \n", ports);
                 for (let p in ports){
                     urls.push(`http://${IP}:${p} (${containerPort})`);
                 }
+                console.log("urls: \n", urls);
                 resolve(urls);
             })
         } catch(err) {

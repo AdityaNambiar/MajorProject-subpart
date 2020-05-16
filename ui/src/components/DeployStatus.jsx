@@ -15,20 +15,22 @@ class Integration extends Component {
 
     this.state = {
       projName: this.props.location.state.projName,
+      branchName: this.props.location.state.branchName,
+      tagname: tagname, this.props.location.state.tagname,
+      jenkinsfile: this.props.location.state.jenkinsfile,
+      jenkins_jobdesc: this.props.location.state.jenkins_jobdesc,
       progressPercent: 0,
       postResp: '',
       urls: []
     }
   }
   componentWillUnmount = () => {
-    if (this.state.progressPercent !== 100) {
       window.onbeforeunload = function() {
           return "Please wait while your build finishes!";
       }
-    }
   }
   componentDidMount = () => {
-    const { projName, jenkinsfile, jenkins_jobdesc } = this.props.location.state;
+    const { projName, branchName, tagname, jenkinsfile, jenkins_jobdesc } = this.state;
 
     fetch('http://localhost:5003/integrate', {
       method: 'POST',
@@ -37,34 +39,34 @@ class Integration extends Component {
       },
       body: JSON.stringify({ 
           projName: projName,
-          workdirpath: '',
+          branchName: branchName,
           jenkinsfile: jenkinsfile,
           description: jenkins_jobdesc
       })
     })
     .then(resp => resp.json())
     .then(res => {
-      //console.log(res);
-      if (res.data === "Build Failed - Check logs!") throw new Error("Build Failed - Check logs!");
+      console.log(res);
+      if (res.err === "Build Failed - Check logs!") throw new Error("Build Failed - Check logs!");
       else {
         this.setState({ 
-           projName: res.data,
-           workdirpath: res.workdirpath, 
+           projName: res.projName,
+           branchName: res.branchName, 
            progressPercent: '50' 
         });
         this.startDeployment();
       }
     })
     .catch(err => {
-      console.log("got err: ", err);
-      let errmsg = err.data || err.message;
+      console.log(err);
+      let errmsg = err.err || err.message;
       window.alert(errmsg); 
       this.setState({ progressPercent: '0' });
     })
 
   }
   startDeployment = () => {
-    const { projName,workdirpath } = this.props.location.state;
+    const { projName, tagname, branchName } = this.state;
 
     fetch('http://localhost:5003/deploy', {
       method: 'POST',
@@ -73,17 +75,20 @@ class Integration extends Component {
       },
       body: JSON.stringify({ 
           projName: projName,
-          workdirpath: workdirpath
+          branchName: branchName
       })
     })
     .then(resp => resp.json())
     .then(res => {
       console.log(res);
-      if (res.data.includes("Error")) throw new Error(res.data);
-      this.setState({ projName: res.data, progressPercent: '100', urls: res.urls });
+      if (res.err) throw new Error(res.err);
+      this.setState({ projName: res.projName, progressPercent: '100', urls: res.urls });
+      console.log(this.state)
     })
     .catch(err => {
-      window.alert(err.data); 
+      console.log(err);
+      let errmsg = err.err || err.message;
+      window.alert(errmsg);  
       this.setState({ postResp: err , progressPercent: '50'});
     }) 
   }
@@ -91,7 +96,8 @@ class Integration extends Component {
     e.preventDefault();
     document.getElementById('logarea').classList.toggle("d-none");
     if (!document.getElementById('logarea').classList.contains("d-none")){
-      const { projName } = this.props.location.state;
+      const { projName } = this.state;
+
       fetch('http://localhost:5003/showLogs', {
         method: 'POST',
         headers: {
@@ -161,7 +167,7 @@ class Integration extends Component {
           <div className="p-5 w-100 mt-3 bg bg-dark text-center text-light">
           <span>Access your application here</span><br/>
           {
-            this.state.urls.map(url => <span>url</span>)
+            this.state.urls.map(url => <span>{url}</span>)
           }
           </div>
       </div>

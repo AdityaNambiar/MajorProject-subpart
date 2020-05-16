@@ -31,8 +31,10 @@ router.post('/showLogs', async (req, res) => {
 function doesJobExist(jenkins, projName){
     return new Promise( (resolve, reject) => {
         try {
+            console.log(projName);
             jenkins.get_config_xml(projName, function(err, data) {
                 if (err === "Server returned unexpected status code: 404"){ 
+                    console.log(err);
                     resolve(false) // means job does not exist
                 }   
                 resolve(true); // means job does exist

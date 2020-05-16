@@ -15,17 +15,17 @@ router.post('/integrate', async (req, res) => {
         let description = req.body.description || `${projName} build`;
         let jenkinsFile = req.body.jenkinsfile || 'Jenkinsfile';
         let branchName = req.body.branchName || 'master';
-        let pollSCMSchedule = req.body.pollSCMSchedule || 'H/2 * * * *';
+        //let pollSCMSchedule = req.body.pollSCMSchedule || 'H/2 * * * *';
         // username/API token:
         let jenkins = jenkinsapi.init(`http://admin:11a4469a856bdf30c30a7c0053f822beaa@${IP}:8080`);
         
         // Setup working directory for jenkins to access it.
-        let workdirpath = await cloneRepo(projName); 
+        let workdirpath = await cloneRepo(projName,branchName); 
         
         // Updating XML by creating nodes in variables
         if (await doesJobExist(jenkins, projName)){
             let existingXml = await getConfigOfJob(jenkins,projName);
-            let newPObj = await preparePipelineObj(description, pollSCMSchedule,
+            let newPObj = await preparePipelineObj(description,
                             branchName, jenkinsFile, workdirpath, existingXml);
             let newPXML = xmljsconv.js2xml(newPObj);
 
@@ -37,12 +37,16 @@ router.post('/integrate', async (req, res) => {
             let queueId = await updateJob(jenkins, projName, xmlConfigString);
             var isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, queueId, projName);
             if (isCompleted){
-                res.status(200).json({data: projName, workdirpath: workdirpath});
+                console.log("build successful");
+                await rmWorkdir(projName, branchName);
+                res.status(200).json({projName: projName, branchName: branchName});
             } else {
-                res.status(400).json({data:"Build Failed - Check logs!"});                
+                console.log("build unsuccessful");
+                await rmWorkdir(projName, branchName);
+                res.status(400).json({err:"Build Failed - Check logs!"});                
             }
         } else {
-            let newPObj = await preparePipelineObj(description, pollSCMSchedule,
+            let newPObj = await preparePipelineObj(description,
                             branchName, jenkinsFile, workdirpath, null);
             let newPXML = xmljsconv.js2xml(newPObj);
 
@@ -55,17 +59,36 @@ router.post('/integrate', async (req, res) => {
             var isCompleted = await checkJobStatus(jenkins, jenkinsbuildstatusapi, queueId, projName);
             if (isCompleted){
                 console.log("build successful");
-                res.status(200).json({data: projName, workdirpath: workdirpath});
+                await rmWorkdir(projName, branchName);
+                res.status(200).json({projName: projName, branchName: branchName});
             } else {
                 console.log("build unsuccessful");
-                res.status(400).json({data:"Build Failed - Check logs!"});                
+                await rmWorkdir(projName, branchName);
+                res.status(400).json({err:"Build Failed - Check logs!"});                
             }
         }
     } catch (err) {
         console.log(err);
-        res.status(400).json({data:`(integrate) main err ${err.name} :- ${err.message}`});
+        await rmWorkdir(projName, branchName);
+        res.status(400).json({err:`(integrate) main err ${err.name} :- ${err.message}`});
     }
 })
+
+
+/**
+ * Remove username's work dir so as to obtain the latest work dir later on.
+ */
+function rmWorkdir(projName, branchName) {
+    let workdirpath = path.join(process.cwd(), 'projects_silo', projName+'-'+branchName);
+    return new Promise((resolve,reject) => {
+        fs.rmdir(workdirpath, { 
+            recursive: true
+        }, (err) => {
+            if (err) { console.log(err); reject(new Error(`rmWorkdir err ${err.name} :- ${err.message}`)); }
+            resolve(true);
+        })
+    })
+}
 
 function checkJobStatus(jenkins,jenkinsbuildstatusapi, queueId, projName){
     return new Promise((resolve, reject) => {
@@ -260,19 +283,19 @@ function readXmlFromSilo(projName){
 
     })
 }
-function cloneRepo(projName) {
+function cloneRepo(projName, branchName) {
     return new Promise( async (resolve, reject) => {
         try {
             let projects_silo_path = await mkProjSilo();
             let url = `http://${IP}:7005/projects/bare/${projName}.git`
-            let projPath = path.join(projects_silo_path, projName);
+            let projPath = path.join(projects_silo_path, projName+'-'+branchName);
             if (fs.existsSync(projPath)){
                 fs.rmdir(projPath, {recursive:true}, (err) => {
                     if (err) {
                         console.log(err);
                         reject(new Error(`Could not remove old workspace: ${err}`))
                     }
-                    exec(`git clone ${url} ${projName}`, {
+                    exec(`git clone ${url} ${projName}-${branchName}`, {
                         cwd: projects_silo_path,
                         shell: true
                     }, (err, stdout, stderr) => {
@@ -289,7 +312,7 @@ function cloneRepo(projName) {
                     })
                 })
             } else {
-                exec(`git clone ${url} ${projName}`, {
+                exec(`git clone ${url} ${projName}-${branchName}`, {
                         cwd: projects_silo_path,
                         shell: true
                     }, (err, stdout, stderr) => {
@@ -302,7 +325,7 @@ function cloneRepo(projName) {
                             //console.log(stderr);
                             //reject(new Error(`(cloneRepo) git-clone cli stderr:\n ${stderr}`));
                         }
-                        resolve(path.join(projects_silo_path, projName));
+                        resolve(path.join(projects_silo_path, projName+'-'+branchName));
                 })
             }
         } catch (err) {
@@ -312,7 +335,7 @@ function cloneRepo(projName) {
     })
 }
 
-async function preparePipelineObj(description, pollSCMSchedule,
+async function preparePipelineObj(description,
                         branchName, jenkinsFile, workdirpath, existingJobXml) {
     try {
         // Read the sample pipeline job's XML:
@@ -327,10 +350,10 @@ async function preparePipelineObj(description, pollSCMSchedule,
             "type":"text",
             "text": description
         }]
-        var scheduleElement = [{
+        /*var scheduleElement = [{
             "type":"text",
             "text": pollSCMSchedule
-        }]
+        }]*/
         var branchElement = [{
             "type": "text",
             "text": branchName
@@ -347,13 +370,13 @@ async function preparePipelineObj(description, pollSCMSchedule,
         pipelineObj.elements[0]
                 .elements[1]
                 ["elements"] = descElement // set description of job.
-        pipelineObj.elements[0] // 'flow-definition' 
+        /*pipelineObj.elements[0] // 'flow-definition' 
                 .elements[3] // 'properties'
                 .elements[0] // 'PipelineTriggersJobProperty'
                 .elements[0] // 'triggers'
                 .elements[0] // 'SCMTrigger'
                 .elements[0] // 'spec'
-                ["elements"] = scheduleElement; // set poll scheduling of job.
+                ["elements"] = scheduleElement; // set poll scheduling of job.*/
         pipelineObj.elements[0] // 'flow-definition'
                 .elements[4] // 'definition'
                 .elements[0] // 'scm'

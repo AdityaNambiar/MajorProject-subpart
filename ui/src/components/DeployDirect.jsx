@@ -12,7 +12,6 @@ class DeployDirect extends Component {
 
     this.state = {
       projName: this.props.location.state.projName,
-      progressPercent: 0,
       postResp: '',
       urls: []
     }
@@ -23,7 +22,7 @@ class DeployDirect extends Component {
       }
   }
   componentDidMount = () => {
-    const { projName } = this.props.location.state;
+    const { projName, tagname } = this.props.location.state;
 
     fetch('http://localhost:5003/deployDirectly', {
       method: 'POST',
@@ -31,18 +30,21 @@ class DeployDirect extends Component {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ 
-          projName: projName
+          projName: projName,
+          tagname: tagname
       })
     })
     .then(resp => resp.json())
     .then(res => {
       console.log(res);
-      if (res.data.includes("Error")) throw new Error(res.data);
+      if (res.err.includes("Error")) throw new Error(res.err);
       this.setState({ urls: res.urls });
     })
     .catch(err => {
-      window.alert(err.data); 
-      this.setState({ postResp: err , progressPercent: '50'});
+      console.log(err);
+      let errmsg = err.err || err.message;
+      window.alert(errmsg); 
+      this.setState({ postResp: err});
     }) 
   }
   showLogs = (e) => {
@@ -61,7 +63,7 @@ class DeployDirect extends Component {
       })
       .then(resp => resp.json())
       .then(res => {                                                                                                      
-        this.setState({ postResp: res.data });
+        this.setState({ postResp: res });
       })
       .catch(err => {
         console.log(err); 

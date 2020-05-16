@@ -30,7 +30,7 @@ class Integration extends Component {
       }
   }
   componentDidMount = () => {
-    const { projName, branchName, tagname, jenkinsfile, jenkins_jobdesc } = this.state;
+    const { projName, branchName, jenkinsfile, jenkins_jobdesc } = this.state;
 
     fetch('http://localhost:5003/integrate', {
       method: 'POST',
@@ -75,7 +75,8 @@ class Integration extends Component {
       },
       body: JSON.stringify({ 
           projName: projName,
-          branchName: branchName
+          branchName: branchName,
+          tagname: tagname
       })
     })
     .then(resp => resp.json())

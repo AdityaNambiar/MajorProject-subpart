@@ -24,7 +24,7 @@ router.post('/deploy', async (req, res) => {
         let tagName = req.body.tagName;
 
         await cleanUp(projName);
-        await pullImage(projName); 
+        await pullImage(projName, tagName); 
         let urls = await createContainer(projName);
         res.status(200).json({data: projName, urls: urls});
     } catch (err) {
@@ -101,7 +101,7 @@ function removeContainer(projName) {
         }
     })
 }
-function pullImage(projName) {
+function pullImage(projName, tagName) {
     /**
         When pulling images:
         - Remove the existing any projName image on local system (so that you can pull the projName image and only it stays - the one with the private registry IP)
@@ -110,7 +110,7 @@ function pullImage(projName) {
     */
     return new Promise( async (resolve, reject) => {
         try {
-            let tagname = await getTagName(projName);
+            let tagname = tagName;
             dockerapi.pull(`${IP}:${registryPort}/${projName}:${tagname}`, (err, stream) => {
               if (err) {
                 console.log(err);
@@ -128,23 +128,6 @@ function pullImage(projName) {
     })
 }
 
-function getTagName(projName) {
-    return new Promise( async (resolve, reject) => {
-        try {
-            const image = await dockerapi.listImages({
-                filter: `${IP}:${registryPort}/${projName}`
-            });
-            let repoTags = image[0].RepoTags; // Gives an array of tags already present of the same image name.
-            let newRepoTags = repoTags.filter(e => e.includes(`${IP}:${registryPort}/`))
-            // The last element of RepoTags[] is always the latest tagged image
-            let most_recent_tag = newRepoTags[newRepoTags.length - 1].split(`${projName}:`)[1] // Eg: "192.168.1.101:7009/reactapp:v4"            
-            resolve(most_recent_tag);
-        } catch(err) {
-            console.log(err);
-            reject(new Error(`getTagName err: ${err}`));
-        }
-    })
-}
 function createContainer(projName){
     return new Promise( async (resolve, reject) => {
         try {

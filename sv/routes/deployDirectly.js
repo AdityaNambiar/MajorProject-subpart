@@ -28,10 +28,10 @@ router.post('/deployDirectly', async (req, res) => {
         await pullImage(projName);
         let urls = await createContainer(projName); 
 
-        res.status(200).json({data: projName, urls: urls});
+        res.status(200).json({projName: projName, urls: urls});
     } catch (err) {
         console.log(err);
-        res.status(400).send(`Error occured during direct deployment : \n${err.name} :- ${err.message}`);
+        res.status(400).json({err: `Error occured during direct deployment : \n${err.name} :- ${err.message}`});
     }
 })
 function mkProjSilo() {

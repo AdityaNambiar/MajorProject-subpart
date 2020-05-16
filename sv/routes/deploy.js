@@ -29,12 +29,13 @@ router.post('/deploy', async (req, res) => {
         await cleanUp(projName);
         await pruneImages();
         await pullImage(projName, tagName); 
-        let urls = await createContainer(projName, tagName);
-        res.status(200).json({data: projName, urls: urls});
+        let urls = await createContainer(projName, tagName, branchName);
+        res.status(200).json({projName: projName, urls: urls});
     } catch (err) {
         console.log(err);
         await pruneImages()
-        res.status(400).json({data:`(deploy) main err ${err.name} :- ${err.message}`});
+        await pruneContainers()
+        res.status(400).json({err:`(deploy) main err ${err.name} :- ${err.message}`});
     }
 })
 function pruneImages(){
@@ -53,6 +54,21 @@ function pruneImages(){
     })
 }
 
+function pruneContainers(){
+    return new Promise( (resolve, reject) => {
+        try {
+            dockerapi.pruneContainers({ 
+                filters: { // this is what they mean by - map[string][]string <- where first 'string' is key of JSON obj and second 'string' is value of string array of JSON obj
+                    "label!":["registry"] // Remove any container without the name "registry"
+                }
+            })
+            return resolve(true)
+        } catch(err) {
+            console.log(err);
+            return reject(new Error(`Unable to prune images: `+err));
+        }
+    })
+}
 function pullImage(projName, tagName) {
     /**
         When pulling images:
@@ -60,7 +76,7 @@ function pullImage(projName, tagName) {
         - Remove any existing projName containers. (Containers with the same projName cannot exist so it gives a "Conflict. The container name "/reactapp" is already in use" error anyway)
             -- I think it's better to clean up and then pull and then run container.
     */
-    console.log("pullImage ran");
+    console.log("Pulling image...");
     return new Promise( async (resolve, reject) => {
         try {
             let tagname = tagName;
@@ -71,12 +87,12 @@ function pullImage(projName, tagName) {
               } else {
                   stream.on('data', (data) => 
                   {
-                    console.log("pullImage: \n",String(data));
-                    return resolve(data);
+                    //console.log("pullImage: \n",String(data));
                   })
                   stream.on('error', (error) => {
                     return console.log("pullImage stream error: \n",error);
                   })
+                  return resolve(data);
               }
             });
         } catch(err) {
@@ -87,7 +103,7 @@ function pullImage(projName, tagName) {
 }
 
 function createContainer(projName, tagName){
-    console.log("createContainer ran");
+    console.log("Going to run container...");
     return new Promise( async (resolve, reject) => {
         try {
             let tag = tagName;
@@ -119,36 +135,5 @@ function createContainer(projName, tagName){
         }
     })
 }
-/* BACKUP FOR REFERENCE (whenever we want to fetch digest of an image -
-    As said in the API documentation, you need to pass name and digest with HTTP Method "DELETE" to remove the 
-    image from registry but this gives me UNSUPPORTED error.. probably it requires RepoDigest and not .Id):
-*/
-/*function getImageDigest(projName, tagId){
-    return new Promise( (resolve, reject) => {
-        try{ 
-            const options = {
-                method: "GET",
-            }
 
-            const req = http.request(`http://${IP}:${registryPort}/v2/${projName}/manifests/${tagId}`, options, (res) => {
-                res.on('data', (chunk) => {
-                    resolve(JSON.parse(String(chunk)).config.digest); // Return the image digest.
-                })
-                res.on('error', (error) => {
-                    reject(new Error("http resp err: \n",error));
-                })
-            })
-            req.setHeader("Accept","application/vnd.docker.distribution.manifest.v2+json")
-            req.on('error', (e) => {
-              reject( new Error(`problem with request: ${e.message}`));
-            });
-
-            req.end();
-
-        } catch(err) {
-            console.log(err);
-            reject(new Error('(getImageDigest) err: '+err));
-        }
-    })
-}*/
 module.exports = router

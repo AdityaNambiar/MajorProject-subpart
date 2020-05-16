@@ -10,7 +10,7 @@ router.post('/showDeployLogs', (req,res) =>{
 		res.status(200).json({data: logs});
 	} catch(err) {
 		console.log(err);
-		res.status(400).json({data: "Error showing deploy logs "+err});
+		res.status(400).json({err: "Error showing deploy logs "+err});
 	}
 
 })

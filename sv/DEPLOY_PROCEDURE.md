@@ -27,3 +27,36 @@ docker run -d -p 7009:5000 --restart always --name registry -v registrydata:/dat
 -- Currently, I am unable to remove old project images from registry.. It's HTTP DELETE request is working for me.
 
 
+
+/* BACKUP FOR REFERENCE (whenever we want to fetch digest of an image -
+    As said in the API documentation, you need to pass name and digest with HTTP Method "DELETE" to remove the 
+    image from registry but this gives me UNSUPPORTED error.. probably it requires RepoDigest and not .Id):
+*/
+/*function getImageDigest(projName, tagId){
+    return new Promise( (resolve, reject) => {
+        try{ 
+            const options = {
+                method: "GET",
+            }
+
+            const req = http.request(`http://${IP}:${registryPort}/v2/${projName}/manifests/${tagId}`, options, (res) => {
+                res.on('data', (chunk) => {
+                    resolve(JSON.parse(String(chunk)).config.digest); // Return the image digest.
+                })
+                res.on('error', (error) => {
+                    reject(new Error("http resp err: \n",error));
+                })
+            })
+            req.setHeader("Accept","application/vnd.docker.distribution.manifest.v2+json")
+            req.on('error', (e) => {
+              reject( new Error(`problem with request: ${e.message}`));
+            });
+
+            req.end();
+
+        } catch(err) {
+            console.log(err);
+            reject(new Error('(getImageDigest) err: '+err));
+        }
+    })
+}*/

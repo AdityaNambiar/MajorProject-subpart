@@ -29,7 +29,8 @@ router.post('/integrate', async (req, res) => {
         let workdirpath = await cloneRepository(projName, branchName, timestamp); 
         console.log("timestamp: ", Date.now());
         // Updating XML by creating nodes in variables
-        if (await doesJobExist(projName)){
+        let jobExist = await doesJobExist(projName);
+        if (jobExist){
 
             let existingXml = await getConfigOfJob(projName);
             let newPXML = await preparePipelineXML(description,
@@ -87,8 +88,9 @@ function doesJobExist(projName){
             jenkins.get_config_xml(projName, (err, data) => {
                 if (err === "Server returned unexpected status code: 404"){ 
                     return resolve(false) // means job does not exist
-                }   
-                return resolve(true); // means job does exist
+                }  else {
+                    return resolve(true); // means job does exist
+                }  
             });
         } catch(err) {
             console.log(err);
@@ -106,14 +108,16 @@ function createJob(projName, xmlConfigString) {
                 if (err) {
                     console.log(err);
                     return reject(new Error("jenkins create-job: \n"+err))
+                } else {
+                    jenkins.build(projName, function(err, data) {
+                      if (err){ 
+                        console.log(err);
+                        return reject(new Error("jenkins build-job: \n"+err))
+                      } else {
+                         return resolve(data.queueId);
+                      }
+                    });
                 }
-                jenkins.build(projName, function(err, data) {
-                  if (err){ 
-                    console.log(err);
-                    return reject(new Error("jenkins build-job: \n"+err))
-                  }
-                 return resolve(data.queueId);
-                });
             })
         } catch(err) {
             console.log(err);
@@ -129,14 +133,16 @@ function updateJob(projName, xmlConfigString) {
                 if (err) {
                     console.log(err);
                     return reject(new Error("jenkins update-job: \n"+err))
+                } else {
+                    jenkins.build(projName, function(err, data) {
+                      if (err){ 
+                        console.log(err);
+                        return reject(new Error("jenkins build-job: \n"+err))
+                      } else {
+                        return resolve(data.queueId);
+                      }
+                    })
                 }
-                jenkins.build(projName, function(err, data) {
-                  if (err){ 
-                    console.log(err);
-                    return reject(new Error("jenkins build-job: \n"+err))
-                  }
-                    return resolve(data.queueId);
-                });
             })
         } catch(err) {
             console.log(err);

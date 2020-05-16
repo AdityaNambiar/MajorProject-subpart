@@ -7,10 +7,11 @@ const Docker = require('dockerode');
 const IP = require('ip').address(); // Get machine IP.
 //const http = require('http');
 const dockerapi = new Docker();
+const {exec} = require('child_process');
 const registryPort = 7009; // Ideally you can set this as process.env or something like this to take in the registry port no. from environment variables.
 
 
-module.exports = function cleanUp(projName) {
+module.exports = function cleanUp(imageName, projName, branchName) {
     /**
         To remove all same name containers:
         - docker rm $(docker ps -a | grep reactapp | awk '{ print $1 }')
@@ -22,8 +23,8 @@ module.exports = function cleanUp(projName) {
     */
     return new Promise( async (resolve, reject) => {
         try {
-            await removeContainer(projName);
-            await removeImages(projName);
+            await removeContainer(projName, branchName);
+            await removeImages(imageName);
             return resolve(true); 
         } catch(err) {
             console.log(err);
@@ -32,14 +33,14 @@ module.exports = function cleanUp(projName) {
     })
 }
 
-function removeImages(projName){
+function removeImages(imageName){
     return new Promise( async (resolve, reject) => {
         try{ 
             const image = await dockerapi.listImages({
-                filter: `${IP}:${registryPort}/${projName}`
+                filter: imageName
             });
             if (!image[0]){ // Means no images are present of the same name.
-                resolve(true);
+                return resolve(true);
             }
             let repoTags = image[0].RepoTags; // Gives an array of tags already present of the same image name.
             let allRepoTags = repoTags.filter(e => e.includes(`${IP}:${registryPort}/`)) // Only consider the registry tagged images.
@@ -51,7 +52,7 @@ function removeImages(projName){
                 await image.remove({remove: true}); 
             }
             const imagecheck = await dockerapi.listImages({
-                filter: `${IP}:${registryPort}/${projName}`
+                filter: imageName
             });
             console.log("images has been cleaned now: \n", imagecheck);
             return resolve(true);
@@ -65,14 +66,29 @@ function removeImages(projName){
     })
 }
 
-function removeContainer(projName) {    
+function removeContainer(projName, branchName) {    
     console.log("Removing container ...");
     return new Promise( async (resolve,reject) => {
         try {   
-            const container = await dockerapi.getContainer(projName);
-            let resp = await container.remove({ force: true, v: true }); // v = remove 'volume' of container as well. 
-            console.log("container - if any - has been removed now")
-            return resolve(resp);
+            exec(`docker rm -f ${projName}-${branchName}`, {
+                cwd: process.cwd(),
+                shell: true
+            }, (err,stdout,stderr) => {
+                if (err){
+                    if (err.toString().includes("Error: No such container")){
+                        return resolve(true);
+                    }
+                    console.log(err);
+                    return reject(new Error(`removeContainer cli err ${err}`));
+                }
+                if (stderr) {
+                    console.log(stderr);
+                    return reject(new Error(`removeContainer cli stderr ${stderr}`))
+                }
+
+                console.log("container - if any - has been removed now")
+                return resolve(stdout);
+            });
         } catch(err) {
             console.log(err);
             if (err.message.includes("(HTTP code 404) no such container")){

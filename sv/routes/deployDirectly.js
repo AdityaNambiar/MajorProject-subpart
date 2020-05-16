@@ -35,11 +35,11 @@ router.post('/deployDirectly', async (req, res) => {
         let imageName = `${IP}:${registryPort}/${projName}-${branchName}:${tagName}`
         await buildImage(workdirpath,projName,imageName);
         await pushImage(imageName);
-        await cleanUp(projName);
+        await cleanUp(imageName, projName, branchName);
         await pruneImages();
         await pruneContainers();
         await pullImage(imageName);
-        let urls = await createContainer(projName, imageName) 
+        let urls = await createContainer(projName, branchName, imageName) 
 
         res.status(200).json({projName: projName, urls: urls});
     } catch (err) {
@@ -50,10 +50,10 @@ router.post('/deployDirectly', async (req, res) => {
 })
 function buildImage(workdirpath, projName, imageName){
     console.log("Building image ...")
-    return new Promise( (resolve, reject) => {
+    return new Promise( async (resolve, reject) => {
         var tarStream = tar.pack(workdirpath);
         try {
-            dockerapi.buildImage(tarStream, {nocache: true, t: imageName}, function (err, stream) {
+            await dockerapi.buildImage(tarStream, {nocache: true, t: imageName}, function (err, stream) {
               if (err) {
                 console.log(err);
                 return reject(new Error(`(buildImage) docker.buildImage err ${err.name} :- ${err.message}`));
@@ -90,38 +90,19 @@ function pushImage(imageName){
     console.log("Pushing image ...")
     return new Promise( async (resolve, reject) => {
         try {
-            const image = await dockerapi.listImages({
-                filter: imageName
-            });
-            console.log(image, imageName);
-            image.push({
-                name: imageName
-            }, function (err, response) {
-              if (err) {
-                console.log(err);
-                return reject(new Error(`(pushImage) image-push err ${err.name} :- ${err.message}`));
-              }
-              dockerapi.modem.followProgress(response, onFinished, onProgress);
-                // stream is the object which just prints "IncomingMessage..."
-                function onProgress(err, output) {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        //console.log(output); 
-                        //^ This is the stream output.
-                    }
+            await exec(`docker push ${imageName}`, {
+                cwd: process.cwd(),
+                shell: true
+            }, (err,stdout,stderr) => {
+                if (err){
+                    console.log(err);
+                    return reject(new Error(`pushImage cli err ${err}`));
                 }
-                function onFinished(err, output) {
-                    if (err){ // docker image build was unsuccessful.
-                        console.log(err);
-                        return reject(new Error(`followProgress - buildImage err: ${err}`))
-                    } else {
-                        fs.writeFileSync(projName+'-dockerlogs.txt', JSON.stringify(output)
-                            , { flags: 'w' });
-                        return resolve(true);
-                    }
+                if (stderr) {
+                    console.log(stderr);
+                    return reject(new Error(`pushImage cli stderr ${stderr}`))
                 }
-              return resolve(response);
+                return resolve(stdout);
             });
         } catch(err) {
             console.log(err);
@@ -131,9 +112,9 @@ function pushImage(imageName){
 }
 function pruneImages(){
     console.log("Pruning dangling images ...")
-    return new Promise( (resolve, reject) => {
+    return new Promise( async (resolve, reject) => {
         try {
-            dockerapi.pruneImages({ 
+            await dockerapi.pruneImages({ 
                 filters: { // this is what they mean by - map[string][]string <- where first 'string' is key of JSON obj and second 'string' is value of string array of JSON obj
                     "dangling":["true"]
                 }
@@ -148,9 +129,9 @@ function pruneImages(){
 
 function pruneContainers(){
     console.log("Pruning containers except 'registry' ...")
-    return new Promise( (resolve, reject) => {
+    return new Promise( async (resolve, reject) => {
         try {
-            dockerapi.pruneContainers({ 
+            await dockerapi.pruneContainers({ 
                 filters: { // this is what they mean by - map[string][]string <- where first 'string' is key of JSON obj and second 'string' is value of string array of JSON obj
                     "label!":["registry"] // Remove any container without the name "registry"
                 }
@@ -169,21 +150,26 @@ function pullImage(imageName) {
         - Remove any existing projName containers. (Containers with the same projName cannot exist so it gives a "Conflict. The container name "/reactapp" is already in use" error anyway)
             -- I think it's better to clean up and then pull and then run container.
     */
+    console.log("Pulling image...");
     return new Promise( async (resolve, reject) => {
         try {
-            dockerapi.pull(imageName, (err, stream) => {
+            await dockerapi.pull(imageName, (err, stream) => {
               if (err) {
                 console.log(err);
                 return reject(new Error(`docker-pull err ${err.name} :- ${err.message}`))
               } else {
                   stream.on('data', (data) => 
                   {
+                    // This is stream (access the strings via data.stream) logs
                     //console.log("pullImage: \n",String(data));
+                  })
+                  stream.on('end',(data)=> {
+                    //console.log(data); // undefined.
+                    return resolve(true);
                   })
                   stream.on('error', (error) => {
                     return console.log("pullImage stream error: \n",error);
                   })
-                  return resolve(data);
               }
             });
         } catch(err) {
@@ -193,12 +179,12 @@ function pullImage(imageName) {
     })
 }
 
-function createContainer(projName, imageName){
+function createContainer(projName, branchName, imageName){
     console.log("Going to run container...");
     return new Promise( async (resolve, reject) => {
         try {
             let container = await dockerapi.createContainer({
-              Image: imageName,
+              Image: `${IP}:${registryPort}/${projName}-${branchName}:0.2`,
               name: `${projName}-${branchName}`,
               PublishAllPorts: true
             }) 

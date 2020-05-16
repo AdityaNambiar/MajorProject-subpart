@@ -40,7 +40,6 @@ class DeployDirect extends Component {
     .then(resp => resp.json())
     .then(res => {
       console.log(res);
-      if (res.err.includes("Error")) throw new Error(res.err);
       this.setState({ urls: res.urls });
     })
     .catch(err => {
@@ -97,7 +96,7 @@ class DeployDirect extends Component {
           <div className="p-5 w-100 mt-3 bg bg-dark text-center text-light">
           <span>Access your application here</span><br/>
           {
-            this.state.urls.map(url => <span>url</span>)
+            this.state.urls.map(url => <span>{url}</span>)
           }
           </div>
       </div>

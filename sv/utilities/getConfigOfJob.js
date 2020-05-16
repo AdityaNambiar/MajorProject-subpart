@@ -1,6 +1,7 @@
 /**
     Get the configuration XML file of an existing job.
 */
+const IP = require('ip').address(); // Get machine IP.
 const jenkinsapi = require('jenkins-api');
 const jenkins = jenkinsapi.init(`http://admin:11a4469a856bdf30c30a7c0053f822beaa@${IP}:8080`);
 

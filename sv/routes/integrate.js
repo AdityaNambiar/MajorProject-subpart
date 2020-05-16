@@ -2,6 +2,8 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
+
+const IP = require('ip').address(); // Get machine IP.
 const jenkins = require('jenkins-api').init(`http://admin:11a4469a856bdf30c30a7c0053f822beaa@${IP}:8080`);
 
 // Utility imports:

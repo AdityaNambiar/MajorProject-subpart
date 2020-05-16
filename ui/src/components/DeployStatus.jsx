@@ -16,7 +16,7 @@ class Integration extends Component {
     this.state = {
       projName: this.props.location.state.projName,
       branchName: this.props.location.state.branchName,
-      tagname: tagname, this.props.location.state.tagname,
+      tagname: this.props.location.state.tagname,
       jenkinsfile: this.props.location.state.jenkinsfile,
       jenkins_jobdesc: this.props.location.state.jenkins_jobdesc,
       progressPercent: 0,
@@ -76,7 +76,7 @@ class Integration extends Component {
       body: JSON.stringify({ 
           projName: projName,
           branchName: branchName,
-          tagname: tagname
+          tagName: tagname
       })
     })
     .then(resp => resp.json())

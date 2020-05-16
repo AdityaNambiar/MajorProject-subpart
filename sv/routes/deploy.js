@@ -1,11 +1,9 @@
 const path = require('path');
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const { exec } = require('child_process');
 const Docker = require('dockerode');
 const IP = require('ip').address(); // Get machine IP.
-const http = require('http');
+//const http = require('http');
 const dockerapi = new Docker();
 const registryPort = 7009; // Ideally you can set this as process.env or something like this to take in the registry port no. from environment variables.
 
@@ -16,91 +14,44 @@ const registryPort = 7009; // Ideally you can set this as process.env or somethi
 //             });
 //     console.log(image);
 // });
+
+// Utility imports:
+
+const cleanUp = require('../utilities/cleanUp');
+
 router.post('/deploy', async (req, res) => {
 
     try {
         let projName = req.body.projName;
         let branchName = req.body.branchName;
         let tagName = req.body.tagName;
-
+        console.log(tagName);
         await cleanUp(projName);
         await pullImage(projName, tagName); 
-        let urls = await createContainer(projName);
+        let urls = await createContainer(projName, tagName);
         res.status(200).json({data: projName, urls: urls});
     } catch (err) {
         console.log(err);
+        await pruneImages()
         res.status(400).json({data:`(deploy) main err ${err.name} :- ${err.message}`});
     }
 })
-function cleanUp(projName) {
-    /**
-        To remove all same name containers:
-        - docker rm $(docker ps -a | grep reactapp | awk '{ print $1 }')
-        To remove all same name images:
-        - docker rmi $(docker ps -a | grep reactapp | awk '{ print $3 }')
-
-        But these are NOT RELIABLE. They will also match substrings like for project name with 'react',
-        it will also match "reactapp". That is, it will display the super string as well.  
-    */
-    return new Promise( async (resolve, reject) => {
+function pruneImages(){
+    return new Promise( (resolve, reject) => {
         try {
-            await removeContainer(projName);
-            await removeImages(projName);
-            resolve(true); 
+            dockerapi.pruneImages({ 
+                filters: { // this is what they mean by - map[string][]string <- where first 'string' is key of JSON obj and second 'string' is value of string array of JSON obj
+                    "dangling":["true"]
+                }
+            })
+            resolve(true)
         } catch(err) {
             console.log(err);
-            reject(new Error(`(cleanUp) err ${err.name} :- ${err.message}`))
+            reject(new Error(`Unable to prune images: `+err));
         }
     })
 }
 
-function removeImages(projName){
-    return new Promise( async (resolve, reject) => {
-        try{ 
-            const image = await dockerapi.listImages({
-                filter: `${IP}:${registryPort}/${projName}`
-            });
-            let repoTags = image[0].RepoTags; // Gives an array of tags already present of the same image name.
-            let allRepoTags = repoTags.filter(e => e.includes(`${IP}:${registryPort}/`)) // Only consider the registry tagged images.
-            // let most_recent_img = allRepoTags[allRepoTags.length - 1] // which among them is the latest
-            // let oldRepoTags = allRepoTags.filter(e => e !== most_recent_img)
-            for (let i = 0; i < allRepoTags.length; i++) {
-                const image = await dockerapi.getImage(allRepoTags[i]);
-                console.log("img to be deleted: \n",image);
-                await image.remove({remove: true}); 
-            }
-            const imagecheck = await dockerapi.listImages({
-                filter: `${IP}:${registryPort}/${projName}`
-            });
-            console.log("images has been cleaned now")
-            resolve(true);
-        } catch(err) {
-            console.log(err);
-            if (err.message.includes("(HTTP code 404) no such image")){
-                resolve(true);
-            }
-            reject(new Error('(removeImages) err: '+err));
-        }
-    })
-}
-
-function removeContainer(projName) {
-    return new Promise( async (resolve,reject) => {
-        try {   
-            const container = await dockerapi.getContainer(projName);
-            let resp = await container.remove({ force: true, v: true }); // v = remove 'volume' of container as well. 
-            console.log("container - if any - has been removed now")
-            resolve(resp);
-        } catch(err) {
-            console.log(err);
-            if (err.message.includes("(HTTP code 404) no such container")){
-                resolve(true);
-            } else {
-                reject(new Error(`(removeContainer) err ${err.name} :- ${err.message}`))
-            }
-        }
-    })
-}
 function pullImage(projName, tagName) {
     /**
         When pulling images:
@@ -115,11 +66,12 @@ function pullImage(projName, tagName) {
               if (err) {
                 console.log(err);
                 reject(new Error(`docker-pull err ${err.name} :- ${err.message}`))
+              } else {
+                  stream.on('end', (data) => {
+                    console.log("pullImage: \n",String(data));
+                    resolve(data);
+                  })
               }
-              stream.on('data', (data) => {
-                console.log("pullImage: \n",String(data));
-                resolve(data);
-              })
             });
         } catch(err) {
             console.log(err);
@@ -128,10 +80,10 @@ function pullImage(projName, tagName) {
     })
 }
 
-function createContainer(projName){
+function createContainer(projName, tagName){
     return new Promise( async (resolve, reject) => {
         try {
-            let tag = await getTagName(projName);
+            let tag = tagName;
             let container = await dockerapi.createContainer({
               Image: `${IP}:${registryPort}/${projName}:${tag}`,
               name: `${projName}`,
@@ -156,7 +108,7 @@ function createContainer(projName){
             })
         } catch(err) {
             console.log(err);
-            reject(new Error(`showLogs err: ${err}`));
+            reject(new Error(`createContainer err: ${err}`));
         }
     })
 }

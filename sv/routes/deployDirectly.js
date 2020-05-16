@@ -9,12 +9,14 @@ const dockerapi = new Docker();
 const IP = require('ip').address(); // Get machine IP.
 const registryPort = 7009; // Ideally you can set this as process.env or something like this to take in the registry port no. from environment variables.
 
-// ( async () => {
-//     const image = await dockerapi.listImages({
-//                 filter: `${IP}:${registryPort}/reactapp`
-//             })
-//     console.log(await image[0].RepoTags);
-// })();
+ // ( async () => {
+ //     const image = dockerapi.pruneImages({ 
+ //                filters: {
+ //                    "dangling":["true"]
+ //                }
+ //            })
+ //     console.log(await image);
+ // })();
 router.post('/deployDirectly', async (req, res) => {
 
     try {
@@ -31,9 +33,25 @@ router.post('/deployDirectly', async (req, res) => {
         res.status(200).json({projName: projName, urls: urls});
     } catch (err) {
         console.log(err);
+        await pruneImages();
         res.status(400).json({err: `Error occured during direct deployment : \n${err.name} :- ${err.message}`});
     }
 })
+function pruneImages(){
+    return new Promise( (resolve, reject) => {
+        try {
+            dockerapi.pruneImages({ 
+                filters: { // this is what they mean by - map[string][]string <- where first 'string' is key of JSON obj and second 'string' is value of string array of JSON obj
+                    "dangling":["true"]
+                }
+            })
+            resolve(true)
+        } catch(err) {
+            console.log(err);
+            reject(new Error(`Unable to prune images: `+err));
+        }
+    })
+}
 function mkProjSilo() {
     return new Promise( (resolve, reject) =>{
         try {

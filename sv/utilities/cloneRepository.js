@@ -1,4 +1,5 @@
 
+const IP = require('ip').address(); // Get machine IP.
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
@@ -29,7 +30,7 @@ module.exports = function cloneRepository(projName, branchName, timestamp) {
                             //console.log(stderr);
                             //reject(new Error(`(cloneRepo) git-clone cli stderr:\n ${stderr}`));
                         }
-                        resolve(path.join(projects_silo_path, projName));
+                        resolve(path.join(projects_silo_path, projName+'-'+branchName+'-'+timestamp));
                     })
                 })
             } else {
@@ -46,7 +47,7 @@ module.exports = function cloneRepository(projName, branchName, timestamp) {
                             //console.log(stderr);
                             //reject(new Error(`(cloneRepo) git-clone cli stderr:\n ${stderr}`));
                         }
-                        resolve(path.join(projects_silo_path, projName+'-'+branchName));
+                        resolve(path.join(projects_silo_path, projName+'-'+branchName+'-'+timestamp));
                 })
             }
         } catch (err) {

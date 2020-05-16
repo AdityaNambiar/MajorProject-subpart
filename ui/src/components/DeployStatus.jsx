@@ -19,6 +19,7 @@ class Integration extends Component {
       tagname: this.props.location.state.tagname,
       jenkinsfile: this.props.location.state.jenkinsfile,
       jenkins_jobdesc: this.props.location.state.jenkins_jobdesc,
+      timestamp: null,
       progressPercent: 0,
       postResp: '',
       urls: []
@@ -52,6 +53,7 @@ class Integration extends Component {
         this.setState({ 
            projName: res.projName,
            branchName: res.branchName, 
+           timestamp: res.timestamp,
            progressPercent: '50' 
         });
         this.startDeployment();
@@ -66,7 +68,7 @@ class Integration extends Component {
 
   }
   startDeployment = () => {
-    const { projName, tagname, branchName } = this.state;
+    const { projName, tagname, timestamp, branchName } = this.state;
 
     fetch('http://localhost:5003/deploy', {
       method: 'POST',
@@ -76,7 +78,8 @@ class Integration extends Component {
       body: JSON.stringify({ 
           projName: projName,
           branchName: branchName,
-          tagName: tagname
+          tagName: tagname,
+          timestamp: timestamp,
       })
     })
     .then(resp => resp.json())

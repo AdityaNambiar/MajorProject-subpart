@@ -1,5 +1,6 @@
 
 const fs = require('fs');
+const path = require('path');
 const mkXmlSilo = require('./mkXmlSilo');
 
 module.exports = function writeXmlToSilo(projName, newPXML){

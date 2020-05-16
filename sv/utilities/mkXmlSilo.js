@@ -1,5 +1,6 @@
 
 const fs = require('fs');
+const path = require('path')
 module.exports = function mkXmlSilo() {
     return new Promise( (resolve, reject) =>{
         try {

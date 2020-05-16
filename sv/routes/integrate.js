@@ -16,12 +16,12 @@ const cloneRepository = require('../utilities/cloneRepository');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
 router.post('/integrate', async (req, res) => {
-    try {
         let projName = req.body.projName || "reactapp";
-        let description = req.body.description || `${projName} build`;
-        let jenkinsFile = req.body.jenkinsfile || 'Jenkinsfile';
         let branchName = req.body.branchName || 'master';
         let timestamp = Date.now();
+    try {
+        let description = req.body.description || `${projName} build`;
+        let jenkinsFile = req.body.jenkinsfile || 'Jenkinsfile';
         //let pollSCMSchedule = req.body.pollSCMSchedule || 'H/2 * * * *';
         // username/API token:
         
@@ -44,7 +44,7 @@ router.post('/integrate', async (req, res) => {
             if (isCompleted){
                 console.log("build successful");
                 await rmWorkdir(projName, branchName, timestamp);
-                res.status(200).json({projName: projName, branchName: branchName});
+                res.status(200).json({projName: projName, branchName: branchName, timestamp: timestamp});
             } else {
                 console.log("build unsuccessful");
                 await rmWorkdir(projName, branchName, timestamp);
@@ -65,7 +65,7 @@ router.post('/integrate', async (req, res) => {
             if (isCompleted){
                 console.log("build successful");
                 await rmWorkdir(projName, branchName, timestamp);
-                res.status(200).json({projName: projName, branchName: branchName});
+                res.status(200).json({projName: projName, branchName: branchName, timestamp: timestamp});
             } else {
                 console.log("build unsuccessful");
                 await rmWorkdir(projName, branchName, timestamp);

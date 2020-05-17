@@ -17,7 +17,7 @@ module.exports = function cloneRepository(projName, branchName, timestamp) {
                         console.log(err);
                         return reject(new Error(`Could not remove old workspace: ${err}`))
                     } else {
-                        exec(`git clone ${url} ${projName}-${branchName}-${timestamp}`, {
+                        exec(`git clone -b ${branchName} ${url} ${projName}-${branchName}-${timestamp} `, {
                             cwd: projects_silo_path,
                             shell: true
                         }, (err, stdout, stderr) => {
@@ -35,7 +35,7 @@ module.exports = function cloneRepository(projName, branchName, timestamp) {
                     }
                 })
             } else {
-                exec(`git clone ${url} ${projName}-${branchName}-${timestamp}`, {
+                exec(`git clone -b ${branchName} ${url} ${projName}-${branchName}-${timestamp}`, {
                         cwd: projects_silo_path,
                         shell: true
                     }, (err, stdout, stderr) => {

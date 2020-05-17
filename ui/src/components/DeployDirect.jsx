@@ -40,6 +40,7 @@ class DeployDirect extends Component {
     .then(resp => resp.json())
     .then(res => {
       console.log(res);
+      if (res.err) throw new Error(res.err);
       this.setState({ urls: res.urls });
     })
     .catch(err => {
@@ -65,11 +66,11 @@ class DeployDirect extends Component {
       })
       .then(resp => resp.json())
       .then(res => {                                                                                                      
-        this.setState({ postResp: res });
+        this.setState({ postResp: res.logs });
       })
       .catch(err => {
         console.log(err); 
-        this.setState({ postResp: err });
+        this.setState({ postResp: err.err });
       })
     }
   }

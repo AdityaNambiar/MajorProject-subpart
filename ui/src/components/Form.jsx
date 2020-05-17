@@ -15,7 +15,7 @@ class Integration extends Component {
       tagname: '',
       branchName: '',
       jenkins_jobdesc: '',
-      branchnames: [ "master", "feature1", "feature2" ],
+      branchnames: [ "master", "nodeapi", "feature2" ],
       projectnames: [ "reactapp", "sampleapp", "newsampleapp", "testapp"]
     }
   }

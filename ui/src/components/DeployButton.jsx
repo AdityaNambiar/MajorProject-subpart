@@ -11,7 +11,7 @@ class DeployButton extends Component {
     super(props);
     this.state = {
       projName: 'reactapp',
-      branchName: 'master',
+      branchName: 'nodeapi',
       tagname: '0.2'
     }
   }

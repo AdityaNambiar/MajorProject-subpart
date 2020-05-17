@@ -10,41 +10,52 @@ const tar = require('tar-fs');
 const IP = require('ip').address(); // Get machine IP.
 const registryPort = 7009; // Ideally you can set this as process.env or something like this to take in the registry port no. from environment variables.
 
- // ( async () => {
- //     const image = dockerapi.pruneImages({ 
- //                filters: {
- //                    "dangling":["true"]
- //                }
- //            })
- //     console.log(await image);
+ // (async () => {
+ //     const nets = await dockerapi.createNetwork({
+ //        Name: "sample1",
+ //        CheckDuplicate: true
+ //     });
+ //     console.log(await nets);
+ //     const networks = await dockerapi.listNetworks();
+ //     console.log(await networks);
  // })();
 
 // Utility imports:
 
 const cleanUp = require('../utilities/cleanUp');
 const cloneRepository = require('../utilities/cloneRepository');
+const rmWorkdir = require('../utilities/rmWorkdir');
 
 router.post('/deployDirectly', async (req, res) => {
-
-    try {
         let projName = req.body.projName;
         let branchName = req.body.branchName;
         let tagName = req.body.tagName;
-        let timestamp = Date.now();
-        let workdirpath = await cloneRepository(projName, branchName, timestamp);
+
+    try {
+        let workdirpath = await cloneRepository(projName, branchName);
         let imageName = `${IP}:${registryPort}/${projName}-${branchName}:${tagName}`
         await buildImage(workdirpath,projName,imageName);
         await pushImage(imageName);
         await cleanUp(imageName, projName, branchName);
         await pruneImages();
-        await pruneContainers();
+        //await pruneContainers(); 
+        //await pruneVolumes();
+        //await pruneNetworks();
         await pullImage(imageName);
+        //await generateVolAndNet(projName, branchName);
         let urls = await createContainer(projName, branchName, imageName) 
 
+        await rmWorkdir(projName, branchName);
         res.status(200).json({projName: projName, urls: urls});
     } catch (err) {
         console.log(err);
         await pruneImages();
+        await rmWorkdir(projName, branchName);
+        // Will remove all unused volumes & networks 
+        // (unused means if the container for this is removed then it becomes unused):
+        // Not ideal to be deleted on subsequent deployments.
+        //await pruneVolumes(); 
+        //await pruneNetworks();
         res.status(400).json({err: `Error occured during direct deployment : \n${err.name} :- ${err.message}`});
     }
 })
@@ -161,9 +172,9 @@ function pullImage(imageName) {
                   stream.on('data', (data) => 
                   {
                     // This is stream (access the strings via data.stream) logs
-                    //console.log("pullImage: \n",String(data));
+                    console.log("pullImage: \n",String(data));
                   })
-                  stream.on('end',(data)=> {
+                  stream.on('end',(data)=> { // This event is generated when stream is end.
                     //console.log(data); // undefined.
                     return resolve(true);
                   })
@@ -181,10 +192,20 @@ function pullImage(imageName) {
 
 function createContainer(projName, branchName, imageName){
     console.log("Going to run container...");
+
+              /*Volumes: {
+                [`${projName}-${branchName}`]: {}
+              },
+              
+              }NetworkingConfig: {
+                EndpointsConfig: {
+                    NetworkID: projName
+                }
+              }*/
     return new Promise( async (resolve, reject) => {
         try {
             let container = await dockerapi.createContainer({
-              Image: `${IP}:${registryPort}/${projName}-${branchName}:0.2`,
+              Image: imageName,
               name: `${projName}-${branchName}`,
               PublishAllPorts: true
             }) 
@@ -193,7 +214,7 @@ function createContainer(projName, branchName, imageName){
             await container.inspect((err, data) => {
                 if (err) throw new Error(err);
                 var portBindings = data.NetworkSettings.Ports;
-                //console.log("pbings: \n",portBindings);
+                console.log("pbings: \n",portBindings);
                 for (let pb in portBindings){
                     containerPort = pb;
                     ports.push(portBindings[pb][0].HostPort);
@@ -211,5 +232,4 @@ function createContainer(projName, branchName, imageName){
         }
     })
 }
-
 module.exports = router

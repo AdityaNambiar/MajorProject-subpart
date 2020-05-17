@@ -5,19 +5,19 @@ const fs = require('fs');
 const { exec } = require('child_process');
 
 
-module.exports = function cloneRepository(projName, branchName, timestamp) {
+module.exports = function cloneRepository(projName, branchName) {
     return new Promise( async (resolve, reject) => {
         try {
             let projects_silo_path = await mkProjSilo();
             let url = `http://${IP}:7005/projects/bare/${projName}.git`
-            let projPath = path.join(projects_silo_path, projName+'-'+branchName+'-'+timestamp);
+            let projPath = path.join(projects_silo_path, projName+'-'+branchName);
             if (fs.existsSync(projPath)){
                 fs.rmdir(projPath, {recursive:true}, (err) => {
                     if (err) {
                         console.log(err);
                         return reject(new Error(`Could not remove old workspace: ${err}`))
                     } else {
-                        exec(`git clone -b ${branchName} ${url} ${projName}-${branchName}-${timestamp} `, {
+                        exec(`git clone -b ${branchName} ${url} ${projName}-${branchName} `, {
                             cwd: projects_silo_path,
                             shell: true
                         }, (err, stdout, stderr) => {
@@ -30,12 +30,12 @@ module.exports = function cloneRepository(projName, branchName, timestamp) {
                                 //console.log(stderr);
                                 //reject(new Error(`(cloneRepo) git-clone cli stderr:\n ${stderr}`));
                             }
-                            return resolve(path.join(projects_silo_path, projName+'-'+branchName+'-'+timestamp));
+                            return resolve(path.join(projects_silo_path, projName+'-'+branchName));
                         })
                     }
                 })
             } else {
-                exec(`git clone -b ${branchName} ${url} ${projName}-${branchName}-${timestamp}`, {
+                exec(`git clone -b ${branchName} ${url} ${projName}-${branchName}`, {
                         cwd: projects_silo_path,
                         shell: true
                     }, (err, stdout, stderr) => {
@@ -48,7 +48,7 @@ module.exports = function cloneRepository(projName, branchName, timestamp) {
                             //console.log(stderr);
                             //reject(new Error(`(cloneRepo) git-clone cli stderr:\n ${stderr}`));
                         }
-                        return resolve(path.join(projects_silo_path, projName+'-'+branchName+'-'+timestamp));
+                        return resolve(path.join(projects_silo_path, projName+'-'+branchName));
                 })
             }
         } catch (err) {

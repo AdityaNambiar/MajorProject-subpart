@@ -4,17 +4,16 @@
 2. This will be passed to jenkins.create_job(jobName, xmlString ... );
     - Jenkins will pick up the specified Jenkinsfile and then start a job.
 ## Deployment procedure.
-- After integration is successfully over, system will pick up the Dockerfile of given name and then follow the below steps:  
+- After integration is successfully over, system will pick up the Dockerfile of given name and then follow the below steps:  (follow from step 4) (for direct deployment - from 1 to 5)
     1. Build the image (project's image):
          'docker build -t localhost:7009/projName:0.1 --no-cache -f Dockerfile .'
-    3. Push the new docker image (project's image):
+    2. Push the new docker image (project's image):
          'docker push localhost:7009/projName:0.1'
-    4. Remove the local image:
+    3. Remove the local image:
          'docker rmi -f projName:0.1 localhost:5000/projName:0.1'
-    5. Pull the proj's image:
-
+    4. Pull the proj's image:
         'docker pull localhost:7009/projName:0.1'
-    6. Run the image:
+    5. Run the image:
          'docker container run --rm -P -d -v projName_vol localhost:7009/projName'
     
 
@@ -60,3 +59,42 @@ docker run -d -p 7009:5000 --restart always --name registry -v registrydata:/dat
         }
     })
 }*/
+
+
+// BACKUP - FOR REFERENCE (using the dockerode (docker API wrapper for JS) to generate volume and networks - the following function could be broken as well.. don't use it directly):
+
+/*function generateVolAndNet(projName, branchName) {
+    return new Promise( async (resolve, reject) => {
+        try {
+            let newvol = await dockerapi.createVolume({ // Works like docker CLI.. if it already exists, it won't give an error.
+                name: projName+'-'+branchName
+            });
+            let newnet = await dockerapi.createNetwork({ // Works like docker CLI.. if it already exists, it won't give an error.
+                Name: projName,
+                CheckDuplicate: true
+            });
+            const vol = dockerapi.listVolumes({
+               filters: {
+                   "name":[projName+'-'+branchName]
+               }
+            })
+            const net = dockerapi.listNetworks({
+               filters: {
+                   "name":[projName]
+               }
+            })
+            console.log(vol.Volumes, net.length);
+            if (vol.Volumes != 0 &&  net.length != 0){ // As long as the project' volume and network exist, resolve.
+                return resolve(true);
+            } else {
+                return reject(new Error("Unable to generate Vol And Net for container"))
+            }
+                        
+        } catch(err) {
+            console.log(err);
+            //if ()
+            return reject(new Error(`generateVolAndNet err: ${err}`))
+        }
+    })
+}
+*/

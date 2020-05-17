@@ -114,7 +114,7 @@ function createContainer(projName, branchName, imageName){
     return new Promise( async (resolve, reject) => {
         try {
             let container = await dockerapi.createContainer({
-              Image: `${IP}:${registryPort}/${projName}-${branchName}:0.2`,
+              Image: imageName,
               name: `${projName}-${branchName}`,
               PublishAllPorts: true
             }) 

@@ -4,8 +4,8 @@
 
  const path = require('path');
  const fs = require('fs');
-module.exports = function rmWorkdir(projName, branchName, timestamp) {
-    let workdirpath = path.join(process.cwd(), 'projects_silo', projName+'-'+branchName+'-'+timestamp);
+module.exports = function rmWorkdir(projName, branchName) {
+    let workdirpath = path.join(process.cwd(), 'projects_silo', projName+'-'+branchName);
     return new Promise((resolve,reject) => {
         fs.rmdir(workdirpath, { 
             recursive: true

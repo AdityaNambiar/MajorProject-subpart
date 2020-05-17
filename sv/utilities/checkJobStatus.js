@@ -30,7 +30,7 @@ module.exports = function checkJobStatus(queueId, projName){
                 if(!queuedata.hasOwnProperty("executable")){
                     queuelabel();
                 } else{
-                   clearInterval(queueVar); 
+                    clearInterval(queueVar); 
                     buildnumber = queuedata.executable.number;
                     // GET Build number.
                     fs.writeFileSync(projName+'-'+'currjob_buildno.txt', buildnumber);

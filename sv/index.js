@@ -10,12 +10,12 @@ const app = express();
 app.use(bodyParser.json())
 app.use(cors())
 
-app.post('/integrate', require('./routes/integrate'));
-app.post('/deploy', require('./routes/deploy'));
-app.post('/showLogs', require('./routes/showLogs'));
+app.use('/integrate', require('./routes/integrate'));
+app.use('/deploy', require('./routes/deploy'));
+app.use('/showLogs', require('./routes/showLogs'));
 
-app.post('/deployDirectly', require('./routes/deployDirectly'));
-app.post('/showDeployLogs', require('./routes/showDeployLogs'));
+app.use('/deployDirectly', require('./routes/deployDirectly'));
+app.use('/showDeployLogs', require('./routes/showDeployLogs'));
 
 app.listen(5003, () => {
     console.log("listening at 5003");

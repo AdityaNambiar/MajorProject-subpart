@@ -10,7 +10,12 @@ module.exports = function showLogs(jobName, buildnumber){
             //let buildnumber = fs.readFileSync(projName+'-'+'currjob_buildno.txt', 'utf8');
             var log = jenkinslogsapi.build.logStream(jobName, buildnumber);
             log.on('data', (txt) => {
-                resolve(txt);
+                //console.log(data);
+                //resolve(txt);
+            })
+            log.on('end', (end) => {
+                console.log("stream ended, 'end' variable is: ",end);
+                return resolve(end);
             })
             log.on('error', (err) => {
                 console.log(err);

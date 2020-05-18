@@ -7,7 +7,7 @@ const IP = require('ip').address();
 const jenkinslogsapi = require('jenkins')({ baseUrl: `http://admin:112c43c287353d6ed5b169432ddb57a924@${IP}:8080`, crumbIssuer: true }); // Naming this specially like this because I am only using this package for getting logStream.
 const { exec } = require('child_process');
 
-router.post('/showLogs', async (req, res) => {
+router.post('/', async (req, res) => {
 
     try {
         let projName = req.body.projName;

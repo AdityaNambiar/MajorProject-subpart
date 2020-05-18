@@ -1,7 +1,7 @@
 const fs = require('fs');
 const router = require('express').Router();
 
-router.post('/showDeployLogs', (req,res) =>{
+router.post('/', (req,res) =>{
 	try {
 		const projName = req.body.projName;
 

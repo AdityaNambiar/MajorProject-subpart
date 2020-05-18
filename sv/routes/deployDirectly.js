@@ -26,7 +26,7 @@ const cleanUp = require('../utilities/cleanUp');
 const cloneRepository = require('../utilities/cloneRepository');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
-router.post('/deployDirectly', async (req, res) => {
+router.post('/', async (req, res) => {
         let projName = req.body.projName;
         let branchName = req.body.branchName;
         let tagName = req.body.tagName;

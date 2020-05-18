@@ -15,7 +15,7 @@ const writeXmlToSilo = require('../utilities/writeXmlToSilo');
 const cloneRepository = require('../utilities/cloneRepository');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
-router.post('/integrate', async (req, res) => {
+router.post('/', async (req, res) => {
         console.log("timestamp: ", Date.now());
         let projName = req.body.projName;
         let branchName = req.body.branchName;
@@ -41,17 +41,17 @@ router.post('/integrate', async (req, res) => {
 
             console.log("job exists - updating it now");
             let queueId = await updateJob(jobName, xmlConfigString);
-            console.log(queueId);
+            console.log("queueId: ",queueId);
             let isCompleted = await checkJobStatus(queueId, jobName);
-            console.log(isCompleted);
+            console.log("isCompleted: ",isCompleted);
             if (isCompleted){
                 console.log("build successful");
-                await rmWorkdir(projName, branchName, timestamp);
-                return res.status(200).json({projName: projName, branchName: branchName, timestamp: timestamp});
+                await rmWorkdir(projName, branchName);
+                return res.status(200).send({projName: projName, branchName: branchName});
             } else {
                 console.log("build unsuccessful");
-                await rmWorkdir(projName, branchName, timestamp);
-                return res.status(400).json({err:"Build Failed - Check logs!"});                
+                await rmWorkdir(projName, branchName);
+                return res.status(400).send({err:"Build Failed - Check logs!"});                
             }
 
         } else {
@@ -64,22 +64,25 @@ router.post('/integrate', async (req, res) => {
 
             console.log("job does not exists - creating it now");
             let queueId = await createJob(jobName, xmlConfigString);
+            console.log("queueId: ",queueId);
             let isCompleted = await checkJobStatus(queueId, jobName);
+            console.log("isCompleted: ",isCompleted);
+
             if (isCompleted){
                 console.log("build successful");
-                await rmWorkdir(projName, branchName, timestamp);
-                return res.status(200).json({projName: projName, branchName: branchName, timestamp: timestamp});
+                await rmWorkdir(projName, branchName);
+                return res.status(200).send({projName: projName, branchName: branchName});
             } else {
                 console.log("build unsuccessful");
-                await rmWorkdir(projName, branchName, timestamp);
-                return res.status(400).json({err:"Build Failed - Check logs!"});                
+                await rmWorkdir(projName, branchName);
+                return res.status(400).send({err:"Build Failed - Check logs!"});                
             }
 
         }
     } catch (err) {
         console.log(err);
-        await rmWorkdir(projName, branchName, timestamp);
-        return res.status(400).json({err:`(integrate) main err ${err.name} :- ${err.message}`});
+        await rmWorkdir(projName, branchName);
+        return res.status(400).send({err:`(integrate) main err ${err.name} :- ${err.message}`});
     }
 })
 

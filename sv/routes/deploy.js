@@ -19,19 +19,20 @@ const registryPort = 7009; // Ideally you can set this as process.env or somethi
 
 const cleanUp = require('../utilities/cleanUp');
 
-router.post('/deploy', async (req, res) => {
+router.post('/', async (req, res) => {
 
     try {
         let projName = req.body.projName;
         let branchName = req.body.branchName;
         let tagName = req.body.tagName;
 
-        let imageName = `${IP}:${registryPort}/${projName}-${branchName}:${tagName}`
-        await cleanUp(imageName, projName, branchName);
+        let imageName = `${IP}:${registryPort}/${projName}-${branchName}:${tagName}`;
+        let jobName = `${projName}-${branchName}`;
+        await cleanUp(imageName, jobName);
         await pruneImages();
         await pruneContainers();
         await pullImage(imageName);
-        let urls = await createContainer(projName, branchName, imageName) 
+        let urls = await createContainer(jobName, imageName) 
         res.status(200).json({projName: projName, urls: urls});
     } catch (err) {
         console.log(err);
@@ -109,13 +110,13 @@ function pullImage(imageName) {
     })
 }
 
-function createContainer(projName, branchName, imageName){
+function createContainer(jobName, imageName){
     console.log("Going to run container...");
     return new Promise( async (resolve, reject) => {
         try {
             let container = await dockerapi.createContainer({
               Image: imageName,
-              name: `${projName}-${branchName}`,
+              name: jobName,
               PublishAllPorts: true
             }) 
             let containerStarted = await container.start();

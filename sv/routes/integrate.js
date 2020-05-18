@@ -4,7 +4,7 @@ const router = express.Router();
 const fs = require('fs');
 
 const IP = require('ip').address(); // Get machine IP.
-const jenkins = require('jenkins-api').init(`http://admin:11a4469a856bdf30c30a7c0053f822beaa@${IP}:8080`);
+const jenkins = require('jenkins-api').init(`http://admin:112c43c287353d6ed5b169432ddb57a924@${IP}:8080`);
 
 // Utility imports:
 const checkJobStatus = require('../utilities/checkJobStatus');
@@ -16,40 +16,42 @@ const cloneRepository = require('../utilities/cloneRepository');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
 router.post('/integrate', async (req, res) => {
-        let projName = req.body.projName || "reactapp";
-        let branchName = req.body.branchName || 'master';
-        let timestamp = Date.now();
+        console.log("timestamp: ", Date.now());
+        let projName = req.body.projName;
+        let branchName = req.body.branchName;
     try {
+        let jobName = `${projName}-${branchName}`;
         let description = req.body.description || `${projName} build`;
         let jenkinsFile = req.body.jenkinsfile || 'Jenkinsfile';
         //let pollSCMSchedule = req.body.pollSCMSchedule || 'H/2 * * * *';
         // username/API token:
         
         // Setup working directory for jenkins to access it.
-        let workdirpath = await cloneRepository(projName, branchName, timestamp); 
-        console.log("timestamp: ", Date.now());
+        let workdirpath = await cloneRepository(projName, branchName); 
         // Updating XML by creating nodes in variables
-        let jobExist = await doesJobExist(projName);
+        let jobExist = await doesJobExist(jobName);
         if (jobExist){
 
-            let existingXml = await getConfigOfJob(projName);
+            let existingXml = await getConfigOfJob(jobName);
             let newPXML = await preparePipelineXML(description,
                             branchName, jenkinsFile, workdirpath, existingXml);
 
-            await writeXmlToSilo(projName, newPXML);
-            let xmlConfigString = await readXmlFromSilo(projName);
+            await writeXmlToSilo(jobName, newPXML);
+            let xmlConfigString = await readXmlFromSilo(jobName);
 
             console.log("job exists - updating it now");
-            let queueId = await updateJob(projName, xmlConfigString);
-            let isCompleted = await checkJobStatus(queueId, projName);
+            let queueId = await updateJob(jobName, xmlConfigString);
+            console.log(queueId);
+            let isCompleted = await checkJobStatus(queueId, jobName);
+            console.log(isCompleted);
             if (isCompleted){
                 console.log("build successful");
                 await rmWorkdir(projName, branchName, timestamp);
-                res.status(200).json({projName: projName, branchName: branchName, timestamp: timestamp});
+                return res.status(200).json({projName: projName, branchName: branchName, timestamp: timestamp});
             } else {
                 console.log("build unsuccessful");
                 await rmWorkdir(projName, branchName, timestamp);
-                res.status(400).json({err:"Build Failed - Check logs!"});                
+                return res.status(400).json({err:"Build Failed - Check logs!"});                
             }
 
         } else {
@@ -57,35 +59,35 @@ router.post('/integrate', async (req, res) => {
             let newPXML = await preparePipelineXML(description,
                             branchName, jenkinsFile, workdirpath, null);
            
-            await writeXmlToSilo(projName, newPXML);
-            let xmlConfigString = await readXmlFromSilo(projName);
+            await writeXmlToSilo(jobName, newPXML);
+            let xmlConfigString = await readXmlFromSilo(jobName);
 
             console.log("job does not exists - creating it now");
-            let queueId = await createJob(projName, xmlConfigString);
-            let isCompleted = await checkJobStatus(queueId, projName);
+            let queueId = await createJob(jobName, xmlConfigString);
+            let isCompleted = await checkJobStatus(queueId, jobName);
             if (isCompleted){
                 console.log("build successful");
                 await rmWorkdir(projName, branchName, timestamp);
-                res.status(200).json({projName: projName, branchName: branchName, timestamp: timestamp});
+                return res.status(200).json({projName: projName, branchName: branchName, timestamp: timestamp});
             } else {
                 console.log("build unsuccessful");
                 await rmWorkdir(projName, branchName, timestamp);
-                res.status(400).json({err:"Build Failed - Check logs!"});                
+                return res.status(400).json({err:"Build Failed - Check logs!"});                
             }
 
         }
     } catch (err) {
         console.log(err);
         await rmWorkdir(projName, branchName, timestamp);
-        res.status(400).json({err:`(integrate) main err ${err.name} :- ${err.message}`});
+        return res.status(400).json({err:`(integrate) main err ${err.name} :- ${err.message}`});
     }
 })
 
-function doesJobExist(projName){
+function doesJobExist(jobName){
     console.log("doesJobExist executed");
     return new Promise( (resolve, reject) => {
         try {
-            jenkins.get_config_xml(projName, (err, data) => {
+            jenkins.get_config_xml(jobName, (err, data) => {
                 if (err === "Server returned unexpected status code: 404"){ 
                     return resolve(false) // means job does not exist
                 }  else {
@@ -100,16 +102,16 @@ function doesJobExist(projName){
 }
 
 
-function createJob(projName, xmlConfigString) {
+function createJob(jobName, xmlConfigString) {
     console.log("createJob executed");
     return new Promise( (resolve, reject) => {
         try {
-            jenkins.create_job(projName, xmlConfigString, (err, data) => {
+            jenkins.create_job(jobName, xmlConfigString, (err, data) => {
                 if (err) {
                     console.log(err);
                     return reject(new Error("jenkins create-job: \n"+err))
                 } else {
-                    jenkins.build(projName, function(err, data) {
+                    jenkins.build(jobName, function(err, data) {
                       if (err){ 
                         console.log(err);
                         return reject(new Error("jenkins build-job: \n"+err))
@@ -125,16 +127,16 @@ function createJob(projName, xmlConfigString) {
         }
     })
 }
-function updateJob(projName, xmlConfigString) {
+function updateJob(jobName, xmlConfigString) {
     console.log("updateJob executed");
     return new Promise( (resolve, reject) => {
         try {
-            jenkins.update_job(projName, xmlConfigString, (err, data) => {
+            jenkins.update_job(jobName, xmlConfigString, (err, data) => {
                 if (err) {
                     console.log(err);
                     return reject(new Error("jenkins update-job: \n"+err))
                 } else {
-                    jenkins.build(projName, function(err, data) {
+                    jenkins.build(jobName, function(err, data) {
                       if (err){ 
                         console.log(err);
                         return reject(new Error("jenkins build-job: \n"+err))

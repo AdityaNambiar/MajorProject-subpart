@@ -48,6 +48,7 @@ module.exports = function cloneRepository(projName, branchName) {
                             //console.log(stderr);
                             //reject(new Error(`(cloneRepo) git-clone cli stderr:\n ${stderr}`));
                         }
+                        
                         return resolve(path.join(projects_silo_path, projName+'-'+branchName));
                 })
             }
@@ -64,11 +65,15 @@ function mkProjSilo() {
             let projects_silo_path = path.resolve(__dirname,'..','projects_silo');
             if(!fs.existsSync(projects_silo_path)){
                 fs.mkdir(projects_silo_path, { recursive: true }, (err) => {
-                    if (err) return reject(new Error(`mkdir proj silo err: ${err}`));
-                    return resolve(projects_silo_path);
+                    if (err) {
+                        return reject(new Error(`mkdir proj silo err: ${err}`));
+                    } else {
+                        return resolve(projects_silo_path);
+                    }
                 })
+            } else {
+                return resolve(projects_silo_path);
             }
-            resolve(projects_silo_path);
         } catch (err) {
             return reject(new Error('mkProjSilo err: '+err));
         }

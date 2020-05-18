@@ -19,6 +19,9 @@
 
 The port 7009 will be having our own Docker private registry ("registry" docker image).
 
+command to run jenkins via docker:
+docker run -v jenkins_home:/var/jenkins_home --restart always --name jenkins -p 8082:8080 -p 50000:50000 jenkins/jenkins:lts-alpine
+
 command to run private docker registry image:
 docker run -d -p 7009:5000 --restart always --name registry -v registrydata:/data registry:2.7.1
 

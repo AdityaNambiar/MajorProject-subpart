@@ -11,7 +11,7 @@ const {exec} = require('child_process');
 const registryPort = 7009; // Ideally you can set this as process.env or something like this to take in the registry port no. from environment variables.
 
 
-module.exports = function cleanUp(imageName, projName, branchName) {
+module.exports = function cleanUp(imageName, jobName) {
     /**
         To remove all same name containers:
         - docker rm $(docker ps -a | grep reactapp | awk '{ print $1 }')
@@ -23,7 +23,7 @@ module.exports = function cleanUp(imageName, projName, branchName) {
     */
     return new Promise( async (resolve, reject) => {
         try {
-            await removeContainer(projName, branchName);
+            await removeContainer(jobName);
             await removeImages(imageName);
             return resolve(true); 
         } catch(err) {
@@ -66,11 +66,11 @@ function removeImages(imageName){
     })
 }
 
-function removeContainer(projName, branchName) {    
+function removeContainer(jobName) {    
     console.log("Removing container ...");
     return new Promise( async (resolve,reject) => {
         try {   
-            exec(`docker rm -f ${projName}-${branchName}`, {
+            exec(`docker rm -f ${jobName}`, {
                 cwd: process.cwd(),
                 shell: true
             }, (err,stdout,stderr) => {

@@ -3,7 +3,8 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const jenkinsapi = require('jenkins-api');
-const jenkinslogsapi = require('jenkins')({ baseUrl: 'http://admin:11a4469a856bdf30c30a7c0053f822beaa@localhost:8080', crumbIssuer: true }); // Naming this specially like this because I am only using this package for getting logStream.
+const IP = require('ip').address();
+const jenkinslogsapi = require('jenkins')({ baseUrl: `http://admin:112c43c287353d6ed5b169432ddb57a924@${IP}:8080`, crumbIssuer: true }); // Naming this specially like this because I am only using this package for getting logStream.
 const { exec } = require('child_process');
 
 router.post('/showLogs', async (req, res) => {
@@ -11,7 +12,7 @@ router.post('/showLogs', async (req, res) => {
     try {
         let projName = req.body.projName;
         console.log(projName);
-        let jenkins = jenkinsapi.init("http://admin:11a4469a856bdf30c30a7c0053f822beaa@localhost:8080");
+        let jenkins = jenkinsapi.init("http://admin:112c43c287353d6ed5b169432ddb57a924@localhost:8080");
         
         if (await doesJobExist(jenkins, projName)){
             console.log("job exists - fetching logs now");

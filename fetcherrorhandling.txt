@@ -1,0 +1,19 @@
+ fetch("http://localhost:3000/members", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(member),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(res.status);
+        else return res.json();
+      })
+      .then((data) => {
+        this.setState({ member: data });
+        console.log("DATA STORED");
+      })
+      .catch((error) => {
+        console.log(error);
+        this.setState({ requestFailed: true });
+      });

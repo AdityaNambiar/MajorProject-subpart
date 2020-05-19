@@ -6,14 +6,17 @@ import Forum from "./forum";
 class Discussions extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      chatid:this.props.location.state.chatid
+    };
   }
   render() {
+   
     return (
       <div>
         <Navbar />
         <div className="container">
-          <Forum forumFor={"project"} />
+          <Forum forumFor={"project"} chatid={this.state.chatid} chatType="Collaborator"/> 
         </div>
       </div>
     );

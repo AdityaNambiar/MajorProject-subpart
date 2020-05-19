@@ -1,58 +1,71 @@
 import React, { Component } from "react";
-import NavBar from "./navbar";
+//import ClientNavBar from "./clientNavbar";
 import { withRouter } from "react-router-dom";
-import Spinner from "./../Utils/spinner";
-const axios = require('axios');
-const downloadCard  = require("../hooks/downloadCard")
-const errorHandle = require("../hooks/errorHandling")
-const {networkname,url} = require("../utilities/config")
-class Register extends Component {
+import Spinner from "../../Utils/spinner";
+import errorHandle from "../../hooks/errorHandling"
+import authServer from "../../api/authServer"
+import downloadCard from "../../hooks/downloadCard"
+import {networkname,url} from "../../utilities/config"
+import axios from "axios"
+class ClientRegister extends Component {
   constructor(props) {
     super(props);
     this.state = {
       loading: false,
       requestFailed: false,
-      member: {},
-      members: [],
-      eid: "",
-      email: "",
+      client: {},
+      clients: [],
+      emailid: "",
       fname: "",
       lname: "",
       gender: "",
-      designation: "projectManager",
       contact: "",
+      designation: "Client",
     };
 
     this.onChange = this.onChange.bind(this);
-    this.handleRegister = this.handleRegister.bind(this);
+    this.handleClientRegister = this.handleClientRegister.bind(this);
   }
 
   onChange(e) {
     this.setState({ [e.target.name]: e.target.value });
   }
 
-  handleRegister = async (e) => {
+  handleClientRegister = async (e) => {
     e.preventDefault();
-    const member = {
-      eid: this.state.eid,
-      email: this.state.email,
+   try{
+    const client = {
+      email: this.state.emailid,
       fname: this.state.fname,
       lname: this.state.lname,
       gender: this.state.gender,
-      designation: this.state.designation,
       contact: this.state.contact,
-    };
-  try{
-    this.setState({ loading: true });
-     let endpoint = `${url}/createParticipant`
-    const res =  await axios.post(endpoint,member,{responseType: 'blob'});
-    downloadCard(res,`${member.fname}${member.eid}@${networkname}.card`)
-      this.props.history.push("./login");
-      this.setState({ loading: false });
+      designation: this.state.designation,
+    }; 
+    if (
+      client.emailid === "" ||
+      client.fname === "" ||
+      client.lname === "" ||
+      client.gender === "" ||
+      client.contact === ""
+    ) {
+      window.alert("Enter all the required details of the client!");
+    } else {
+        this.setState({loading:true});
+        let endpoint = `${url}/createParticipant`
+        let config = {
+          headers:{
+            'x-auth-token':localStorage.getItem('x-auth-token')
+          },
+          responseType: 'blob'
+        }
+        const res =  await axios.post(endpoint,client,config);
+        downloadCard(res,`${client.fname}${client.lname}@${networkname}.card`)
+           this.setState({loading:false})
+    }
   }catch(error){
-    console.log(error)
     errorHandle(error);
-    this.setState({ loading: false });
+    this.setState({loading:false})
   }
   };
 
@@ -62,42 +75,18 @@ class Register extends Component {
     this.setState({ [name]: value });
   };
 
-  handleAlreadyLogin = () => {
-    this.props.history.push("./login");
-  };
-
   render() {
     return (
-      <div style={{marginTop:"50px"}}>
-        <div className="container mt-2">
+      <div>
+        <div className="container my-2">
           <div className="row justify-content-center">
-            <div className="col-md-8">
+            <div className="col-md-12">
               <div className="card">
                 <div className="card-header bg bg-dark text-light font-weight-bold">
-                  Register
+                  Register Client
                 </div>
                 <div className="card-body">
                   <form name="my-form" action="success.php" method="">
-                    <div className="form-group row">
-                      <label
-                        for="employee_id"
-                        className="col-md-4 col-form-label text-md-right"
-                      >
-                        Employee Id
-                      </label>
-                      <div className="col-md-6">
-                        <input
-                          type="text"
-                          id="employee_id"
-                          className="form-control"
-                          name="eid"
-                          value={this.state.eid}
-                          onChange={this.onChange}
-                          required
-                        />
-                      </div>
-                    </div>
-
                     <div className="form-group row">
                       <label
                         for="email_address"
@@ -110,8 +99,8 @@ class Register extends Component {
                           type="text"
                           id="email_address"
                           className="form-control"
-                          name="email"
-                          value={this.state.email}
+                          name="emailid"
+                          value={this.state.emailid}
                           onChange={this.onChange}
                           required
                         />
@@ -211,62 +200,6 @@ class Register extends Component {
 
                     <div className="form-group row">
                       <label
-                        for="designation"
-                        className="col-md-4 col-form-label text-md-right"
-                      >
-                        Designation
-                      </label>
-                      <div className="col-md-6">
-                        <select
-                          class="form-control "
-                          id="designation"
-                          name="designation"
-                          onClick={this.handleOptionChange}
-                          required
-                        >
-                          <option
-                            value="projectManager"
-                            name="designation"
-                            selected={
-                              this.state.designation === "projectManager"
-                            }
-                          >
-                            Project Manager
-                          </option>
-                          <option
-                            value="developer"
-                            name="designation"
-                            selected={this.state.designation === "developer"}
-                          >
-                            Developer
-                          </option>
-                          <option
-                            value="consultant"
-                            name="designation"
-                            selected={this.state.designation === "consultant"}
-                          >
-                            Consultant
-                          </option>
-                          <option
-                            value="tester"
-                            name="designation"
-                            selected={this.state.designation === "tester"}
-                          >
-                            Tester
-                          </option>
-                          <option
-                            value="intern"
-                            name="intern"
-                            selected={this.state.designation === "intern"}
-                          >
-                            Intern
-                          </option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="form-group row">
-                      <label
                         for="phone_number"
                         className="col-md-4 col-form-label text-md-right"
                       >
@@ -289,8 +222,7 @@ class Register extends Component {
                       <button
                         type="submit"
                         className="btn btn-primary"
-                        onClick={this.handleRegister}
-                        disabled={this.state.loading}
+                        onClick={this.handleClientRegister}
                       >
                         {this.state.loading && (
                           <small>
@@ -306,18 +238,9 @@ class Register extends Component {
             </div>
           </div>
         </div>
-        <div className="text-center mt-4">
-          Already Registered?
-          <button
-            className="btn btn-success ml-2"
-            onClick={this.handleAlreadyLogin}
-          >
-            <small>Login!</small>
-          </button>
-        </div>
       </div>
     );
   }
 }
 
-export default withRouter(Register);
+export default withRouter(ClientRegister);

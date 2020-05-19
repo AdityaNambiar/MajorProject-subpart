@@ -1,121 +1,4 @@
 {
-  "usersOnline": [
-    {
-      "fname": "Gopi",
-      "lname": "Mehta",
-      "id": 1
-    },
-    {
-      "fname": "Raj",
-      "lname": "Mandal",
-      "id": 2
-    },
-    {
-      "fname": "Aditya",
-      "lname": "Nambiar",
-      "id": 3
-    }
-  ],
-  "pulls": [
-    {
-      "title": "Lorem ipsum",
-      "conflictedFiles": "05",
-      "id": 1
-    },
-    {
-      "title": "Dummy title",
-      "conflictedFiles": "04",
-      "id": 2
-    },
-    {
-      "title": "pull title",
-      "conflictedFiles": "13",
-      "id": 3
-    }
-  ],
-  "clientAttachments": [
-    {
-      "fileName": "file1.txt",
-      "fileUploadBy": "Gopi Mehta",
-      "fileDate": "02/05/2020",
-      "id": 1
-    },
-    {
-      "fileName": "file2.txt",
-      "fileUploadBy": "Raj Mandal",
-      "fileDate": "05/05/2020",
-      "id": 2
-    },
-    {
-      "fileName": "SRS.docx",
-      "fileUploadBy": "Gopi Mehta",
-      "fileDate": "07/05/2020",
-      "id": 3
-    },
-    {
-      "fileName": "example.ppt",
-      "fileUploadBy": "Raj Mandal",
-      "fileDate": "08/05/2020",
-      "id": 4
-    },
-    {
-      "fileName": "Random.xslx",
-      "fileUploadBy": "Gopi Mehta",
-      "fileDate": "08/05/2020",
-      "id": 5
-    },
-    {
-      "fileName": "guidelines.txt",
-      "fileUploadBy": "Raj Mandal",
-      "fileDate": "09/05/2020",
-      "id": 6
-    }
-  ],
-  "clientChats": [
-    {
-      "creator": "Gopi",
-      "designation": "Project Manager",
-      "timestamp": "30/3/2020 - 4:7:20 IST",
-      "desc": "SRS is complete Deserunt aliqua deserunt dolore dolor non non esse. Occaecat pariatur aliquip labore amet cupidatat sint voluptate elit ex veniam duis cillum laboris. Eu Lorem laboris consequat laboris Lorem magna excepteur eiusmod id qui in exercitation et. Fugiat veniam Lorem nulla et et amet aliqua velit eiusmod et enim elit nostrud."
-    },
-    {
-      "creator": "Raj",
-      "designation": "Client",
-      "timestamp": "30/3/2020 - 4:7:20 IST",
-      "desc": "Minim sint velit excepteur deserunt labore. Laborum velit in cupidatat sunt excepteur quis duis et eiusmod irure. Do consectetur cupidatat sunt et duis aliquip et commodo."
-    }
-  ],
-  "clientChat": {},
-  "clients": [
-    {
-      "emailid": "dasbanchor@gmail.com",
-      "fname": "Raj",
-      "lname": "Mandal",
-      "gender": "male",
-      "contact": "08898843882",
-      "designation": "Client",
-      "id": 1
-    },
-    {
-      "emailid": "gopimehta60@gmail.com",
-      "fname": "Gopi",
-      "lname": "Mehta",
-      "gender": "male",
-      "contact": "08898843882",
-      "designation": "Client",
-      "id": 2
-    },
-    {
-      "emailid": "adibro@gmail.com",
-      "fname": "Aditya",
-      "lname": "Nambiar",
-      "gender": "male",
-      "contact": "1234567895",
-      "designation": "Client",
-      "id": 3
-    }
-  ],
-  "client": {},
   "fileArray": [
     {
       "fileName": "file1.txt",
@@ -227,12 +110,6 @@
       "designation": "Tester",
       "timestamp": "30/3/2020 - 4:7:20 IST",
       "desc": "Reprehenderit cillum amet consectetur ipsum in sit ipsum officia officia velit consequat. Mollit aliquip exercitation deserunt eiusmod culpa laboris commodo est ex voluptate adipisicing nostrud. Ex non anim labore esse id id qui nisi id excepteur. Excepteur anim exercitation eiusmod reprehenderit laborum dolor tempor sunt culpa qui nostrud est ut. Deserunt commodo et officia incididunt mollit voluptate labore anim reprehenderit."
-    },
-    {
-      "creator": "Gopi",
-      "designation": "Project Manager",
-      "timestamp": "23/4/2020 - 5:45:50 IST",
-      "desc": "Nulla irure consequat cupidatat nulla aliquip est aliquip ea consequat in quis ut. Mollit amet commodo velit eiusmod ad. Mollit pariatur ad commodo commodo quis irure nostrud in sit incididunt ea."
     }
   ],
   "post": {},
@@ -315,14 +192,6 @@
       "pmanager": "Gopi",
       "ptimestamp": "14/4/2020 - 0:33:29 IST",
       "id": 7
-    },
-    {
-      "pname": "DevOps",
-      "pdescription": "Final year project!",
-      "pstatus": "public",
-      "pmanager": "Gopi",
-      "ptimestamp": "20/4/2020 - 1:48:21 IST",
-      "id": 8
     }
   ],
   "project": {},

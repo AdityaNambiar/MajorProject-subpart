@@ -2,16 +2,14 @@ import React, { Component } from "react";
 
 class Notice extends Component {
   state = {
-    userName: "Gopi",
+    userName: this.props.username,
   };
 
   render() {
     let post = this.props.post;
-    let creator = post.creator;
-    let desc = post.desc;
-    let designation = post.designation;
+    let creator = post.username;
+    let desc = post.message;
     let timestamp = post.timestamp;
-    let tooltipContent = ` ${post.creator} \n ${post.designation} \n ${post.timestamp}`;
 
     if (creator === this.state.userName) {
       return (
@@ -25,15 +23,10 @@ class Notice extends Component {
               borderRadius: "10px",
             }}
           >
-            <div className="card-body" style={{ padding: "10px" }}>
+            <div className="card-body">
               <div class="message">
-                <p
-                  class="meta"
-                  data-toggle="tooltip"
-                  data-placement="top"
-                  title={tooltipContent}
-                >
-                  {creator} ({designation})
+                <p class="meta">
+                  {creator}{" "}
                   <span className="float-right">{timestamp}</span>
                 </p>
                 <p style={{ marginBottom: "0" }}>
@@ -55,15 +48,10 @@ class Notice extends Component {
             borderRadius: "10px",
           }}
         >
-          <div className="card-body" style={{ padding: "10px" }}>
+          <div className="card-body">
             <div class="message">
-              <p
-                class="meta"
-                data-toggle="tooltip"
-                data-placement="top"
-                title={tooltipContent}
-              >
-                {creator} ({designation})
+              <p class="meta">
+                {creator}
                 <span className="float-right">{timestamp}</span>
               </p>
               <p style={{ marginBottom: "0" }}>

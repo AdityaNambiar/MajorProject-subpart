@@ -1,9 +1,12 @@
 import React, { Component } from "react";
 import NavBar from "./navbar";
 import { withRouter } from "react-router-dom";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import FadeIn from "react-fade-in";
-import Barloader from "../loaders/barLoader";
-
+import BarLoader from "../loaders/barLoader"
+const errorHandle  = require("../hooks/errorHandling");
+const authServer = require("../api/authServer")
 class ProjectGraph extends Component {
   constructor(props) {
     super(props);
@@ -13,29 +16,48 @@ class ProjectGraph extends Component {
     };
   }
 
-  componentDidMount() {
-    this.setState({ loadingModal: true });
-    setTimeout(() => {
+  componentDidMount = async ()=> {
+    
+    try{
+      let {projectid,branchOn} = this.props.location.state;
+      let body ={
+        "projectid":projectid,
+        "branchToUpdate":branchOn,
+        "operation":"GITGRAPH"
+      }
+      this.setState({ loadingModal: true });
+      const {data} = await authServer.post("/checkAccess",body)
+      const graphOutput  = Buffer.from(data.graphOutput.data).toString();
+      this.setState({ loadingModal: false,graph:graphOutput });
+    }catch(error){
+      errorHandle(error);
       this.setState({ loadingModal: false });
-    }, 3000);
+    }
   }
 
   render() {
     let propsObj = this.props.location.state;
-    let pname = propsObj.pname;
+    let pname = propsObj.projectid;
     return (
       <div>
-        <NavBar />
+        <NavBar  projectid={pname} />
         <div className="container">
           <h5 className="bg bg-warning sticky-top text-center">
             Project Name: {pname}
           </h5>
           {this.state.loadingModal ? (
-            <Barloader height={"12px"} width={"1110px"} />
+            <BarLoader height="12px" />
           ) : (
             <FadeIn>
-              <div className="text-center bg bg-dark text-light">
-                {this.state.graph}
+              <div className="mt-1 mx-4 mr-4 bg bg-light" disabled={true}>
+                    <textarea
+                      name="createFileEditor"
+                      class="form-control mt-1 mb-2 bg bg-dark text-light"
+                      id="exampleFormControlTextarea1"
+                      rows="16"
+                      value={this.state.graph}
+                      disabled={true}
+                    ></textarea>
               </div>
             </FadeIn>
           )}

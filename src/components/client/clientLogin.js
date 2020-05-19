@@ -1,13 +1,12 @@
 import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
-import Modal from "../Utils/modal";
-import Spinner from ".././Utils/spinner";
-import NavBar from "./navbar";
+import Modal from "../../Utils/modal";
+import Spinner from "../../Utils/spinner";
+import ClientNavBar from "./clientNavbar";
+import axios from "axios"
 import jwt from "jsonwebtoken"
-const axios = require("axios")
-
-const {networkname,url} = require("../utilities/config")
-class Login extends Component {
+const {networkname,url} = require("../../utilities/config")
+class ClientLogin extends Component {
   state = {
     loading: false,
     id: "cardUpload",
@@ -25,35 +24,30 @@ class Login extends Component {
         this.setState({ [e.target.name]: e.target.value });
     }
   };
-
-  handleLogin = async (e) => {
+ 
+  handleLogin = async(e) => {
     e.preventDefault();
     if (this.state.fileName === "Choose File to Upload") {
       window.alert("Please upload a valid card first");
-    } else {
-      this.setState({ loading: true });
-       
-      const file =  e.target.myfile.files[0];
-      const formData = new FormData();
-      formData.append('card',file);
-      const {data} = await axios.post(`${url}/bnUtil/login`,formData);
-      let token = data.acessToken;
-      this.setState({ loading: false });
-      let pType = jwt.decode(token).pType
-      if(pType=="Member"||pType=="ProjectManager"){
+    } else { 
+        this.setState({ loading: true });
+        const file =  e.target.myfile.files[0];
+        const formData = new FormData();
+        formData.append('card',file);
+        const {data} = await axios.post(`${url}/bnUtil/login`,formData);
+        let token = data.acessToken;
         window.localStorage.setItem("x-auth-token", token);
-        this.props.history.replace("./dashboard",{"username":data.username.split(`@${networkname}`)[0]});
-      }else{
-        alert("Please Login as a Client");
-        return this.props.history.replace("/home")
-      }
-     
+        this.setState({ loading: false });
+        if(jwt.decode(token).pType!=="Client"){
+          alert("Please Login as a Employee");
+          localStorage.removeItem("x-auth-token")
+          return this.props.history.replace("/home")
+        }
+       
+        this.props.history.replace("./clientDashboard");
     }
   };
-
-  handleloginRegister = () => {
-    this.props.history.push("./register");
-  };
+ 
   render() {
     return (
       <div>
@@ -63,7 +57,7 @@ class Login extends Component {
             <div className="col-md-8">
               <div className="card">
                 <div className="card-header bg bg-dark text-light font-weight-bold">
-                  Login
+                  Client Login
                 </div>
                 <div className="card-body">
                   <form className="text-center" onSubmit={this.handleLogin}>
@@ -119,19 +113,10 @@ class Login extends Component {
               </div>
             </div>
           </div>
-          <div className="text-center mt-4 ">
-            Yet to Register?{" "}
-            <button
-              className="btn btn-danger"
-              onClick={this.handleloginRegister}
-            >
-              <small>Register</small>
-            </button>
-          </div>
         </div>
       </div>
     );
   }
 }
 
-export default withRouter(Login);
+export default withRouter(ClientLogin);

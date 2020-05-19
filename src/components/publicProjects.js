@@ -2,8 +2,12 @@
 import React, { Component } from "react";
 import NavBar from "./navbar";
 import FadeIn from "react-fade-in";
-import Barloader from "../loaders/barLoader";
-
+import errorHandle from "../hooks/errorHandling";
+import {url} from "../utilities/config";
+import axios from "axios";
+import jwt from "jsonwebtoken"
+import BarLoader from "../loaders/barLoader"
+import checkAccess from "../hooks/checkAccess";
 class PublicProjects extends Component {
   constructor(props) {
     super(props);
@@ -16,48 +20,51 @@ class PublicProjects extends Component {
     this.handleProject = this.handleProject.bind(this);
   }
 
-  componentWillMount() {
+ async componentDidMount() { 
+  try{ 
     this.setState({ loadingModal: true });
-    setTimeout(() => {
-      fetch("http://localhost:3000/projects")
-        .then((res) => res.json())
-        .then((projects) => {
-          let publicProjects = [];
-          for (let i = 0; i < projects.length; i++) {
-            if (projects[i].pstatus === "public") {
-              //this.setState({ projects: projects });
-              publicProjects.push(projects[i]);
-            }
-          }
-          this.setState({ projects: publicProjects, loadingModal: false });
-        });
-    }, 3000);
+    const {data} = await axios.post(`${url}/getAllProjects`,{},{
+      headers:{
+        'x-auth-token':localStorage.getItem("x-auth-token")
+      }
+    })
+    this.setState({ projects: data, loadingModal: false });
+  }catch(error){
+   errorHandle(error);
+   
+  }
   }
 
-  handleProject = (e) => {
-    e.preventDefault();
-    let pname = e.target.name;
-    this.props.history.push("./project", { pname: pname });
+  handleProject = (e,project) => {
+    e.preventDefault(); 
+    localStorage.setItem(project.projectid,"master");
+    try{
+    let pIdentifier = jwt.decode(localStorage.getItem("x-auth-token")).pIdentifier;
+    let access = checkAccess(project,pIdentifier)
+    this.props.history.push("./project", { projectid: project.projectid,access })
+    }catch(error){
+      alert(error)
+    }
   };
-
+ 
   render() {
     const publicProjects = this.state.projects.map((project) => (
       <React.Fragment>
         <tr>
           <td>
-            <a href="#" onClick={this.handleProject} name={`${project.pname}`}>
-              {project.pname}
+            <a href="#" onClick={(e)=>this.handleProject(e,project)}>
+              {project.projectid}
             </a>
           </td>
           <td>
-            <a href="#" data-toggle="modal" data-target={`#p${project.id}`}>
+            <a href="#" data-toggle="modal" data-target={`#p${project.projectid}`}>
               {" "}
               Project Details
             </a>
           </td>
           <div
             className="modal fade"
-            id={`p${project.id}`}
+            id={`p${project.projectid}`}
             tabindex="-1"
             role="dialog"
             aria-labelledby="exampleModalCenterTitle"
@@ -88,7 +95,7 @@ class PublicProjects extends Component {
                         type="text"
                         className="form-control"
                         id="recipient-name"
-                        value={project.pname}
+                        value={project.projectid}
                         readOnly
                       />
                     </div>
@@ -99,7 +106,7 @@ class PublicProjects extends Component {
                       <textarea
                         className="form-control"
                         id="message-text"
-                        value={project.pdescription}
+                        value={project.description}
                         readOnly
                       ></textarea>
                     </div>
@@ -117,7 +124,7 @@ class PublicProjects extends Component {
                           name="status"
                           id="public"
                           value="public"
-                          checked={project.pstatus === "public"}
+                          checked={project.private==false}
                           disabled
                         />
                         <label className="form-check-label" for="public">
@@ -132,7 +139,7 @@ class PublicProjects extends Component {
                           id="private"
                           value="private"
                           disabled
-                          checked={project.pstatus === "private"}
+                          checked={project.private ==true}
                         />
                         <label className="form-check-label" for="private">
                           Private
@@ -144,8 +151,8 @@ class PublicProjects extends Component {
               </div>
             </div>
           </div>
-          <td>{project.pmanager}</td>
-          <td>{project.ptimestamp}</td>
+          <td>{project.creator.split("#").splice(-1)[0]}</td>
+          <td>{project.datetime}</td>
         </tr>
       </React.Fragment>
     ));
@@ -155,7 +162,7 @@ class PublicProjects extends Component {
         <NavBar />
         <h4 className="bg bg-warning text-center">Public Projects</h4>
         {this.state.loadingModal ? (
-          <Barloader height={"12px"} width={"1110px"} />
+         <BarLoader height="12px" />
         ) : (
           <FadeIn>
             <div className="container">
@@ -180,7 +187,7 @@ class PublicProjects extends Component {
         )}
       </div>
     );
-  }
+  } 
 }
 
 export default PublicProjects;

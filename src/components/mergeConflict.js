@@ -3,67 +3,72 @@ import { withRouter } from "react-router-dom";
 import NavBar from "./navbar";
 import FadeIn from "react-fade-in";
 import Spinner from "./../Utils/spinner";
-import Difference from "./difference";
 import Barloader from "../loaders/barLoader";
-
+import axios from "axios";
+import {url} from "../utilities/config";
+import errorHandle from "../hooks/errorHandling";
+import downloadRepo from "../hooks/downloadCard";
 class MergeConflict extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      fileArray: [],
       loadingModal: false,
       dloading: false,
       ploading: false,
-      errorMessage:
-        "Proident excepteur reprehenderit elit sint reprehenderit in esse ex deserunt ullamco ut aute enim esse. Voluptate qui velit incididunt veniam et Lorem do ipsum duis. Aute commodo in aliquip fugiat consequat dolore velit. In ex sunt ad in. Et mollit aliquip sit reprehenderit dolor minim eiusmod amet reprehenderit id cupidatat enim ea pariatur. Id nostrud consequat nostrud eiusmod irure sunt adipisicing. Enim exercitation ad in sit ea tempor aliquip culpa.",
+      errorMessage:"",
+      mergeobj:this.props.location.state.pullobj,
+      projectid:this.props.location.state.projectid,
+      branchOn:this.props.location.state.branchOn
+
     };
-    this.handlePushButton = this.handlePushButton.bind(this);
+   
     this.handleDloadRepo = this.handleDloadRepo.bind(this);
-    this.handleResolveConflictButton = this.handleResolveConflictButton.bind(
-      this
-    );
+  
   }
 
-  handlePushButton = (e) => {
-    e.preventDefault();
-    this.setState({ ploading: true });
-    setTimeout(() => {
-      this.setState({ ploading: false });
-    }, 3000);
-  };
 
-  handleDloadRepo = (e) => {
+  handleDloadRepo = async (e) => {
     e.preventDefault();
-    this.setState({ dloading: true });
-    setTimeout(() => {
+    try{
+      this.setState({ dloading: true });
+      let {mergeobj,projectid,branchOn} = this.state;
+      let body = {
+        "projectid":projectid,
+        "branchToUpdate":branchOn,
+        "mergeid":mergeobj.mergeid,
+        "operation":"DOWNLOADFORCLI"
+      }
+      const res = await axios.post(`${url}/checkAccess`,body,{
+        headers:{
+          "x-auth-token":localStorage.getItem("x-auth-token")
+        },
+        responseType:"arraybuffer"
+      })
+      downloadRepo(res,`${projectid}.zip`)
       this.setState({ dloading: false });
-    }, 3000);
+      this.props.history.replace("/pulls",{projectid,branchOn})
+     
+
+    }catch(error){
+      errorHandle(error);
+      this.setState({ dloading: false });
+    }
+    
+   
   };
 
-  componentWillMount() {
-    this.setState({ loadingModal: true });
-    setTimeout(() => {
-      fetch("http://localhost:3000/fileArray")
-        .then((res) => res.json())
-        .then((fileArray) =>
-          this.setState({ fileArray: fileArray, loadingModal: false })
-        );
-    }, 3000);
+  getInstructions = ()=>{
+    let {mergeobj} = this.state;
+    let instructions = "";
+    mergeobj.instructions.map((txt,i)=>{
+    instructions = instructions + txt + "\n"
+    });
+    console.log(instructions)
+    return  instructions
   }
-
-  handleResolveConflictButton = (e) => {
-    e.preventDefault();
-    let fileArray = this.state.fileArray;
-    this.props.history.push("./resolveConflicts", { fileArray: fileArray });
-  };
 
   render() {
-    // const conflictedFiles = this.state.fileArray.map((file, index) => (
-    //   <tr key={index}>
-    //     <th scope="row">{file.id}</th>
-    //     <td>{file.fileName}</td>
-    //   </tr>
-    // ));
+
     return (
       <div>
         <NavBar />
@@ -72,19 +77,7 @@ class MergeConflict extends Component {
             <Barloader height={"12px"} width={"1110px"} />
           ) : (
             <FadeIn>
-              <div className="text-right">
-                <button
-                  type="button"
-                  className="btn btn-outline-success btn-sm  m-4"
-                  onClick={this.handleResolveConflictButton}
-                >
-                  Resolve Conflicts
-                </button>
-              </div>
-
-              <Difference fileArray={this.state.fileArray} />
-              <hr />
-              <form>
+              <form style={{marginTop:"10px"}}>
                 <div className="form-group">
                   <label for="exampleFormControlTextarea1">
                     Error message:
@@ -92,10 +85,10 @@ class MergeConflict extends Component {
                   <textarea
                     className="form-control"
                     id="exampleFormControlTextarea1"
-                    rows="5"
+                    rows="10"
                     disabled
                   >
-                    {this.state.errorMessage}
+                  {this.getInstructions()}
                   </textarea>
                   <div className="text-center">
                     <button
@@ -113,20 +106,6 @@ class MergeConflict extends Component {
                   </div>
                 </div>
               </form>
-              <div className="text-center">
-                <button
-                  type="submit"
-                  className="btn btn-warning btn-sm m-2"
-                  onClick={this.handlePushButton}
-                >
-                  {this.state.ploading && (
-                    <span>
-                      Confirming <Spinner />
-                    </span>
-                  )}
-                  {!this.state.ploading && <span>Push</span>}
-                </button>
-              </div>
             </FadeIn>
           )}
         </div>

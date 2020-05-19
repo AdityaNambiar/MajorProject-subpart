@@ -1,17 +1,15 @@
 import React, { Component } from "react";
 import { Link, NavLink,withRouter } from "react-router-dom";
-const jwt = require("jsonwebtoken")
-class NavBar extends Component {
-
-  getUsername = ()=>{
-    let decoded = jwt.decode(localStorage.getItem("x-auth-token"))
-    return decoded==null?null:decoded.pIdentifier
-  }
+import jwt from "jsonwebtoken"
+class ClientNavbar extends Component {
+  state = {
+    participant:jwt.decode(localStorage.getItem("x-auth-token")).participant
+  };
   render() {
-   
+    let participant = this.state.participant
     return (
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-        <Link className="navbar-brand" to="/login">
+        <Link className="navbar-brand" to="/home">
           DevOps
         </Link>
         <button
@@ -28,49 +26,38 @@ class NavBar extends Component {
         <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
           <ul className="navbar-nav mr-auto">
             <li className="nav-item nav-link ml-2 ">
-              <NavLink className="text-warning" to="/login">
-                Login
+              <NavLink className="text-warning" to="/home">
+                Home
               </NavLink>
             </li>
             <li className="nav-item nav-link ml-2">
-              <NavLink className="text-warning" to="/register">
+              <NavLink className="text-warning" to="/clientRegister">
                 Register
               </NavLink>
             </li>
             <li className="nav-item nav-link ml-2">
-              <NavLink className="text-warning" to="/dashboard">
+              <NavLink className="text-warning" to="/clientDashboard">
                 Dashboard
               </NavLink>
-            </li>
-            <li className="nav-item nav-link ml-2">
-              <NavLink className="text-warning" to="/publicProjects">
-                Public Projects
-              </NavLink> 
-            </li>
-            <li className="nav-item nav-link ml-2">
-              {this.props.projectid&&this.props.access&&(<NavLink className="text-warning" to={{
-                pathname:"/discussions",
-                state:{"chatid":this.props.projectid}
-              }} >
-                Forum
-              </NavLink>)}
             </li>
             <li className="nav-item nav-link ml-2 ">
               <label
                 style={{ fontWeight: "bold", color: "white" }}
-              >{this.getUsername()}</label>
+              >{`Welcome ${participant.fname} ${participant.lname}`}</label>
             </li>
             <li className="nav-item nav-link ml-2">
               <button class="btn btn-outline-danger btn-sm my-2 my-sm-0 mr-0"
-                onClick={()=>{
-                  localStorage.removeItem('x-auth-token');
-                  localStorage.removeItem('chatid');
-                  localStorage.removeItem('doc');
-                  this.props.history.replace('/home');
-                  window.location.reload(true)
-                }}
+              onClick={()=>{
+                localStorage.removeItem('x-auth-token');
+                localStorage.removeItem('chatid');
+                localStorage.removeItem('doc');
+                this.props.history.replace('/home');
+                window.location.reload(true)
+              }}
+              
               >
                 Logout
+                
               </button>
             </li>
           </ul>
@@ -80,4 +67,4 @@ class NavBar extends Component {
   }
 }
 
-export default withRouter(NavBar);
+export default withRouter(ClientNavbar);

@@ -7,7 +7,16 @@ import "react-quill/dist/quill.snow.css";
 import FadeIn from "react-fade-in";
 import Spinner from "./../Utils/spinner";
 import Barloader from "../loaders/barLoader";
-
+import authServer from "../api/authServer";
+import errorHandle from "../hooks/errorHandling"
+import bufferToString from "../utilities/bufferToString";
+import Editor from 'react-simple-code-editor';
+import { highlight, languages } from 'prismjs/components/prism-core';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-javascript';
+import "../prism.css"
+import axios from "axios";
+import {url} from "../utilities/config"
 class ResolveConflicts extends Component {
   constructor(props) {
     super(props);
@@ -15,9 +24,14 @@ class ResolveConflicts extends Component {
       loading: false,
       loadingModal: false,
       commitMessage: "",
-      fileArray: this.props.location.state.fileArray,
-      text: "Click on any file to edit...",
+      fileArray: [],
       currentFile: "",
+      mergeid:"",
+      branchToUpdate:"",
+      filedata:{},
+      projectid:null,
+      branchOn:null
+      
     };
     this.onChange = this.onChange.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -28,50 +42,106 @@ class ResolveConflicts extends Component {
   onChange(e) {
     this.setState({ [e.target.name]: e.target.value });
   }
-  componentWillMount() {
+  async componentDidMount() { 
+    try{
     this.setState({ loadingModal: true });
-    setTimeout(() => {
-      this.setState({ loadingModal: false });
-    }, 3000);
+    let {pullobj,projectid,branchOn} = this.props.location.state;
+    
+    let body = {
+      "projectid":projectid,
+      "branchToUpdate":branchOn,
+      "mergeobj":pullobj,
+      "operation":"READMERGEFILES"
+    }
+    console.log(body)
+    const {data} = await axios.post(`${url}/checkAccess`,body,{
+      headers:{
+        'x-auth-token':localStorage.getItem('x-auth-token')
+      }
+    });
+    console.log(data)
+    let {buffer,mergeid} = data;
+    this.setState({ loadingModal: false ,fileArray:buffer,mergeid:mergeid,projectid:projectid,branchOn:branchOn});
+    }catch(error){
+      errorHandle(error);
+      window.location.reload();
+    }
   }
 
-  handleChange(value) {
-    this.setState({ text: value });
+  handleChange(value) { 
+    let {currentFile,filedata} = this.state;
+    filedata[currentFile] = value;
+    this.setState({ filedata: filedata });
   }
 
-  handleFileClick = (e) => {
+  handleFileClick = (e,file) => {
     e.preventDefault();
-    let fname = e.target.name;
-    let text = e.target.id;
-    this.setState({ text: text, currentFile: fname });
+    let filecontent = bufferToString(file.data.data);
+    let filedata = this.state.filedata
+    if(filedata[file.name]==undefined){
+      filedata[file.name] = filecontent;
+    }
+    this.setState({ text: filecontent, currentFile: file.name});
   };
 
-  handleCommit = (e) => {
+  handleCommit = async (e) => {
     e.preventDefault();
+   try{ 
     let commitMessage = this.state.commitMessage;
     if (commitMessage === "") {
       window.alert("Commit Message cannot be blank!!");
     } else {
       this.setState({ loading: true });
-      setTimeout(() => {
-        this.setState({ loading: false });
-      }, 3000);
+      let {mergeid,filedata,branchOn,projectid} = this.state;
+      // let filebuffobj = {}
+      // for(let file in filedata){
+      //   filebuffobj[file] = stringToBuffer(filedata[file]);
+      // }
+      
+      let body = { 
+        mergeobj:JSON.stringify({branchToUpdate:branchOn,mergeid:mergeid}),
+        filebuffobj: JSON.stringify(filedata),
+        projectid:projectid, 
+        operation:"MERGECOMMIT",
+        usermsg:commitMessage
+      }
+      const {data} = await axios.post(`${url}/checkAccess`,body,{
+        headers:{
+          "x-auth-token":localStorage.getItem("x-auth-token"),
+        },
+       
+      });
+     let {mergeobj}  = data;
+      let status = mergeobj.filter((obj)=>obj.mergeid==mergeid);
+      if(status.length>0){
+        alert("More Conflicts arised, please solve it");
+        window.location.reload();
+      }else{
+        this.setState({loading:false});
+       return this.props.history.replace("/pulls", { projectid: projectid,branchOn:branchOn});
+      }
+      this.setState({loading:false})
     }
+  }catch(error){
+    errorHandle(error);
+    this.setState({loading:false})
+    // window.location.reload()
+  } 
   };
 
   render() {
-    let fileArray = this.state.fileArray;
-    const conflictedFiles = fileArray.map((fileArray, index) => (
+
+    let {fileArray,filedata,currentFile} = this.state
+
+    const conflictedFiles = fileArray.map((file, index) => (
       <tr key={index}>
-        <th scope="row">{fileArray.id}</th>
+        {/* <th scope="row">{file.name}</th> */}
         <td>
           <a
             href=""
-            name={fileArray.fileName}
-            id={fileArray.fileBuffer}
-            onClick={this.handleFileClick}
+            onClick={(e)=>this.handleFileClick(e,file)}
           >
-            {fileArray.fileName}
+            {file.name}
           </a>
         </td>
       </tr>
@@ -89,7 +159,7 @@ class ResolveConflicts extends Component {
                 <table class="table table-sm">
                   <thead>
                     <tr>
-                      <th scope="col">#</th>
+                      {/* <th scope="col">#</th> */}
                       <th scope="col">List of Conflicted files</th>
                     </tr>
                   </thead>
@@ -165,11 +235,32 @@ class ResolveConflicts extends Component {
               </div>
               <div className="col-md-8">
                 <h5>{this.state.currentFile}</h5>
-                <ReactQuill
-                  value={this.state.text}
-                  onChange={this.handleChange}
-                  preserveWhitespace="true"
-                />
+                
+                
+                {Object.keys(filedata).length>0&&(<Editor
+                      value={filedata[currentFile]}
+                      onValueChange={specificFileEditor =>this.handleChange(specificFileEditor)}
+                      highlight={specificFileEditor => highlight(specificFileEditor, languages.js)}
+                      padding={10}
+                      style={{
+                        fontFamily: '"Fira code", "Fira Mono", monospace',
+                        border:"1px solid black",
+                        borderRadius:"5px",
+
+                        fontSize: 12,
+                      }}
+                  />)}
+
+                
+                {/* <textarea
+                      name="specificFileEditor"
+                      class="form-control mt-1 mb-2 bg bg-dark text-light"
+                      id="exampleFormControlTextarea1"
+                      rows="22"
+                      style={{fontSize:"14px",height:"80vh"}}
+                      value={this.state.filedata[this.state.currentFile]}
+                      onChange={(e)=>this.handleChange(e.target.value)}
+                    ></textarea> */}
               </div>
             </div>
           </FadeIn>

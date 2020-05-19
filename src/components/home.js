@@ -21,7 +21,7 @@ class Home extends Component {
 
   render() {
     return (
-      <div>
+      <div style={{overflowX: "hidden"}}>
         <div
           style={{
             backgroundImage: `url(${require("../assets/icons/home.jpg")})`,
@@ -29,7 +29,7 @@ class Home extends Component {
             backgroundSize: "cover",
             backgroundRepeat: "no-repeat",
             minHeight: "100%",
-            height: "665px",
+            height: "100vh",
           }}
           className="row"
         >
@@ -40,13 +40,13 @@ class Home extends Component {
             <h4>Hello user!</h4>
             <h5>Are you?</h5>
             <button
-              className="btn btn-outline-primary mr-4"
+              className="btn btn-outline-primary btn-lg mr-4"
               onClick={this.handleClientLogin}
             >
               Client
             </button>
             <button
-              className="btn btn-outline-warning"
+              className="btn btn-outline-warning btn-lg"
               onClick={this.handleEmployeeLogin}
             >
               Employee

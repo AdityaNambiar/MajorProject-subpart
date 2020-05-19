@@ -1,4 +1,4 @@
-.files input {
+.ufiles input {
   outline: 2px dashed #92b0b3;
   outline-offset: -10px;
   -webkit-transition: outline-offset 0.15s ease-in-out,
@@ -9,7 +9,7 @@
   margin: 0;
   width: 100% !important;
 }
-.files input:focus {
+.ufiles input:focus {
   outline: 2px dashed #92b0b3;
   outline-offset: -10px;
   -webkit-transition: outline-offset 0.15s ease-in-out,
@@ -17,10 +17,10 @@
   transition: outline-offset 0.15s ease-in-out, background-color 0.15s linear;
   border: 1px solid #92b0b3;
 }
-.files {
+.ufiles {
   position: relative;
 }
-.files:after {
+.ufiles:after {
   pointer-events: none;
   position: absolute;
   top: 60px;
@@ -38,7 +38,7 @@
 .color input {
   background-color: #f1f1f1;
 }
-.files:before {
+.ufiles:before {
   position: absolute;
   bottom: 10px;
   left: 0;
@@ -57,7 +57,7 @@
 
 #main {
   margin: auto;
-  width: 1111px;
+  width: 682px;
   position: fixed;
   bottom: 0;
   margin-left: 0;
@@ -65,23 +65,24 @@
 }
 
 #sendprojectmessagetextdiv {
-  width: 1000px;
+  width: 580px;
   max-height: 50px;
   float: left;
 }
 #sendprojectmessagetextarea {
-  width: 1000px;
+  width: 595px;
   max-height: 50px;
+  margin-left: -16px;
 }
 
 #sendprojectmessagebtndiv {
-  width: 105px;
+  width: 85px;
   min-height: 30px;
-  float: right;
+  float: left;
 }
 
 #sendprojectmessagebtn {
-  width: 105px;
+  width: 100px;
   min-height: 50px;
 }
 
@@ -96,7 +97,7 @@
   left: 9px;
   position: fixed;
 } */
-/* .rdw-editor-toolbar.toolbarClassName {
+.rdw-editor-toolbar.toolbarClassName {
   width: 620px;
   background-color: slategrey;
   margin-bottom: 0px;
@@ -110,4 +111,4 @@
   width: 620px;
   background-color: #363636;
   color: white;
-} */
+}

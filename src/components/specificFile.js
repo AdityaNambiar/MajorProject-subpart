@@ -4,9 +4,20 @@ import { withRouter } from "react-router-dom";
 import NavBar from "./navbar";
 import CommitHistory from "./commitHistory";
 import Spinner from "./../Utils/spinner";
-import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import FadeIn from "react-fade-in";
+import bufferToString from "../utilities/bufferToString";
+import BarLoader from "../loaders/barLoader"
+import axios from "axios";
+import {url} from "../utilities/config"
+import Editor from 'react-simple-code-editor';
+import { highlight, languages } from 'prismjs/components/prism-core';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-javascript';
+import "../prism.css"
+const errorHandle   = require("../hooks/errorHandling");
+
+const authServer = require("../api/authServer");
 
 class SpecificFile extends Component {
   constructor(props) {
@@ -15,8 +26,10 @@ class SpecificFile extends Component {
       loading: false,
       loadingModal: false,
       commitMessage: "",
-      specificFileEditor:
-        "Lorem dolore mollit \n ad veniam commodo nulla dolor amet.\n Nisi ex excepteur culpa occaecat ipsum enim mollit \n sit. Non deserunt ad pariatur et aliquip incididunt.",
+      specificFileEditor:"",
+      showCommitModal:false,
+      edit:true
+      
     };
     this.onChange = this.onChange.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -26,72 +39,108 @@ class SpecificFile extends Component {
   onChange(e) {
     this.setState({ [e.target.name]: e.target.value });
   }
-  handleChange(value) {
-    this.setState({ specificFileEditor: value });
+  handleChange(editor) {
+    // const value = editor.getText();
+    this.setState({ specificFileEditor: editor });
   }
 
   handleBCProjectName = (e) => {
-    e.preventDefault();
+    e.preventDefault(); 
     let pname = e.target.name;
-    this.props.history.push("./project", { pname: pname });
+    let access = this.props.location.state.access
+    this.props.history.replace("./project", { projectid: pname,access });
   };
 
-  componentWillMount() {
-    this.setState({ loadingModal: true });
-    setTimeout(() => {
+  componentDidMount = async ()=> {
+    
+    try{
+      const {fname,projectName,onBranch} = this.props.location.state;
+      console.log(this.props.location.state)
+      this.setState({ loadingModal: true });
+      let body = {"operation":"READFILE","branchToUpdate":onBranch,"projectid":projectName,"filename":fname}
+      const {data} = await axios.post(`${url}/checkAccess`,body,{
+        headers:{
+          'x-auth-token':localStorage.getItem("x-auth-token")
+        }
+      });
+     
+      let filecontent = bufferToString(data.buffer.data);
+      this.setState({ loadingModal: false,specificFileEditor:filecontent });
+     
+    }catch(error){
+      errorHandle(error);
       this.setState({ loadingModal: false });
-    }, 3000);
+    }
   }
-  // handleEditButton = (e) => {
-  //   e.preventDefault();
-  //   let disabled = this.state.disabledEditor;
-  //   if (disabled === false) {
-  //     this.setState({ disabledEditor: true });
-  //   } else {
-  //     this.setState({ disabledEditor: false });
-  //   }
-  // };
+  
 
-  handleSaveButton = (e) => {
+arrrayBufferToBase64(buffer){
+    let binary = "";
+    let bytes = new Uint8Array(buffer);
+    let len = bytes.byteLength; 
+    for(let i=0;i<len;i++){
+      binary += String.fromCharCode(bytes[i]);
+
+    }
+    return window.btoa(binary);
+  }
+  handleSaveButton = async (e) => {
     e.preventDefault();
-    let commitMessage = this.state.commitMessage;
+    try{
+    const {specificFileEditor,commitMessage} = this.state;
+    const {fname} = this.props.location.state;
+    const filename = fname
     if (commitMessage === "") {
       window.alert("Commit Description cannot be blank!!");
     } else {
       this.setState({ loading: true });
-      setTimeout(() => {
-        this.setState({ loading: false });
-      }, 3000);
+      let body ={
+        "projectid":this.props.location.state.projectName,
+        "operation":"COMMITFILE",
+        "branchToUpdate": this.props.location.state.onBranch,
+        "filename":filename,
+        "filebuff":specificFileEditor,
+        "usermsg":commitMessage,
+        "commitHash":this.props.location.state.commitHash
+      }
+      const {data} = await axios.post(`${url}/checkAccess`,body,{
+        headers:{
+          "x-auth-token":localStorage.getItem("x-auth-token")
+        }
+      });
+      // console.log(data);
+      this.setState({ loading: false });
+      window.location.reload()
+    }}catch(error){
+      errorHandle(error);
+      this.setState({ loading: false });
+      window.location.reload(false)
     }
   };
+  handleEdit = ()=>{
+ 
+    let edit  = this.state.edit;
+    this.setState({edit:!edit})
+  }
   render() {
-    let propsObj = this.props.location.state;
-    let fname = propsObj.fname;
-    let pname = propsObj.projectName;
+    let {fname,projectName,onBranch,access} = this.props.location.state;
     return (
-      <div className="">
+      <div>
         <NavBar />
-
+        <div className="container">
         {this.state.loadingModal ? (
-          <lottie-player
-            src="https://assets3.lottiefiles.com/packages/lf20_rWaqBk.json"
-            background="transparent"
-            speed="1"
-            style={{ width: "1340px", height: "12px" }}
-            loop
-            autoplay
-          ></lottie-player>
+         <BarLoader height="12px" />
         ) : (
           <FadeIn>
-            <div className="container">
+            
               <nav aria-label="breadcrumb" className="mx-4 mb-2 mt-4">
                 <ol class="breadcrumb">
-                  <li class="breadcrumb-item">
+                  {/* <li class="breadcrumb-item">
                     <h5 className="text-dark">username</h5>
-                  </li>
+                  </li> */}
                   <li class="breadcrumb-item">
-                    <a href="#" onClick={this.handleBCProjectName} name={pname}>
-                      {pname}
+                    <a href="#" onClick={this.handleBCProjectName} name={projectName}>
+                      {projectName}
                     </a>
                   </li>
                   <li class="breadcrumb-item active" aria-current="page">
@@ -99,12 +148,13 @@ class SpecificFile extends Component {
                   </li>
                 </ol>
               </nav>
-              <div className=" mb-2" style={{ width: "1111px" }}>
+              <div className=" mb-2 " id="specificFileBtns" style={{ width: "1111px" }}>
                 <button
                   type="button"
-                  class="float-right btn btn-primary mt-2 mb-2 mr-5 btn-sm"
+                  class="btn btn-primary mt-2 mb-2 mr-2 btn-sm"
                   data-toggle="modal"
                   data-target="#fileCommitHistory"
+                  onClick={()=>this.setState({showCommitModal:true})}
                 >
                   History
                 </button>
@@ -118,10 +168,11 @@ class SpecificFile extends Component {
                   aria-hidden="true"
                 >
                   <div
-                    class="modal-dialog modal-dialog-centered"
+                    class="modal-dialog modal-lg modal-dialog-centered"
                     role="document"
+                    style={{textAlign: "left"}}
                   >
-                    <div class="modal-content">
+                    <div class="modal-content"> 
                       <div class="modal-header bg bg-danger text-light">
                         <h5 class="modal-title" id="exampleModalCenterTitle">
                           Commit history of {fname}
@@ -136,25 +187,39 @@ class SpecificFile extends Component {
                         </button>
                       </div>
                       <div class="modal-body">
-                        <CommitHistory commitOf={"fileCommit"} />
+                       {this.state.showCommitModal&&(<CommitHistory 
+                          projectName={projectName}
+                          onBranch={onBranch}
+                          filename={fname}
+                          commitOf="fileCommits"
+                          access ={access}
+
+                        />)}
                       </div>
                     </div>
                   </div>
                 </div>
-                {/*<button
-              className="btn btn-dark  mb-2 mr-2 btn-sm"
-              onClick={this.handleEditButton}
-            >
-              Edit
-            </button> */}
+             
+             {access&&(
+             <>
+             <button
+                  type="button"
+                  className=" btn btn-danger mt-2 mb-2 mr-2 btn-sm"
+                  onClick={()=>this.handleEdit()}
+                >
+                  Edit
+                </button>
+
                 <button
                   type="button"
-                  class="float-right btn btn-success mt-2 mb-2 mr-2 btn-sm"
+                  className=" btn btn-success mt-2 mb-2 mr-5 btn-sm"
                   data-toggle="modal"
                   data-target="#commit"
                 >
                   Commit
                 </button>
+                  </>
+                )}
                 <div
                   class="modal fade"
                   id="commit"
@@ -163,7 +228,7 @@ class SpecificFile extends Component {
                   aria-labelledby="commitLabel"
                   aria-hidden="true"
                 >
-                  <div class="modal-dialog" role="document">
+                  <div class="modal-dialog" role="document" style={{textAlign: "left"}}>
                     <div class="modal-content">
                       <div class="modal-header">
                         <h5 class="modal-title" id="commitLabel">
@@ -200,6 +265,7 @@ class SpecificFile extends Component {
                           type="button"
                           class="btn btn-success btn-sm"
                           onClick={this.handleSaveButton}
+                          disabled={this.state.loading}
                         >
                           {this.state.loading && (
                             <span>
@@ -213,18 +279,25 @@ class SpecificFile extends Component {
                   </div>
                 </div>
               </div>
-              <div className="mt-1 mx-4 mr-4 bg bg-light">
-                <ReactQuill
-                  name="specificFileEditor"
-                  value={this.state.specificFileEditor}
-                  onChange={this.handleChange}
-                  preserveWhitespace="true"
-                  //disabled={this.state.disabledEditor}
-                />
-              </div>
-            </div>
+              <div className="mt-1 mx-4 mr-4 mb-2">
+                    <Editor
+                      value={this.state.specificFileEditor}
+                      onValueChange={specificFileEditor => this.setState({ specificFileEditor })}
+                      highlight={specificFileEditor => highlight(specificFileEditor, languages.js)}
+                      padding={10}
+                      readOnly={this.state.edit}
+                      style={{
+                        fontFamily: '"Fira code", "Fira Mono", monospace',
+                        border:"1px solid black",
+                        borderRadius:"5px",
+                        width: "1050px",
+                        fontSize: 12,
+        
+                      }}
+                  /></div>
+            
           </FadeIn>
-        )}
+        )}</div>
       </div>
     );
   }

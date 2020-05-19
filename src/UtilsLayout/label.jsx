@@ -10,8 +10,7 @@ class Label extends Component {
     super(props);
     this.state = {
       projectName: this.props.projectName,
-      commitMessage:
-        "Et fugiat pariatur occaecat exercitation irure laborum officia amet irure esse. Lorem ad enim labore eiusmod anim aliqua culpa",
+      commitMessage:"",
       fileTimestamp: "30/3/2020 - 4:7:20 IST",
     };
     this.handleSpecificFile = this.handleSpecificFile.bind(this);
@@ -38,7 +37,7 @@ class Label extends Component {
     transform: "scale(1,1)",
     //margin: "10px",
   };
-
+ 
   handleSpecificFile = (e) => {
     e.preventDefault();
     let fname = e.target.name;
@@ -46,7 +45,10 @@ class Label extends Component {
     this.props.history.push("./specificFile", {
       fname: fname,
       projectName: projectName,
-    });
+      onBranch:this.props.onBranch,
+      commitHash:this.props.commitHash,
+      access:this.props.access
+    }); 
   };
 
   handleFileCommitMsg = (e) => {
@@ -56,9 +58,9 @@ class Label extends Component {
       pname: projectName,
     });
   };
-  render() {
+  render() { 
     var { labelobj } = this.props;
-
+    console.log("From Label",this.props.commitHash)
     return (
       <React.Fragment>
         <tr>
@@ -81,13 +83,13 @@ class Label extends Component {
           </td>
           <td>
             <small>
-              <a href="" onClick={this.handleFileCommitMsg}>
-                {this.state.commitMessage}
+              <a href="" onClick={(e)=>e.preventDefault()} >
+                {labelobj.commitmsg}
               </a>
             </small>
           </td>
           <td>
-            <small>{this.state.fileTimestamp}</small>
+            <small>{labelobj.time}</small>
           </td>
         </tr>
       </React.Fragment>

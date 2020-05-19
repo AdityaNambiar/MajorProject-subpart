@@ -14,7 +14,7 @@ module.exports = function showLogs(jobName, buildnumber){
                 //resolve(txt);
             })
             log.on('end', (end) => {
-                console.log("stream ended, 'end' variable is: ",end);
+                //console.log("stream ended, 'end' variable is: ",end);
                 return resolve(end);
             })
             log.on('error', (err) => {

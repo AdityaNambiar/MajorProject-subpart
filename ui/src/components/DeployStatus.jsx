@@ -22,12 +22,11 @@ class Integration extends Component {
       urls: []
     }
   }
-  componentWillUnmount = () => {
-      window.onbeforeunload = function() {
-          return "Please wait while your build finishes!";
-      }
-  }
+  // componentWillUnmount = () => {
+  //   window.onbeforeunload = null
+  // }
   componentDidMount = () => {
+    //window.onbeforeunload = e => "Don't leave"
     console.log("COMPONENT DID MOUNT EXECUTED");
     const { projName, branchName, jenkinsfile, jenkins_jobdesc } = this.state;
 
@@ -66,7 +65,7 @@ class Integration extends Component {
 
   }
   startDeployment = () => {
-    const { projName, tagname, branchName } = this.state;
+    const { projName, tagName, branchName } = this.state;
 
     fetch('http://localhost:5003/deploy', {
       method: 'POST',
@@ -76,7 +75,7 @@ class Integration extends Component {
       body: JSON.stringify({ 
           projName: projName,
           branchName: branchName,
-          tagName: tagname
+          tagName: tagName
       })
     })
     .then(resp => resp.json())
@@ -158,7 +157,7 @@ class Integration extends Component {
           <div className="p-5 w-100 mt-3 bg bg-dark text-center text-light">
           <span>Access your application here:</span><br/>
           {
-            this.state.urls.map(url => <span>{url}</span>)
+            this.state.urls.map((url,i) => <span key={i}>{url}</span>)
           }
           </div>
       </div>

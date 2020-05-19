@@ -12,7 +12,7 @@ class Integration extends Component {
     this.state = {
       jenkinsfile: '',
       projName: '',
-      tagname: '',
+      tagName: '',
       branchName: '',
       jenkins_jobdesc: '',
       branchnames: [ "master", "nodeapi", "feature2" ],
@@ -21,12 +21,12 @@ class Integration extends Component {
   }
   startIntegration = (e) => {
     e.preventDefault();
-    const { projName, branchName, tagname, jenkinsfile, jenkins_jobdesc } = this.state; 
+    const { projName, branchName, tagName, jenkinsfile, jenkins_jobdesc } = this.state; 
     //console.log(projName);
     this.props.history.push('/deploystatus',{
       projName: projName,
       branchName: branchName,
-      tagname: tagname,
+      tagName: tagName,
       jenkinsfile: jenkinsfile,
       jenkins_jobdesc: jenkins_jobdesc
     })
@@ -67,7 +67,7 @@ class Integration extends Component {
             <Col>
               <Form.Group>
               <Form.Label>Enter Tag of the image you will be deploying:</Form.Label>
-              <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ tagname: e.target.value })} type="text" placeholder="Example: v1" />
+              <Form.Control style={{ width: "75%" }} onChange={(e) => this.setState({ tagName: e.target.value })} type="text" placeholder="Example: v1" />
               </Form.Group>
             </Col>
           </Row>

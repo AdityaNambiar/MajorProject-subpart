@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
             if (isCompleted){
                 console.log("build successful");
                 await rmWorkdir(projName, branchName);
-                return res.status(200).send({projName: projName, branchName: branchName});
+                return res.status(200).send({projName: projName, progressPercent: '50', branchName: branchName});
             } else {
                 console.log("build unsuccessful");
                 await rmWorkdir(projName, branchName);
@@ -73,7 +73,7 @@ router.post('/', async (req, res) => {
             if (isCompleted){
                 console.log("build successful");
                 await rmWorkdir(projName, branchName);
-                return res.status(200).send({projName: projName, branchName: branchName});
+                return res.status(200).send({projName: projName, progressPercent: '50', branchName: branchName});
             } else {
                 console.log("build unsuccessful");
                 await rmWorkdir(projName, branchName);

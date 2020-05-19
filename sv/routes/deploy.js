@@ -33,7 +33,7 @@ router.post('/', async (req, res) => {
         await pruneContainers();
         await pullImage(imageName);
         let urls = await createContainer(jobName, imageName) 
-        res.status(200).send({projName: projName, urls: urls});
+        res.status(200).send({projName: projName, progressPercent: '100', urls: urls});
     } catch (err) {
         console.log(err);
         await pruneImages()

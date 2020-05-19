@@ -11,7 +11,7 @@ class DeployDirect extends Component {
     this.state = {
       projName: this.props.location.state.projName,
       branchName: this.props.location.state.branchName,
-      tagname: this.props.location.state.tagname,
+      tagName: this.props.location.state.tagName,
       progressPercent: '0',
       postResp: '',
       urls: []
@@ -23,7 +23,7 @@ class DeployDirect extends Component {
       }
   }
   componentDidMount = () => {
-    const { projName, branchName, tagname } = this.state;
+    const { projName, branchName, tagName } = this.state;
 
     fetch('http://localhost:5003/deployDirectly', {
       method: 'POST',
@@ -33,7 +33,7 @@ class DeployDirect extends Component {
       body: JSON.stringify({ 
           projName: projName,
           branchName: branchName,
-          tagName: tagname
+          tagName: tagName
       })
     })
     .then(resp => resp.json())
@@ -123,7 +123,7 @@ class DeployDirect extends Component {
           <div className="p-5 w-100 mt-3 bg bg-dark text-center text-light">
           <span>Access your application here:</span><br/>
           {
-            this.state.urls.map(url => <span>{url}</span>)
+            this.state.urls.map((url,i) => <span key={i}>{url}</span>)
           }
           </div>
       </div>

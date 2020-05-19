@@ -12,17 +12,17 @@ class DeployButton extends Component {
     this.state = {
       projName: 'reactapp',
       branchName: 'nodeapi',
-      tagname: '0.2'
+      tagName: '0.2'
     }
   }
   startDirectDeployment = (e) => {
     e.preventDefault();
-    const { projName, branchName, tagname} = this.state
+    const { projName, branchName, tagName} = this.state
 
     this.props.history.push('/deploydirect',{
       projName: projName,
       branchName: branchName,
-      tagname: tagname
+      tagName: tagName
     }) 
   }
   render() {

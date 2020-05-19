@@ -9,11 +9,27 @@ const registryPort = 7009; // Ideally you can set this as process.env or somethi
 
 
 // (async () => {
-//     const image = await dockerapi.listImages({
-//                 filter: `${IP}:${registryPort}/react`
-//             });
-//     console.log(image);
-// });
+//     const containerName = 'reactapp-master'; //req.body.containerName ||
+//     const container = await dockerapi.getContainer(containerName);
+//     //console.log(container);
+//     var ports = [], urls = [], containerPort = "";
+//     await container.inspect((err, data) => {
+//         if (err) throw new Error(err);
+//         var portBindings = data.NetworkSettings.Ports;
+//         //console.log("pbings: \n",portBindings);
+//         for (let pb in portBindings){
+//             containerPort = pb;
+//             ports.push(portBindings[pb][0].HostPort);
+//         }
+//         console.log("ports: \n", ports);
+//         for (let p in ports){
+//             urls.push(`http://${IP}:${ports[p]} (${containerPort})`);
+//         }
+//         console.log("urls: \n", urls);
+//         //return resolve(urls);
+//     })
+
+// })();
 
 // Utility imports:
 

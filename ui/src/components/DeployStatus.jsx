@@ -1,7 +1,4 @@
 import React, { Component } from 'react';
-import {
-  Button, Container, Row, Col
-} from 'react-bootstrap';
 import "react-step-progress-bar/styles.css";
 import { ProgressBar, Step } from "react-step-progress-bar";
 import { withRouter } from 'react-router-dom';
@@ -17,11 +14,10 @@ class Integration extends Component {
     this.state = {
       projName: this.props.location.state.projName,
       branchName: this.props.location.state.branchName,
-      tagname: this.props.location.state.tagname,
+      tagName: this.props.location.state.tagName,
       jenkinsfile: this.props.location.state.jenkinsfile,
       jenkins_jobdesc: this.props.location.state.jenkins_jobdesc,
-      timestamp: null,
-      progressPercent: 0,
+      progressPercent: '0',
       postResp: '',
       urls: []
     }
@@ -49,14 +45,14 @@ class Integration extends Component {
     })
     .then(resp => resp.json())
     .then(res => {
-      console.log(res);
+      console.log("res: ",res);
       if (res.err === "Build Failed - Check logs!") throw new Error("Build Failed - Check logs!");
       else {
+        let computedPercent = parseInt(this.state.progressPercent) + parseInt(res.progressPercent);
         this.setState({ 
            projName: res.projName,
-           branchName: res.branchName, 
-           timestamp: res.timestamp,
-           progressPercent: '50' 
+           branchName: res.branchName,
+           progressPercent: computedPercent
         });
         this.startDeployment();
       }
@@ -70,7 +66,7 @@ class Integration extends Component {
 
   }
   startDeployment = () => {
-    const { projName, tagname, timestamp, branchName } = this.state;
+    const { projName, tagname, branchName } = this.state;
 
     fetch('http://localhost:5003/deploy', {
       method: 'POST',
@@ -80,16 +76,15 @@ class Integration extends Component {
       body: JSON.stringify({ 
           projName: projName,
           branchName: branchName,
-          tagName: tagname,
-          timestamp: timestamp,
+          tagName: tagname
       })
     })
     .then(resp => resp.json())
     .then(res => {
       console.log(res);
       if (res.err) throw new Error(res.err);
-      this.setState({ projName: res.projName, progressPercent: '100', urls: res.urls });
-      console.log(this.state)
+      let computedPercent = parseInt(this.state.progressPercent) + parseInt(res.progressPercent);
+      this.setState({ projName: res.projName, progressPercent: computedPercent, urls: res.urls });
     })
     .catch(err => {
       console.log(err);
@@ -158,20 +153,10 @@ class Integration extends Component {
             </Step>
           </ProgressBar>
           <hr className="mt-4"/>
-          <Container className="mt-5">
-            <Row>
-              <Col>
-                <Button onClick={(e) => {this.showLogs(e)}}>Show Build Console Logs</Button>
-              </Col>
-              {/*<Col>
-                <Button onClick={(e) => {this.downloadCurrentBuildReport}}>Download last build report</Button>
-              </Col>*/}
-            </Row>
-          </Container>
           <textarea id="logarea" value={this.state.postResp} rows="20" className="d-none mt-3 p-5 w-100 bg bg-dark text-light" readOnly/>
 
           <div className="p-5 w-100 mt-3 bg bg-dark text-center text-light">
-          <span>Access your application here</span><br/>
+          <span>Access your application here:</span><br/>
           {
             this.state.urls.map(url => <span>{url}</span>)
           }

@@ -33,20 +33,22 @@ router.post('/', async (req, res) => {
 
     try {
         let workdirpath = await cloneRepository(projName, branchName);
-        let imageName = `${IP}:${registryPort}/${projName}-${branchName}:${tagName}`
-        await buildImage(workdirpath,projName,imageName);
+        let imageName = `${IP}:${registryPort}/${projName}-${branchName}:${tagName}`;
+        let jobName = `${projName}-${branchName}`;
+        await cleanUp(imageName, jobName);
+        await buildImage(workdirpath, imageName);
         await pushImage(imageName);
-        await cleanUp(imageName, projName, branchName);
+        await cleanUp(imageName, jobName);
         await pruneImages();
         //await pruneContainers(); 
         //await pruneVolumes();
         //await pruneNetworks();
         await pullImage(imageName);
         //await generateVolAndNet(projName, branchName);
-        let urls = await createContainer(projName, branchName, imageName) 
+        let urls = await createContainer(jobName, imageName) 
 
         await rmWorkdir(projName, branchName);
-        res.status(200).json({projName: projName, urls: urls});
+        res.status(200).send({projName: projName, urls: urls});
     } catch (err) {
         console.log(err);
         await pruneImages();
@@ -56,10 +58,10 @@ router.post('/', async (req, res) => {
         // Not ideal to be deleted on subsequent deployments.
         //await pruneVolumes(); 
         //await pruneNetworks();
-        res.status(400).json({err: `Error occured during direct deployment : \n${err.name} :- ${err.message}`});
+        res.status(400).send({err: `Error occured during direct deployment : \n${err.name} :- ${err.message}`});
     }
 })
-function buildImage(workdirpath, projName, imageName){
+function buildImage(workdirpath, imageName){
     console.log("Building image ...")
     return new Promise( async (resolve, reject) => {
         var tarStream = tar.pack(workdirpath);
@@ -190,23 +192,13 @@ function pullImage(imageName) {
     })
 }
 
-function createContainer(projName, branchName, imageName){
+function createContainer(jobName, imageName){
     console.log("Going to run container...");
-
-              /*Volumes: {
-                [`${projName}-${branchName}`]: {}
-              },
-              
-              }NetworkingConfig: {
-                EndpointsConfig: {
-                    NetworkID: projName
-                }
-              }*/
     return new Promise( async (resolve, reject) => {
         try {
             let container = await dockerapi.createContainer({
               Image: imageName,
-              name: `${projName}-${branchName}`,
+              name: jobName,
               PublishAllPorts: true
             }) 
             let containerStarted = await container.start();
@@ -214,7 +206,7 @@ function createContainer(projName, branchName, imageName){
             await container.inspect((err, data) => {
                 if (err) throw new Error(err);
                 var portBindings = data.NetworkSettings.Ports;
-                console.log("pbings: \n",portBindings);
+                //console.log("pbings: \n",portBindings);
                 for (let pb in portBindings){
                     containerPort = pb;
                     ports.push(portBindings[pb][0].HostPort);

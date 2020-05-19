@@ -1,10 +1,8 @@
 import React, { Component } from 'react';
-import {
-  Button, Container, Row, Col
-} from 'react-bootstrap';
 import "react-step-progress-bar/styles.css";
 import { withRouter } from 'react-router-dom';
-import JSONPretty from 'react-json-pretty';
+import dockericon from '../assets/dockericon.webp';
+import { ProgressBar, Step } from "react-step-progress-bar";
 
 class DeployDirect extends Component {
   constructor(props) {
@@ -14,6 +12,7 @@ class DeployDirect extends Component {
       projName: this.props.location.state.projName,
       branchName: this.props.location.state.branchName,
       tagname: this.props.location.state.tagname,
+      progressPercent: '0',
       postResp: '',
       urls: []
     }
@@ -41,7 +40,8 @@ class DeployDirect extends Component {
     .then(res => {
       console.log(res);
       if (res.err) throw new Error(res.err);
-      this.setState({ urls: res.urls });
+      let computedPercent = parseInt(this.state.progressPercent) + parseInt(res.progressPercent);
+      this.setState({ urls: res.urls, progressPercent: computedPercent });
     })
     .catch(err => {
       console.log(err);
@@ -75,27 +75,53 @@ class DeployDirect extends Component {
     }
   }
   render() {
-    const { projName } = this.state;
+    const { progressPercent, projName } = this.state;
     return (
       <div style={{
         width: "75%",
-        margin: "5% auto"
+        margin: "7% auto"
       }}>
         <h2>{projName}</h2>
-      
+          <ProgressBar
+            percent={progressPercent}
+            filledBackground="linear-gradient(to right, #fefb72, #f0bb31)"
+          >
+            <Step transition="scale">
+              {
+                ({ accomplished, position }) => (
+                <img
+                  style={{ 
+                    filter: `grayscale(${accomplished ? 0 : 100}%)`, 
+                    marginRight: '100%', 
+                    borderRadius: '20%'
+                  }}
+                  width="50"
+                  alt=""
+                />
+              )}
+            </Step>
+            <Step transition="scale">
+              {
+                ({ accomplished, position }) => (
+                <img
+                  style={{ 
+                    filter: `grayscale(${accomplished ? 0 : 100}%)`, 
+                    marginLeft: '100%', 
+                    borderRadius: '20%'
+                  }}
+                  width="50"
+                  alt=""
+                  src={dockericon}
+                />
+              )}
+            </Step>
+          </ProgressBar>
           <hr className="mt-5"/>
-          <Container className="mt-5">
-            <Row>
-              <Col>
-                <Button onClick={(e) => {this.showLogs(e)}}>Show Build Console Logs</Button>
-              </Col>
-            </Row>
-          </Container>
           <textarea id="logarea" value={this.state.postResp} rows="20" className="d-none mt-3 p-5 w-100 bg bg-dark text-light" readOnly>
           </textarea>
 
           <div className="p-5 w-100 mt-3 bg bg-dark text-center text-light">
-          <span>Access your application here</span><br/>
+          <span>Access your application here:</span><br/>
           {
             this.state.urls.map(url => <span>{url}</span>)
           }

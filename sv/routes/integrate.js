@@ -16,6 +16,9 @@ const cloneRepository = require('../utilities/cloneRepository');
 const rmWorkdir = require('../utilities/rmWorkdir');
 
 router.post('/', async (req, res) => {
+    // https://stackoverflow.com/questions/45876257/express-post-request-gives-err-empty-response
+    // To get rid of NodeJS core timeout of 2 minutes if route is not sending response. See: https://github.com/expressjs/express/issues/2174
+        req.setTimeout(0); 
         console.log("timestamp: ", Date.now());
         let projName = req.body.projName;
         let branchName = req.body.branchName;

@@ -8,14 +8,14 @@ const docker = require('dockerode');
 const app = express();
 
 app.use(bodyParser.json())
-app.use(cors())
+app.use(cors());
 
-app.use('/integrate', require('./routes/integrate'));
 app.use('/deploy', require('./routes/deploy'));
 app.use('/showLogs', require('./routes/showLogs'));
 
 app.use('/deployDirectly', require('./routes/deployDirectly'));
 app.use('/showDeployLogs', require('./routes/showDeployLogs'));
+app.use('/integrate', require('./routes/integrate'));
 
 app.listen(5003, () => {
     console.log("listening at 5003");

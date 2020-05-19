@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
-  Button, Container, Row, Col
+  Button
 } from 'react-bootstrap';
 import "react-step-progress-bar/styles.css";
 import { withRouter } from 'react-router-dom';

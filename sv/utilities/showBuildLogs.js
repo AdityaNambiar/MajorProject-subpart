@@ -10,7 +10,7 @@ module.exports = function showLogs(jobName, buildnumber){
             //let buildnumber = fs.readFileSync(projName+'-'+'currjob_buildno.txt', 'utf8');
             var log = jenkinslogsapi.build.logStream(jobName, buildnumber);
             log.on('data', (txt) => {
-                //console.log(data);
+                //console.log(txt);
                 //resolve(txt);
             })
             log.on('end', (end) => {

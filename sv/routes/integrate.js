@@ -18,8 +18,8 @@ const rmWorkdir = require('../utilities/rmWorkdir');
 router.post('/', async (req, res) => {
     // https://stackoverflow.com/questions/45876257/express-post-request-gives-err-empty-response
     // To get rid of NodeJS core timeout of 2 minutes if route is not sending response. See: https://github.com/expressjs/express/issues/2174
-        req.setTimeout(0); 
-        console.log("timestamp: ", Date.now());
+        //req.setTimeout(0); 
+        //console.log("timestamp: ", Date.now());
         let projName = req.body.projName;
         let branchName = req.body.branchName;
     try {
@@ -42,11 +42,11 @@ router.post('/', async (req, res) => {
             await writeXmlToSilo(jobName, newPXML);
             let xmlConfigString = await readXmlFromSilo(jobName);
 
-            console.log("job exists - updating it now");
+            //console.log("job exists - updating it now");
             let queueId = await updateJob(jobName, xmlConfigString);
             console.log("queueId: ",queueId);
             let isCompleted = await checkJobStatus(queueId, jobName);
-            console.log("isCompleted: ",isCompleted);
+            console.log("Build status (true if completed): ",isCompleted);
             if (isCompleted){
                 console.log("build successful");
                 await rmWorkdir(projName, branchName);
@@ -65,12 +65,11 @@ router.post('/', async (req, res) => {
             await writeXmlToSilo(jobName, newPXML);
             let xmlConfigString = await readXmlFromSilo(jobName);
 
-            console.log("job does not exists - creating it now");
+            //console.log("job does not exists - creating it now");
             let queueId = await createJob(jobName, xmlConfigString);
             console.log("queueId: ",queueId);
             let isCompleted = await checkJobStatus(queueId, jobName);
-            console.log("isCompleted: ",isCompleted);
-
+            console.log("Build status (true if completed): ",isCompleted);
             if (isCompleted){
                 console.log("build successful");
                 await rmWorkdir(projName, branchName);
@@ -90,7 +89,7 @@ router.post('/', async (req, res) => {
 })
 
 function doesJobExist(jobName){
-    console.log("doesJobExist executed");
+    //console.log("doesJobExist executed");
     return new Promise( (resolve, reject) => {
         try {
             jenkins.get_config_xml(jobName, (err, data) => {
@@ -109,7 +108,7 @@ function doesJobExist(jobName){
 
 
 function createJob(jobName, xmlConfigString) {
-    console.log("createJob executed");
+    console.log("Creating new job...");
     return new Promise( (resolve, reject) => {
         try {
             jenkins.create_job(jobName, xmlConfigString, (err, data) => {
@@ -134,7 +133,7 @@ function createJob(jobName, xmlConfigString) {
     })
 }
 function updateJob(jobName, xmlConfigString) {
-    console.log("updateJob executed");
+    console.log("Updating existing job...");
     return new Promise( (resolve, reject) => {
         try {
             jenkins.update_job(jobName, xmlConfigString, (err, data) => {

@@ -1,7 +1,7 @@
 # MajorProject
 A repository to store our Engineering Major Project
 
+## Deployed URLs:
 
-updating master while nodeserv is ahead of 37 commits.
-
-Updated on detached HEAD
+devopschain CLI npm package:
+- https://www.npmjs.com/package/devopschain

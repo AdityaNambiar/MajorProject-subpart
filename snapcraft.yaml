@@ -1,0 +1,44 @@
+name: devopschain
+version: 0.0.1
+summary: DevOpschain CLI
+description: CLI for git usage using devopschain for our majorproject
+grade: stable
+confinement: classic
+
+apps:
+  devopschain:
+    command: bin/run
+
+architectures:
+  - build-on: [amd64, armhf]
+
+parts:
+  devopschain:
+    plugin: nil
+    override-build: |
+      set -ex
+
+      # install yarn
+      apt-get update
+      apt-get install -y curl
+      curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+      curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+      echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+      apt-get update
+      apt-get install -y nodejs yarn
+
+      yarn
+      yarn pack --filename devopschain.tar.gz
+      tar xvzf devopschain.tar.gz
+      OS=linux ./scripts/utils/_fetch_node_binary ../bin
+      # Run the command
+      sed -i 's/#!\/usr\/bin\/env node/#!\/snap\/devopschain\/current\/bin\/node/' ../bin/run
+      # sed -i "s/^process\.env\.DevOpsChain_UPDATE_INSTRUCTIONS.*$/process.env.DevOpsChain_UPDATE_INSTRUCTIONS = 'update with: snap refresh devopschain'/" ../bin/run
+      mkdir -p snap/hooks
+      cat << EOF > snap/hooks/configure
+      #!/bin/sh
+      set -e
+      export PATH="$SNAP_DATA/bin:$PATH"
+      # devopschain update
+      EOF
+      chmod +x snap/hooks/configure

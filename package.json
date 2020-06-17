@@ -1,7 +1,7 @@
 {
   "name": "devopschain",
   "description": "A devopschain cli",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "author": "Raj Mandal @rajmandal800",
   "bin": {
     "devopschain": "./bin/run"
